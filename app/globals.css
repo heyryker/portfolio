@@ -132,7 +132,7 @@ body {
  * sit in equal columns a whole number of cells wide, each starting on a
  * vertical line, and are centered in a one-cell row (with line-height 1,
  * Inter's caps are centered in the line box). Desktop is one row of five;
- * phones get three over two.
+ * phones get three over two, centered.
  */
 .case-nav {
   /* The widest label, [EDITORIAL], is about 6.2em. */
@@ -167,16 +167,44 @@ body {
 }
 
 @media not all and (min-width: 720px) and (min-height: 520px) {
+  /*
+   * Phones: three over two, each row centered with equal gaps between the
+   * labels. Rows stay on the grid; with equal spacing, the labels' left edges
+   * can't all land on vertical lines, so centering wins here.
+   */
   .case-nav {
-    /* [MOTION] ends the top row. */
-    --nav-last: 4.9em;
-    --nav-slot: calc(var(--grid-cell) * 5);
-    --nav-width: calc(var(--nav-slot) * 2 + var(--nav-last));
+    --nav-width: 100%;
     --nav-height: calc(var(--grid-cell) * 3);
   }
 
   .case-nav ul {
-    grid-template-columns: repeat(3, var(--nav-slot));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: calc(var(--grid-cell) * 2);
+    row-gap: 0;
+  }
+
+  .case-nav li {
+    display: flex;
+    align-items: center;
+    height: var(--grid-cell);
+  }
+
+  /* A full-width, one-cell spacer that breaks the list after the third label. */
+  .case-nav ul::before {
+    content: "";
+    flex-basis: 100%;
+    height: var(--grid-cell);
+    order: 1;
+  }
+
+  .case-nav li:nth-child(n + 4) {
+    order: 2;
+  }
+
+  .case-nav-link {
+    margin-left: 0;
   }
 }
 
