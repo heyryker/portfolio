@@ -79,6 +79,8 @@ const ROPE = 64; // towing rope length
 const LASSO_TWIRL = 0.7;
 const LASSO_THROW = 0.3;
 const LASSO_HOLD = 1.2;
+const LASSO_PULL = 2.4; // how long a roped cursor can drag the Curious One around
+const ROPE_SNAP = 160; // a cursor that jumps further than this in a frame slips the loop
 const LASSO_REEL = 0.3;
 
 // The garden, planted by the Shy and Curious Ones. Flowers are drawn in half
@@ -230,6 +232,10 @@ type Lasso = {
   loop: Vec;
   /** Rope paid out while towing; reeled in to ROPE. */
   rope: number;
+  /** A roped cursor: seconds spent dragging the meeple, whether it's dragging this frame, and where it was. */
+  pull: number;
+  tugging: boolean;
+  last: Vec;
 };
 
 type Flower = {
@@ -1582,7 +1588,8 @@ export class MeepleEngine {
   }
 
   private startLasso(m: Meeple, square: TintTarget | null) {
-    m.lasso = { phase: "twirl", t: 0, square, loop: this.hand(m), rope: ROPE };
+    const loop = this.hand(m);
+    m.lasso = { phase: "twirl", t: 0, square, loop, rope: ROPE, pull: 0, tugging: false, last: loop };
     m.planting = -1;
     m.target = null;
   }
@@ -1621,19 +1628,47 @@ export class MeepleEngine {
         const k = Math.min(1, l.t / LASSO_THROW);
         l.loop = { x: hand.x + (goal.x - hand.x) * k, y: hand.y + (goal.y - hand.y) * k };
         if (k < 1) break;
-        if (!sq) next("hold");
-        else if (sq.state === "loose") {
+        if (!sq) {
+          // The rope is as long as the throw, so the cursor only drags it once it pulls away.
+          l.rope = Math.max(ROPE, Math.hypot(goal.x - hand.x, goal.y - hand.y));
+          l.last = goal;
+          next("hold");
+        } else if (sq.state === "loose") {
           sq.state = "towed";
           l.rope = Math.max(ROPE, Math.hypot(goal.x - hand.x, goal.y - hand.y));
           next("tow");
         } else next("reel");
         break;
       }
-      case "hold":
-        // Caught the cursor. It slips off if the cursor gets away.
+      case "hold": {
+        // Caught the cursor. Pull away and it drags the meeple along, skidding
+        // on its heels, until the loop slips off (or the cursor jumps away).
         l.loop = goal;
-        if (l.t > LASSO_HOLD || !this.cursorActive || Math.hypot(goal.x - hand.x, goal.y - hand.y) > 280) next("reel");
+        const dx = goal.x - hand.x;
+        const dy = goal.y - hand.y;
+        const d = Math.hypot(dx, dy);
+        const excess = d - l.rope;
+        l.tugging = false;
+        let slip = !this.cursorActive || l.t > (l.pull > 0 ? LASSO_PULL : LASSO_HOLD);
+        if (excess > ROPE_SNAP) slip = true;
+        else if (excess > 0) {
+          m.x = clamp(m.x + (dx / d) * excess, 0, this.vw - W);
+          m.y = clamp(m.y + (dy / d) * excess, 0, this.vh - H);
+          l.pull += dt;
+          l.tugging = excess > 0.5;
+          this.glance = null;
+        }
+        if (slip) {
+          // Let go mid-drag and it keeps sliding a little.
+          if (l.tugging && dt > 0) {
+            m.vx = clamp(((goal.x - l.last.x) / dt) * 0.6, -600, 600);
+            m.vy = clamp(((goal.y - l.last.y) / dt) * 0.6, -600, 600);
+          }
+          next("reel");
+        }
+        l.last = goal;
         break;
+      }
       case "tow": {
         if (!sq || sq.state !== "towed" || !sq.rect) {
           next("reel");
@@ -1825,6 +1860,14 @@ export class MeepleEngine {
     this.drawEyes(m, ox + P, oy);
     if (m.asleep) this.drawZzz(m, ox, oy);
     if (m.lasso) this.drawLasso(m, ox, oy);
+    if (m.lasso?.tugging) {
+      // Heels dug in: dust kicks up behind its feet, away from the pull.
+      const l = m.lasso;
+      const back = Math.sign(this.hand(m).x - l.loop.x) || 1;
+      const k = (this.time * 4) % 1;
+      this.rect(ox + W / 2 + back * (W / 2 + 2 + k * 9), oy + H - 3 - k * 9, 2, 2, DIRT);
+      this.rect(ox + W / 2 + back * (W / 2 + 5 + ((k + 0.5) % 1) * 6), oy + H - 2 - ((k + 0.5) % 1) * 6, 2, 2, DIRT);
+    }
   }
 
   private drawLasso(m: Meeple, ox: number, oy: number) {
