@@ -7,6 +7,12 @@
  * light. The world is top-down (graph paper seen from above), so there is no
  * gravity: throws glide to a stop with friction.
  *
+ * They also make a little trouble: the Chaotic One charges the headline's
+ * pixel squares out of their sockets, the Curious One lassos them (and the
+ * cursor) and tows them home, the Shy and Curious Ones plant a pixel garden
+ * that the Chaotic One tramples, and the Sleepy One wears a nightcap. At rest the
+ * headline always settles back to its grid-locked look.
+ *
  * The canvas ignores pointer events. The engine listens on the page instead
  * and only claims a press that lands on a meeple and not on a link or button,
  * so meeples never block the case-study labels or the menu.
@@ -32,9 +38,52 @@ const SCATTER_TIME = 2.4;
 const AWAKE_TIME = 12; // how long the Sleepy One stays up once woken
 
 const ZZZ_COLOR = "#A1A3A6"; // `muted`
+const ROPE_COLOR = "#221F20"; // `ink-soft`
 
 // 3x5 pixel "z", drawn at 2px per pixel.
 const Z_GLYPH = ["XXX", "..X", ".X.", "X..", "XXX"];
+
+// Mischief. The headline's pixel squares can be shoved out of their sockets
+// by a fast meeple; slow walkers only tint them. Loose squares slide, come to
+// rest, and get roped back by the Curious One (or glide home on their own).
+const PUSH_SPEED = 110;
+const SQUARE_FRICTION = 2.6;
+const SQUARE_REST = 1.2; // seconds at rest before the lasso goes after it
+const SQUARE_GIVE_UP = 8; // seconds loose before it glides home by itself
+
+const ROPE = 64; // towing rope length
+const LASSO_TWIRL = 0.7;
+const LASSO_THROW = 0.3;
+const LASSO_HOLD = 1.2;
+const LASSO_REEL = 0.3;
+
+// The garden, planted by the Shy and Curious Ones. Flowers are drawn in half
+// meeple pixels and planted on the meeple-pixel grid, so they sit on the
+// graph paper too.
+const F = P / 2;
+const PLANT_TIME = 0.9;
+const MAX_FLOWERS = 10;
+const FLOWER_LIFE = 75;
+const WILT_TIME = 2;
+const TRAMPLED_TIME = 3;
+const PETALS = ["#985DF6", "#E05A32", "#58B9F8", "#FBEC5A"];
+const STEM = "#5FCC8A";
+const DIRT = "#A1A3A6";
+
+// Rows top to bottom. S stem, L leaf, P petal, C center, D dirt.
+const FLOWER_SEED = ["DDD"];
+const FLOWER_SPROUT = ["L.L", ".S.", ".S."];
+const FLOWER_BLOOM = [".P.", "PCP", ".P.", ".S.", "LS.", ".S."];
+const FLOWER_FLAT = ["LSSPCP"];
+
+// The Sleepy One's nightcap, in px from its head block's top-left. It droops
+// to the left so it stays clear of the z's.
+const NIGHTCAP = [
+  { x: -1, y: -3, w: 13, h: 4, c: "#E05A32" },
+  { x: 1, y: -6, w: 8, h: 3, c: "#E05A32" },
+  { x: -2, y: -8, w: 5, h: 2, c: "#E05A32" },
+  { x: -5, y: -9, w: 3, h: 3, c: "#FBEC5A" },
+];
 
 type Mode = "idle" | "walk" | "drag" | "shake" | "exploded" | "reassemble";
 
@@ -50,9 +99,9 @@ type Traits = {
 const TRAITS: Record<MeepleId, Traits> = {
   yellow: { speed: 55, pause: [0.6, 2.2], step: 0.14 },
   green: { speed: 50, pause: [0.8, 2.6], step: 0.14 },
-  purple: { speed: 22, pause: [1.5, 4], step: 0.2 },
+  purple: { speed: 30, pause: [1.2, 3.5], step: 0.18 },
   red: { speed: 125, pause: [0.15, 0.7], step: 0.08 },
-  blue: { speed: 28, pause: [1, 3], step: 0.2 },
+  blue: { speed: 40, pause: [1, 3], step: 0.2 },
 };
 
 type Vec = { x: number; y: number };
@@ -81,6 +130,10 @@ type Meeple = {
   blinkIn: number;
   blinkFor: number;
   asleep: boolean;
+  /** Seconds until the Sleepy One sleepwalks to a new napping spot. */
+  napFor: number;
+  /** Width of its name tag, once the pixel font has loaded. */
+  tagWidth: number;
   awakeFor: number;
   scaredFor: number;
   fleeTo: Vec | null;
@@ -89,14 +142,51 @@ type Meeple = {
   /** Position last frame, to estimate drag velocity. */
   prev: Vec;
   blocks: Block[];
+  /** The Curious One's lasso, while it's out. */
+  lasso: Lasso | null;
+  lassoCooldown: number;
+  /** Gardeners only: seconds until it next plants, and digging progress (-1 when not). */
+  plantIn: number;
+  planting: number;
 };
 
 type TintTarget = {
   el: HTMLElement;
   prop: "color" | "backgroundColor";
+  /** Where the element sits at rest, ignoring any shove. */
   rect: DOMRect | null;
   color: string | null;
   holdUntil: number;
+  /** Pixel squares can be knocked loose. Text stays put. */
+  pushable: boolean;
+  state: "home" | "loose" | "towed" | "gliding";
+  off: Vec;
+  v: Vec;
+  /** Seconds loose, and seconds at rest while loose. */
+  looseFor: number;
+  restFor: number;
+};
+
+type Lasso = {
+  phase: "twirl" | "throw" | "hold" | "tow" | "reel";
+  t: number;
+  /** A loose headline square to rope back, or null to rope the cursor. */
+  square: TintTarget | null;
+  /** Where the loop is, while it's off the meeple's hand. */
+  loop: Vec;
+  /** Rope paid out while towing; reeled in to ROPE. */
+  rope: number;
+};
+
+type Flower = {
+  /** Left edge and baseline. */
+  x: number;
+  y: number;
+  age: number;
+  petal: string;
+  /** Seconds since it started wilting or was trampled; -1 while healthy. */
+  fade: number;
+  trampled: boolean;
 };
 
 type Drag = {
@@ -128,6 +218,13 @@ export class MeepleEngine {
   private glance: { at: Vec; until: number } | null = null;
   private drag: Drag | null = null;
   private tints: TintTarget[] = [];
+  private squares: TintTarget[] = [];
+  private flowers: Flower[] = [];
+  /** Areas the garden keeps off: the headline and the case-study links. */
+  private noPlant: DOMRect[] = [];
+  /** When the Chaotic One may next shove a square on purpose. */
+  private nextShove = 6;
+  private tagFont = "700 8px monospace";
   private resizeObserver: ResizeObserver;
   private cleanups: (() => void)[] = [];
 
@@ -148,8 +245,29 @@ export class MeepleEngine {
       rect: null,
       color: null,
       holdUntil: 0,
+      pushable: el.dataset.meepleTint !== "text",
+      state: "home",
+      off: { x: 0, y: 0 },
+      v: { x: 0, y: 0 },
+      looseFor: 0,
+      restFor: 0,
     }));
+    this.squares = this.tints.filter((t) => t.pushable);
     this.measureTints();
+
+    // Name tags use the pixel accent font. Nothing else on the page uses it
+    // yet, so ask for it explicitly, then re-measure the tags once it's in.
+    const pixel = getComputedStyle(document.documentElement).getPropertyValue("--font-silkscreen").trim();
+    if (pixel) {
+      // Bold at its native 8px size, so the letters stay crisp and chunky.
+      this.tagFont = `700 8px ${pixel}`;
+      document.fonts
+        ?.load(this.tagFont)
+        .then(() => {
+          for (const m of this.meeples) m.tagWidth = 0;
+        })
+        .catch(() => {});
+    }
 
     this.resizeObserver = new ResizeObserver(() => this.onResize());
     this.resizeObserver.observe(root);
@@ -191,6 +309,7 @@ export class MeepleEngine {
     for (const t of this.tints) {
       t.el.style[t.prop] = "";
       t.el.style.transitionDuration = "";
+      t.el.style.transform = "";
     }
     this.root.style.cursor = "";
   }
@@ -233,6 +352,8 @@ export class MeepleEngine {
       blinkIn: rand(2, 6),
       blinkFor: 0,
       asleep: cfg.id === "blue",
+      napFor: rand(4, 7),
+      tagWidth: 0,
       awakeFor: 0,
       scaredFor: 0,
       fleeTo: null,
@@ -240,6 +361,10 @@ export class MeepleEngine {
       rushCooldown: rand(2, 4),
       prev: { x, y },
       blocks: [],
+      lasso: null,
+      lassoCooldown: rand(3, 6),
+      plantIn: rand(5, 9),
+      planting: -1,
     };
   }
 
@@ -254,7 +379,9 @@ export class MeepleEngine {
   private measureTints() {
     const c = this.canvas.getBoundingClientRect();
     for (const t of this.tints) {
-      const r = t.el.getBoundingClientRect();
+      // The box includes any shove; take it off to get the resting spot.
+      const b = t.el.getBoundingClientRect();
+      const r = new DOMRect(b.left - t.off.x, b.top - t.off.y, b.width, b.height);
       // A text box includes the line's empty space above and below the
       // glyphs. Trim it to roughly the bracket height, so a meeple only
       // tints [I'M] when it actually touches the letters.
@@ -263,6 +390,10 @@ export class MeepleEngine {
       const bottom = r.bottom - fs * 0.12;
       t.rect = new DOMRect(r.left - c.left, top - c.top, r.width, bottom - top);
     }
+    this.noPlant = Array.from(this.root.querySelectorAll<HTMLElement>("h1, nav, header a, header button")).map((el) => {
+      const r = el.getBoundingClientRect();
+      return new DOMRect(r.left - c.left - 12, r.top - c.top - 12, r.width + 24, r.height + 24);
+    });
   }
 
   private onResize() {
@@ -334,6 +465,9 @@ export class MeepleEngine {
       this.updateFace(m, dt);
     }
     this.collide();
+    this.updateSquares(dt);
+    this.shoveSquares();
+    this.updateFlowers(dt);
   }
 
   // ---------------------------------------------------------- personality
@@ -347,7 +481,25 @@ export class MeepleEngine {
     m.wx = 0;
     m.wy = 0;
 
-    if (m.asleep) return;
+    if (m.asleep) {
+      // Every so often the Sleepy One sleepwalks to a fresh napping spot,
+      // eyes shut and z's still going.
+      m.napFor -= dt;
+      if (m.napFor <= 0 && Math.hypot(m.vx, m.vy) < TUMBLE_SPEED) {
+        if (!m.target) {
+          const a = rand(0, Math.PI * 2);
+          const r = rand(140, 320);
+          m.target = this.clampTarget(m.x + Math.cos(a) * r, m.y + Math.sin(a) * r);
+        }
+        m.mode = "walk";
+        if (this.walkTo(m, m.target.x, m.target.y, 55, dt)) {
+          m.mode = "idle";
+          m.target = null;
+          m.napFor = rand(6, 11);
+        }
+      }
+      return;
+    }
     if (m.cfg.id === "blue") {
       m.awakeFor -= dt;
       if (m.awakeFor <= 0 && m.mode === "idle") {
@@ -359,6 +511,11 @@ export class MeepleEngine {
     // Sliding after a throw or a bump: no walking until it slows down.
     if (Math.hypot(m.vx, m.vy) > TUMBLE_SPEED) return;
 
+    if (m.lasso) {
+      this.workLasso(m, dt);
+      return;
+    }
+
     const c = center(m);
     const toCursor = { x: this.cursor.x - c.x, y: this.cursor.y - c.y };
     const d = Math.hypot(toCursor.x, toCursor.y) || 1;
@@ -366,7 +523,29 @@ export class MeepleEngine {
 
     switch (m.cfg.id) {
       case "yellow": {
-        // The Curious One: follows the cursor at a polite distance.
+        // The Curious One carries a lasso. It ropes any headline square that's
+        // been knocked loose and tows it home, and now and then lassos the
+        // cursor when it gets close enough.
+        m.lassoCooldown -= dt;
+        const strays = this.squares.filter((s) => s.state === "loose" && s.restFor > SQUARE_REST);
+        const dist = (s: TintTarget) => Math.hypot(squareCenter(s).x - c.x, squareCenter(s).y - c.y);
+        const stray = strays.sort((a, b) => dist(a) - dist(b))[0];
+        if (stray) {
+          // Walk over until it's within throwing range.
+          const sc = squareCenter(stray);
+          const ds = Math.hypot(sc.x - c.x, sc.y - c.y) || 1;
+          if (ds > 180) {
+            m.mode = "walk";
+            this.walkTo(m, sc.x - ((sc.x - c.x) / ds) * 120 - W / 2, sc.y - ((sc.y - c.y) / ds) * 120 - H / 2, 90, dt);
+          } else this.startLasso(m, stray);
+          return;
+        }
+        if (active && d <= 150 && m.lassoCooldown <= 0 && Math.random() < dt * 0.8) {
+          this.startLasso(m, null);
+          return;
+        }
+        if (active) m.planting = -1;
+        // Follows the cursor at a polite distance.
         if (active && d > 130) {
           const stop = { x: this.cursor.x - (toCursor.x / d) * 100, y: this.cursor.y - (toCursor.y / d) * 100 };
           m.mode = "walk";
@@ -378,12 +557,15 @@ export class MeepleEngine {
           m.idleFor = Math.max(m.idleFor, 0.5);
           return;
         }
+        // With nothing to chase, it gardens too.
+        if (this.garden(m, dt)) return;
         break;
       }
       case "green": {
         // The Shy One: scoots away when the cursor gets close, then peeks back.
         if (active && d < 160 && m.scaredFor <= 0) {
           m.scaredFor = rand(1, 1.5);
+          m.planting = -1;
           const away = { x: -toCursor.x / d, y: -toCursor.y / d };
           const side = rand(-80, 80);
           let to = this.clampTarget(c.x + away.x * 240 - away.y * side - W / 2, c.y + away.y * 240 + away.x * side - H / 2);
@@ -408,8 +590,15 @@ export class MeepleEngine {
             m.wx = (toCursor.x / d) * 18;
             m.wy = (toCursor.y / d) * 18;
           }
+          m.planting = -1;
           return;
         }
+        if (this.garden(m, dt)) return;
+        break;
+      }
+      case "purple": {
+        // The Watcher tends a little garden around its perch.
+        if (this.garden(m, dt)) return;
         break;
       }
       case "red": {
@@ -463,7 +652,21 @@ export class MeepleEngine {
       // The Watcher stays perched near its spot by the headline.
       const hx = Math.min(m.cfg.home.x * this.vw, this.vw - W - 8);
       const hy = Math.min(m.cfg.home.y * this.vh, this.vh - H - 8);
-      return this.clampTarget(hx + rand(-60, 60), hy + rand(-30, 30));
+      return this.clampTarget(hx + rand(-120, 120), hy + rand(-40, 60));
+    }
+    if (m.cfg.id === "red" && this.time > this.nextShove && Math.random() < 0.5) {
+      // Charge straight through one of the headline's pixel squares.
+      const atHome = this.squares.filter((s) => s.state === "home" && s.rect);
+      const s = atHome[Math.floor(Math.random() * atHome.length)];
+      if (s?.rect) {
+        const sc = { x: s.rect.x + s.rect.width / 2, y: s.rect.y + s.rect.height / 2 };
+        const c = center(m);
+        const d = Math.hypot(sc.x - c.x, sc.y - c.y);
+        if (d > 80) {
+          this.nextShove = this.time + rand(14, 24);
+          return this.clampTarget(sc.x + ((sc.x - c.x) / d) * 150 - W / 2, sc.y + ((sc.y - c.y) / d) * 150 - H / 2);
+        }
+      }
     }
     if (m.cfg.id === "red" && Math.random() < 0.35) {
       // Head straight for another meeple. Bumps are the point.
@@ -627,6 +830,8 @@ export class MeepleEngine {
   // ------------------------------------------------------------- exploding
 
   private explode(m: Meeple) {
+    this.cancelLasso(m);
+    m.planting = -1;
     m.mode = "exploded";
     m.modeT = 0;
     const c = center(m);
@@ -738,6 +943,8 @@ export class MeepleEngine {
     e.preventDefault();
 
     this.wake(m);
+    this.cancelLasso(m);
+    m.planting = -1;
     m.mode = "drag";
     m.modeT = 0;
     m.vx = m.vy = m.wx = m.wy = 0;
@@ -819,16 +1026,315 @@ export class MeepleEngine {
     if (e.pointerType === "mouse") this.cursor.inside = false;
   };
 
+  // ------------------------------------------------------- headline squares
+
+  /** Moves loose squares, and writes every square's offset to the page. */
+  private updateSquares(dt: number) {
+    for (const t of this.squares) {
+      const r = t.rect;
+      if (!r) continue;
+      switch (t.state) {
+        case "loose": {
+          t.looseFor += dt;
+          t.off.x += t.v.x * dt;
+          t.off.y += t.v.y * dt;
+          const f = Math.exp(-SQUARE_FRICTION * dt);
+          t.v.x *= f;
+          t.v.y *= f;
+          // Bounce off the viewport edges.
+          const x = r.x + t.off.x;
+          const y = r.y + t.off.y;
+          if (x < 0 || x > this.vw - r.width) {
+            t.off.x = clamp(x, 0, this.vw - r.width) - r.x;
+            t.v.x = -t.v.x * BOUNCE;
+          }
+          if (y < 0 || y > this.vh - r.height) {
+            t.off.y = clamp(y, 0, this.vh - r.height) - r.y;
+            t.v.y = -t.v.y * BOUNCE;
+          }
+          t.restFor = Math.hypot(t.v.x, t.v.y) < 4 ? t.restFor + dt : 0;
+          if (t.looseFor > SQUARE_GIVE_UP) t.state = "gliding";
+          break;
+        }
+        case "towed": {
+          // On the end of the rope: never further than ROPE from the hand.
+          const tower = this.meeples.find((m) => m.lasso?.square === t);
+          if (!tower) {
+            t.state = "loose";
+            break;
+          }
+          const hand = this.hand(tower);
+          const rope = tower.lasso!.rope;
+          const c = squareCenter(t);
+          const d = Math.hypot(c.x - hand.x, c.y - hand.y);
+          if (d > rope) {
+            t.off.x -= ((c.x - hand.x) / d) * (d - rope);
+            t.off.y -= ((c.y - hand.y) / d) * (d - rope);
+          }
+          t.v.x = t.v.y = 0;
+          break;
+        }
+        case "gliding": {
+          const k = 1 - Math.exp(-5 * dt);
+          t.off.x -= t.off.x * k;
+          t.off.y -= t.off.y * k;
+          if (Math.hypot(t.off.x, t.off.y) < 0.5) {
+            t.state = "home";
+            t.off.x = t.off.y = 0;
+          }
+          break;
+        }
+      }
+      // Whole device pixels, so the square stays crisp in flight.
+      const tx = Math.round(t.off.x * this.dpr) / this.dpr;
+      const ty = Math.round(t.off.y * this.dpr) / this.dpr;
+      const transform = tx || ty ? `translate(${tx}px, ${ty}px)` : "";
+      if (t.el.style.transform !== transform) t.el.style.transform = transform;
+    }
+  }
+
+  /**
+   * A fast meeple (a charge, a throw, a drag) knocks a square out of its
+   * socket. Slow walkers just tint it, as before. Once a square is loose,
+   * anyone walking into it kicks it along.
+   */
+  private shoveSquares() {
+    for (const t of this.squares) {
+      const r = t.rect;
+      if (!r || t.state === "towed" || t.state === "gliding") continue;
+      for (const m of this.meeples) {
+        if (m.mode !== "idle" && m.mode !== "walk" && m.mode !== "drag") continue;
+        const vx = m.wx + m.vx;
+        const vy = m.wy + m.vy;
+        const speed = Math.hypot(vx, vy);
+        if (m.mode !== "drag" && speed < (t.state === "home" ? PUSH_SPEED : 20)) continue;
+
+        const sx = r.x + t.off.x;
+        const sy = r.y + t.off.y;
+        const ox = Math.min(m.x + W - 3, sx + r.width) - Math.max(m.x + 3, sx);
+        const oy = Math.min(m.y + H - 3, sy + r.height) - Math.max(m.y + 3, sy);
+        if (ox <= 0 || oy <= 0) continue;
+
+        // Push it out along the axis of least overlap, at the meeple's speed or a bit more.
+        const sc = squareCenter(t);
+        const mc = center(m);
+        if (ox < oy) {
+          const n = Math.sign(sc.x - mc.x) || 1;
+          t.off.x += n * ox;
+          t.v.x = n * Math.max(vx * n * 1.4, 160);
+          t.v.y = vy * 0.6;
+        } else {
+          const n = Math.sign(sc.y - mc.y) || 1;
+          t.off.y += n * oy;
+          t.v.y = n * Math.max(vy * n * 1.4, 160);
+          t.v.x = vx * 0.6;
+        }
+        if (t.state === "home") t.looseFor = 0;
+        t.state = "loose";
+        t.restFor = 0;
+      }
+    }
+  }
+
+  // ----------------------------------------------------------------- lasso
+
+  /** The tip of the right arm, where the rope is held. */
+  private hand(m: Meeple): Vec {
+    return { x: Math.round(m.x) + 2.5 * P, y: Math.round(m.y) + 1.5 * P };
+  }
+
+  private startLasso(m: Meeple, square: TintTarget | null) {
+    m.lasso = { phase: "twirl", t: 0, square, loop: this.hand(m), rope: ROPE };
+    m.planting = -1;
+    m.target = null;
+  }
+
+  private cancelLasso(m: Meeple) {
+    const sq = m.lasso?.square;
+    if (sq && sq.state === "towed") {
+      sq.state = "loose";
+      sq.restFor = 0;
+    }
+    if (m.lasso) m.lassoCooldown = rand(4, 8);
+    m.lasso = null;
+  }
+
+  private workLasso(m: Meeple, dt: number) {
+    const l = m.lasso!;
+    l.t += dt;
+    m.mode = "idle";
+    m.idleFor = Math.max(m.idleFor, 0.4);
+    const hand = this.hand(m);
+    const sq = l.square;
+    const goal = sq ? squareCenter(sq) : { x: this.cursor.x, y: this.cursor.y };
+    const next = (phase: Lasso["phase"]) => {
+      l.phase = phase;
+      l.t = 0;
+    };
+
+    switch (l.phase) {
+      case "twirl":
+        l.loop = hand;
+        // Someone else got there first.
+        if (sq && sq.state !== "loose") next("reel");
+        else if (l.t > LASSO_TWIRL) next("throw");
+        break;
+      case "throw": {
+        const k = Math.min(1, l.t / LASSO_THROW);
+        l.loop = { x: hand.x + (goal.x - hand.x) * k, y: hand.y + (goal.y - hand.y) * k };
+        if (k < 1) break;
+        if (!sq) next("hold");
+        else if (sq.state === "loose") {
+          sq.state = "towed";
+          l.rope = Math.max(ROPE, Math.hypot(goal.x - hand.x, goal.y - hand.y));
+          next("tow");
+        } else next("reel");
+        break;
+      }
+      case "hold":
+        // Caught the cursor. It slips off if the cursor gets away.
+        l.loop = goal;
+        if (l.t > LASSO_HOLD || !this.cursorActive || Math.hypot(goal.x - hand.x, goal.y - hand.y) > 280) next("reel");
+        break;
+      case "tow": {
+        if (!sq || sq.state !== "towed" || !sq.rect) {
+          next("reel");
+          break;
+        }
+        // Walk past the socket so the square, trailing on the rope, lands in it.
+        const home = { x: sq.rect.x + sq.rect.width / 2, y: sq.rect.y + sq.rect.height / 2 };
+        const dx = home.x - goal.x;
+        const dy = home.y - goal.y;
+        const d = Math.hypot(dx, dy);
+        l.loop = goal;
+        l.rope = Math.max(ROPE, l.rope - 160 * dt);
+        if (d < 30 || l.t > 9) {
+          sq.state = "gliding";
+          next("reel");
+          break;
+        }
+        m.mode = "walk";
+        this.walkTo(m, home.x + (dx / d) * (ROPE + 24) - W / 2, home.y + (dy / d) * (ROPE + 24) - H / 2, 80, dt);
+        break;
+      }
+      case "reel": {
+        const k = 1 - Math.exp(-18 * dt);
+        l.loop = { x: l.loop.x + (hand.x - l.loop.x) * k, y: l.loop.y + (hand.y - l.loop.y) * k };
+        if (l.t > LASSO_REEL) {
+          m.lasso = null;
+          m.lassoCooldown = rand(8, 14);
+          m.idleFor = rand(0.4, 1);
+        }
+        break;
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------- garden
+
+  /**
+   * The gardeners (the Shy One and the Curious One), when left alone, stop,
+   * dig, and plant a flower beside them. Returns true while digging.
+   */
+  private garden(m: Meeple, dt: number) {
+    if (m.planting >= 0) {
+      m.planting += dt;
+      m.mode = "idle";
+      m.idleFor = Math.max(m.idleFor, 0.4);
+      if (m.planting >= PLANT_TIME) {
+        this.plant(m);
+        m.planting = -1;
+        m.plantIn = rand(7, 12);
+      }
+      return true;
+    }
+    m.plantIn -= dt;
+    if (m.plantIn <= 0 && m.mode === "idle") {
+      if (this.plantSpot(m)) m.planting = 0;
+      else m.plantIn = rand(2, 4);
+    }
+    return false;
+  }
+
+  /** Where a gardener would plant next, beside the foot it's facing, or null. */
+  private plantSpot(m: Meeple): Vec | null {
+    const side = m.look.x < 0 ? -1 : 1;
+    const cx = m.x + W / 2 + side * (W / 2 + 2 * F);
+    const x = Math.round((cx - 1.5 * F) / F) * F;
+    const y = Math.round((m.y + H) / P) * P;
+    const r = new DOMRect(x, y - FLOWER_BLOOM.length * F, 3 * F, FLOWER_BLOOM.length * F);
+    if (r.left < MARGIN || r.right > this.vw - MARGIN || r.top < 64 || r.bottom > this.vh - MARGIN) return null;
+    if (this.noPlant.some((n) => overlaps(n, r))) return null;
+    if (this.flowers.some((f) => f.fade < 0 && Math.abs(f.x - x) < 4 * F && Math.abs(f.y - y) < 7 * F)) return null;
+    return { x, y };
+  }
+
+  private plant(m: Meeple) {
+    const spot = this.plantSpot(m);
+    if (!spot) return;
+    const healthy = this.flowers.filter((f) => f.fade < 0);
+    if (healthy.length >= MAX_FLOWERS) healthy[0].fade = 0;
+    this.flowers.push({ ...spot, age: 0, petal: PETALS[Math.floor(Math.random() * PETALS.length)], fade: -1, trampled: false });
+  }
+
+  private updateFlowers(dt: number) {
+    for (const f of this.flowers) {
+      f.age += dt;
+      if (f.fade >= 0) {
+        f.fade += dt;
+        continue;
+      }
+      if (f.age > FLOWER_LIFE) {
+        f.fade = 0;
+        continue;
+      }
+      if (f.age < 1.8) continue;
+      // The Chaotic One tramples blooms; so does anything sliding through.
+      const head = new DOMRect(f.x, f.y - FLOWER_BLOOM.length * F, 3 * F, 3 * F);
+      for (const m of this.meeples) {
+        if (m.mode !== "idle" && m.mode !== "walk" && m.mode !== "drag") continue;
+        const fast = Math.hypot(m.wx + m.vx, m.wy + m.vy) > TUMBLE_SPEED;
+        if (!(m.cfg.id === "red" && m.mode === "walk") && !fast) continue;
+        if (overlaps(new DOMRect(m.x, m.y + 2 * P, W, 2 * P), head)) {
+          f.trampled = true;
+          f.fade = 0;
+          break;
+        }
+      }
+    }
+    this.flowers = this.flowers.filter((f) => f.fade < (f.trampled ? TRAMPLED_TIME : WILT_TIME));
+  }
+
   // ---------------------------------------------------------------- render
 
   private render() {
     const { ctx } = this;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.drawFlowers();
     for (const m of this.meeples) {
       if (m.mode === "exploded" || m.mode === "reassemble") this.drawBlocks(m);
       else this.drawMeeple(m);
     }
+    this.drawTags();
+  }
+
+  /** A small name tag over each meeple's head, in the pixel font. */
+  private drawTags() {
+    const { ctx } = this;
+    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    ctx.font = this.tagFont;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = ZZZ_COLOR;
+    for (const m of this.meeples) {
+      if (!m.tagWidth) m.tagWidth = ctx.measureText(m.cfg.tag).width;
+      if (m.mode === "exploded" || m.mode === "reassemble" || m.lasso?.phase === "twirl") continue;
+      // Clear of the nightcap on the Sleepy One.
+      const lift = m.cfg.id === "blue" ? 13 : 6;
+      ctx.fillText(m.cfg.tag, Math.round(m.x + W / 2), Math.round(m.y) - lift);
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
   /**
@@ -850,14 +1356,78 @@ export class MeepleEngine {
       ox += Math.round(rand(-2, 2));
       oy += Math.round(rand(-2, 2));
     }
+    if (m.planting >= 0) {
+      // Digging: a quick bob, with dirt flicking up from its feet.
+      oy -= Math.round(Math.abs(Math.sin(m.planting * 12)) * 3);
+      const side = m.look.x < 0 ? -1 : 1;
+      const k = (m.planting * 3) % 1;
+      this.rect(ox + W / 2 + side * (W / 2 + 2 + k * 8), oy + H - 4 - k * 10, 2, 2, DIRT);
+      this.rect(ox + W / 2 + side * (W / 2 + 6 + k * 4), oy + H - 2 - k * 6, 2, 2, DIRT);
+    }
     const walking = m.mode === "walk" && Math.hypot(m.wx, m.wy) > 1;
     MEEPLE_BLOCKS.forEach((b, i) => {
       // Blocks 5 and 6 are the legs. Lift one at a time while walking.
       const lift = walking && ((i === 5 && m.stepFrame === 0) || (i === 6 && m.stepFrame === 1)) ? -2 : 0;
       this.rect(ox + b.x * P, oy + b.y * P + lift, P, P, m.cfg.hex);
     });
+    if (m.cfg.id === "blue") for (const c of NIGHTCAP) this.rect(ox + P + c.x, oy + c.y, c.w, c.h, c.c);
     this.drawEyes(m, ox + P, oy);
-    if (m.asleep) this.drawZzz(ox, oy);
+    if (m.asleep) this.drawZzz(m, ox, oy);
+    if (m.lasso) this.drawLasso(m, ox, oy);
+  }
+
+  private drawLasso(m: Meeple, ox: number, oy: number) {
+    const l = m.lasso!;
+    const hand = { x: ox + 2.5 * P, y: oy + 1.5 * P };
+    if (l.phase === "twirl") {
+      // Spinning overhead.
+      const c = { x: ox + W / 2 + 6, y: oy - 14 };
+      const a = this.time * 14;
+      this.ring(c.x, c.y, 15, 5);
+      this.line(hand.x, hand.y, c.x + Math.cos(a) * 15, c.y + Math.sin(a) * 5);
+      return;
+    }
+    const sq = l.square?.rect;
+    const r = sq && l.phase !== "throw" ? Math.max(7, sq.width / 2 + 3) : 7;
+    this.line(hand.x, hand.y, l.loop.x, l.loop.y);
+    this.ring(l.loop.x, l.loop.y, r, r);
+  }
+
+  /** A 2px pixel line. */
+  private line(x0: number, y0: number, x1: number, y1: number) {
+    const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 2));
+    for (let i = 0; i <= n; i++) {
+      this.rect(Math.round(x0 + ((x1 - x0) * i) / n) - 1, Math.round(y0 + ((y1 - y0) * i) / n) - 1, 2, 2, ROPE_COLOR);
+    }
+  }
+
+  /** A 2px pixel ellipse. */
+  private ring(cx: number, cy: number, rx: number, ry: number) {
+    // Enough points that the ring reads as one unbroken 2px line.
+    const n = Math.max(16, Math.round(Math.PI * (rx + ry)));
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      this.rect(Math.round(cx + Math.cos(a) * rx) - 1, Math.round(cy + Math.sin(a) * ry) - 1, 2, 2, ROPE_COLOR);
+    }
+  }
+
+  private drawFlowers() {
+    const { ctx } = this;
+    for (const f of this.flowers) {
+      const limit = f.trampled ? TRAMPLED_TIME : WILT_TIME;
+      ctx.globalAlpha = f.fade < 0 ? 1 : Math.max(0, 1 - f.fade / limit);
+      const rows = f.trampled ? FLOWER_FLAT : f.age < 0.5 ? FLOWER_SEED : f.age < 1.8 ? FLOWER_SPROUT : FLOWER_BLOOM;
+      const left = f.x - ((rows[0].length - 3) / 2) * F;
+      const top = f.y - rows.length * F;
+      const middle = f.petal === "#FBEC5A" ? "#E05A32" : "#FBEC5A";
+      rows.forEach((row, ry) =>
+        [...row].forEach((ch, rx) => {
+          const color = ch === "S" || ch === "L" ? STEM : ch === "P" ? f.petal : ch === "C" ? middle : ch === "D" ? DIRT : null;
+          if (color) this.rect(left + rx * F, top + ry * F, F, F, color);
+        }),
+      );
+    }
+    ctx.globalAlpha = 1;
   }
 
   private drawBlocks(m: Meeple) {
@@ -884,12 +1454,13 @@ export class MeepleEngine {
   }
 
   /** Two small pixel z's drifting up from a napping meeple. */
-  private drawZzz(ox: number, oy: number) {
+  private drawZzz(m: Meeple, ox: number, oy: number) {
     const { ctx } = this;
     for (let k = 0; k < 2; k++) {
       const p = (this.time / 2.4 + k / 2) % 1;
       ctx.globalAlpha = p < 0.15 ? p / 0.15 : 1 - (p - 0.15) / 0.85;
-      const zx = Math.round(ox + W - 2 + p * 10);
+      // Start past the right end of the name tag.
+      const zx = Math.round(Math.max(ox + W - 2, ox + W / 2 + m.tagWidth / 2 + 3) + p * 10);
       const zy = Math.round(oy - 8 - p * 22);
       Z_GLYPH.forEach((row, ry) =>
         [...row].forEach((ch, rx) => {
@@ -913,8 +1484,10 @@ export class MeepleEngine {
       let bestArea = 0;
       for (const m of this.meeples) {
         if (m.mode === "exploded" || m.mode === "reassemble") continue;
-        const ox = Math.min(m.x + W, t.rect.right) - Math.max(m.x, t.rect.left);
-        const oy = Math.min(m.y + H, t.rect.bottom) - Math.max(m.y, t.rect.top);
+        const left = t.rect.left + t.off.x;
+        const top = t.rect.top + t.off.y;
+        const ox = Math.min(m.x + W, left + t.rect.width) - Math.max(m.x, left);
+        const oy = Math.min(m.y + H, top + t.rect.height) - Math.max(m.y, top);
         if (ox > 0 && oy > 0 && ox * oy > bestArea) {
           best = m;
           bestArea = ox * oy;
@@ -941,6 +1514,15 @@ export class MeepleEngine {
 
 function center(m: Meeple): Vec {
   return { x: m.x + W / 2, y: m.y + H / 2 };
+}
+
+function squareCenter(t: TintTarget): Vec {
+  const r = t.rect!;
+  return { x: r.x + t.off.x + r.width / 2, y: r.y + t.off.y + r.height / 2 };
+}
+
+function overlaps(a: DOMRect, b: DOMRect) {
+  return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 }
 
 /** Dragged meeples can't be pushed; the napping one is hard to shift. */
