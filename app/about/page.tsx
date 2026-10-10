@@ -70,15 +70,22 @@ export default function AboutPage() {
 
         <div className="mt-11 grid gap-11 md:grid-cols-[1fr_264px]">
           <div className="space-y-4 text-lg leading-relaxed">
-            {/* TODO(ryker): approve or rewrite the bio. Drafted from your resume summary. */}
             <p>
               I&rsquo;m a senior brand designer and art director. I build brand systems and keep them
-              working at scale, for enterprise SaaS and Web3 teams. Right now that&rsquo;s at Lucid Software, and
-              recently as a contract designer for TRON DAO.
+              working at scale for enterprise SaaS and Web3 teams. Currently at{" "}
+              <a
+                href="https://lucid.co"
+                target="_blank"
+                rel="noopener"
+                className="underline decoration-grid underline-offset-4 transition-colors hover:text-accent hover:decoration-accent focus-visible:text-accent"
+              >
+                Lucid Software
+              </a>
+              .
             </p>
             <p>
-              Most of my work is turning complex, sometimes regulated subject matter into visual systems
-              people can actually use: guidelines, campaigns, events and the videos that go with them.
+              I make complex things simple, and I go looking for the idea nobody expected. That&rsquo;s
+              how I approach brand guidelines, campaigns, events and the videos that bring them to life.
             </p>
             <p className="text-muted">Based in Utah.</p>
             <div className="flex flex-wrap gap-3 pt-3">
