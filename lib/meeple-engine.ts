@@ -15,8 +15,9 @@
  *
  * The two headline squares can be grabbed and thrown like meeples, and answer
  * clicks: HEY's square explodes and reassembles like a meeple, and RYKER's
- * period squashes flat (every meeple jumps at the thud), then blooms into a
- * big flower while little ones pop up all over the page.
+ * period squashes flat until it's gone (every meeple jumps at the thud), and
+ * a shiny gold flower pops up in its place while little ones pop up all over
+ * the page. Then the period springs back.
  *
  * The canvas ignores pointer events. The engine listens on the page instead
  * and only claims a press that lands on a meeple and not on a link or button,
@@ -57,14 +58,13 @@ const SQUARE_REST = 1.2; // seconds at rest before the lasso goes after it
 const SQUARE_GIVE_UP = 8; // seconds loose before it glides home by itself
 
 // Clicking the headline squares. HEY's square bursts into a 4x4 of half
-// meeple pixels; RYKER's period squashes, the meeples hop, and it blooms.
+// meeple pixels; RYKER's period flattens away and a gold flower pops up.
 const SQUARE_SHAKE = 0.35;
 const SQUARE_SPLIT = 4;
-const SQUASH_TIME = 1.2;
-const BLOOM_STEM = [0.3, 0.7]; // the stem grows down in this window
-const BLOOM_PETALS = 0.7; // then the petals pop, one after another
-const BLOOM_LIFE = 9;
-const BLOOM_FADE = 1;
+const FLATTEN_TIME = 0.14;
+const GOLD_LIFE = 9; // seconds from the click until the gold flower goes
+const GOLD_FADE = 0.6;
+const SPRING_BACK = 0.6; // then the period springs back up
 const WILD_LIFE: [number, number] = [14, 20]; // the little flowers it sets off
 const HOP_TIME = 0.42; // one hop
 const HOP_HEIGHT = 16;
@@ -88,6 +88,25 @@ const TRAMPLED_TIME = 3;
 const PETALS = ["#985DF6", "#E05A32", "#58B9F8", "#FBEC5A"];
 const STEM = "#5FCC8A";
 const DIRT = "#A1A3A6";
+
+// The gold flower from RYKER's period: H highlight, P gold petal, C amber center.
+const GOLD_BLOOM = [".HPP.", "HPCPP", ".PPP.", "..S..", ".LS..", "..SL.", "..S.."];
+const GOLD_COLORS: Record<string, string> = {
+  H: "#FFF1A8",
+  P: "#F5C518",
+  C: "#E0860B",
+  S: "#5FCC8A",
+  L: "#5FCC8A",
+  D: "#A1A3A6",
+};
+// Sparkles around its head: x from the flower's middle and y from its top, in its pixels, and a phase.
+const GOLD_SPARKLES: [number, number, number][] = [
+  [-3.6, -0.6, 0],
+  [3.4, 0.4, 0.35],
+  [-2.8, 3.2, 0.6],
+  [3.1, 2.6, 0.15],
+  [0.4, -1.8, 0.8],
+];
 
 // Rows top to bottom. S stem, L leaf, P petal, C center, D dirt.
 const FLOWER_SEED = ["DDD"];
@@ -180,18 +199,16 @@ type TintTarget = {
   holdUntil: number;
   /** Pixel squares can be knocked loose. Text stays put. */
   pushable: boolean;
-  state: "home" | "loose" | "towed" | "gliding" | "burst" | "held";
+  state: "home" | "loose" | "towed" | "gliding" | "burst" | "held" | "gone";
   /** What a click does: HEY's square bursts, RYKER's period squashes. */
   click: "burst" | "squash" | null;
-  /** Seconds into a burst or a squash (-1 when neither). */
+  /** Seconds into a burst (-1 when not). */
   clickT: number;
   /** A burst square's pieces, and their color. */
   blocks: Block[];
   blockColor: string;
-  /** RYKER's period's flower: seconds since it started (-1 when none), petal color, and where it bloomed. */
+  /** RYKER's period: seconds since it was clicked (-1 when not), through flattening, the gold flower and springing back. */
   bloomT: number;
-  bloomPetal: string;
-  bloomAt: Vec;
   off: Vec;
   v: Vec;
   /** Seconds loose, and seconds at rest while loose. */
@@ -298,8 +315,6 @@ export class MeepleEngine {
       blocks: [],
       blockColor: "",
       bloomT: -1,
-      bloomPetal: "",
-      bloomAt: { x: 0, y: 0 },
       off: { x: 0, y: 0 },
       v: { x: 0, y: 0 },
       looseFor: 0,
@@ -1176,12 +1191,20 @@ export class MeepleEngine {
           break;
         }
       }
+      let sy = 1;
       if (t.bloomT >= 0) {
         t.bloomT += dt;
-        // Moving the square knocks the petals off early.
-        const moved = Math.hypot(t.off.x - t.bloomAt.x, t.off.y - t.bloomAt.y) > 1;
-        if (moved && t.bloomT < BLOOM_LIFE) t.bloomT = BLOOM_LIFE;
-        if (t.bloomT > BLOOM_LIFE + BLOOM_FADE) t.bloomT = -1;
+        const back = t.bloomT - GOLD_LIFE - GOLD_FADE;
+        if (t.bloomT < FLATTEN_TIME) sy = 1 - t.bloomT / FLATTEN_TIME;
+        else if (back < 0) sy = 0;
+        else if (back < SPRING_BACK) sy = springBack(back);
+        else {
+          t.bloomT = -1;
+          t.state = Math.hypot(t.off.x, t.off.y) < 0.5 ? "home" : "loose";
+          t.looseFor = t.restFor = 0;
+        }
+        const hide = sy <= 0 ? "hidden" : "";
+        if (t.el.style.visibility !== hide) t.el.style.visibility = hide;
       }
       if (t.state === "loose" && Math.hypot(t.v.x, t.v.y) > 200) this.squareHits(t);
       let jx = 0;
@@ -1194,15 +1217,10 @@ export class MeepleEngine {
       const tx = Math.round(t.off.x * this.dpr) / this.dpr + jx;
       const ty = Math.round(t.off.y * this.dpr) / this.dpr + jy;
       let transform = tx || ty ? `translate(${tx}px, ${ty}px)` : "";
-      if (t.click === "squash" && t.clickT >= 0) {
-        t.clickT += dt;
-        if (t.clickT > SQUASH_TIME) t.clickT = -1;
-        else {
-          const sy = squash(t.clickT);
-          // Spreads out as it flattens, and stays planted on its bottom edge
-          // (transform-origin in globals.css).
-          transform += ` scale(${(1 + (1 - sy) * 0.6).toFixed(3)}, ${sy.toFixed(3)})`;
-        }
+      if (sy !== 1) {
+        // Spreads out as it flattens, and stays planted on its bottom edge
+        // (transform-origin in globals.css).
+        transform += ` scale(${(1 + (1 - Math.min(sy, 1)) * 0.6).toFixed(3)}, ${Math.max(sy, 0.001).toFixed(3)})`;
       }
       if (t.el.style.transform !== transform) t.el.style.transform = transform;
     }
@@ -1211,7 +1229,7 @@ export class MeepleEngine {
   private hitSquare(p: Vec, pad: number): TintTarget | null {
     for (const t of this.squares) {
       const r = t.rect;
-      if (!r || !t.click || t.state === "burst" || t.state === "held") continue;
+      if (!r || !t.click || t.state === "burst" || t.state === "held" || t.state === "gone") continue;
       const x = r.x + t.off.x;
       const y = r.y + t.off.y;
       if (p.x >= x - pad && p.x <= x + r.width + pad && p.y >= y - pad && p.y <= y + r.height + pad) return t;
@@ -1276,12 +1294,10 @@ export class MeepleEngine {
       t.v.x = t.v.y = 0;
       return;
     }
-    if (t.clickT >= 0 || t.bloomT >= 0) return;
-    t.clickT = 0;
+    if (t.bloomT >= 0) return;
     t.bloomT = 0;
-    t.bloomAt = { ...t.off };
-    // Any meeple color but blue, so the petals stand apart from the square.
-    t.bloomPetal = PETALS.filter((c) => c !== "#58B9F8")[Math.floor(Math.random() * 3)];
+    t.state = "gone";
+    t.v.x = t.v.y = 0;
     this.scatterFlowers(t);
     // The thud travels outward, so nearby meeples hop first.
     const c = squareCenter(t);
@@ -1330,7 +1346,7 @@ export class MeepleEngine {
       this.flowers.push({
         x,
         y,
-        age: -(BLOOM_PETALS + Math.hypot(x - c.x, y - c.y) / SHOCKWAVE_SPEED + rand(0, 0.3)),
+        age: -(FLATTEN_TIME + 0.3 + Math.hypot(x - c.x, y - c.y) / SHOCKWAVE_SPEED + rand(0, 0.3)),
         petal: PETALS[Math.floor(Math.random() * PETALS.length)],
         fade: -1,
         trampled: false,
@@ -1340,34 +1356,50 @@ export class MeepleEngine {
   }
 
   /**
-   * RYKER's period as the middle of a big flower: one square per pixel, so
-   * the petals and stem are each the period's size. The stem grows down
-   * first, then the petals pop, then they fade after a while.
+   * The gold flower that pops up where RYKER's period was. It grows through
+   * the same seed, sprout and bloom stages as the garden's flowers, at twice
+   * their pixel size (half the period), with a highlight on the petals and
+   * pixel sparkles twinkling around it.
    */
-  private drawBloom(t: TintTarget) {
+  private drawGold(t: TintTarget) {
     const r = t.rect;
-    if (!r || t.bloomT < BLOOM_STEM[0]) return;
-    const s = r.width;
-    const x0 = r.x + t.off.x - s;
-    const y0 = r.y + t.off.y - s;
+    if (!r || t.bloomT < 0) return;
+    const age = t.bloomT - FLATTEN_TIME;
+    if (age < 0 || age > GOLD_LIFE - FLATTEN_TIME + GOLD_FADE) return;
     const { ctx } = this;
-    ctx.globalAlpha = t.bloomT > BLOOM_LIFE ? Math.max(0, 1 - (t.bloomT - BLOOM_LIFE) / BLOOM_FADE) : 1;
-    const grow = clamp((t.bloomT - BLOOM_STEM[0]) / (BLOOM_STEM[1] - BLOOM_STEM[0]), 0, 1);
-    const rows = Math.ceil(grow * 3);
-    FLOWER_BLOOM.forEach((row, ry) =>
+    const fading = age - (GOLD_LIFE - FLATTEN_TIME);
+    ctx.globalAlpha = fading > 0 ? Math.max(0, 1 - fading / GOLD_FADE) : 1;
+    const g = r.width / 2;
+    // Its left edge lines up with the period's, so it stays clear of R's leg.
+    const cx = r.x + t.off.x + 2.5 * g;
+    const base = r.y + t.off.y + r.height;
+    const rows = age < 0.35 ? FLOWER_SEED : age < 1 ? FLOWER_SPROUT : GOLD_BLOOM;
+    const left = cx - (rows[0].length * g) / 2;
+    const top = base - rows.length * g;
+    rows.forEach((row, ry) =>
       [...row].forEach((ch, rx) => {
-        if (ch === "S" || ch === "L") {
-          if (ry - 2 > rows) return;
-          this.rect(x0 + rx * s, y0 + ry * s, s, s, STEM);
-        } else if (ch === "P") {
-          // Top, left, right, bottom, popping one after another.
-          const k = ry * 3 + rx;
-          const at = BLOOM_PETALS + (k === 1 ? 0 : k === 3 ? 0.08 : k === 5 ? 0.16 : 0.24);
-          if (t.bloomT >= at) this.rect(x0 + rx * s, y0 + ry * s, s, s, t.bloomPetal);
-        }
-        // The middle is the period itself, so it's not drawn.
+        const color = GOLD_COLORS[ch];
+        if (color) this.rect(left + rx * g, top + ry * g, g, g, color);
       }),
     );
+    if (rows === GOLD_BLOOM) {
+      // Sparkles around the head, each twinkling on its own beat.
+      GOLD_SPARKLES.forEach(([sx, sy, phase], i) => {
+        const k = Math.sin((age * 2.2 + phase) * Math.PI * 2);
+        if (k <= 0) return;
+        const arm = Math.round(k * g * 0.5);
+        const x = Math.round(cx + sx * g);
+        const y = Math.round(top + sy * g);
+        const c = i % 2 ? GOLD_COLORS.H : GOLD_COLORS.P;
+        this.rect(x - 1, y - 1, 2, 2, c);
+        if (arm > 1) {
+          this.rect(x - 1, y - 1 - arm, 2, arm, c);
+          this.rect(x - 1, y + 1, 2, arm, c);
+          this.rect(x - 1 - arm, y - 1, arm, 2, c);
+          this.rect(x + 1, y - 1, arm, 2, c);
+        }
+      });
+    }
     ctx.globalAlpha = 1;
   }
 
@@ -1431,7 +1463,7 @@ export class MeepleEngine {
   private shoveSquares() {
     for (const t of this.squares) {
       const r = t.rect;
-      if (!r || t.state === "towed" || t.state === "gliding" || t.state === "burst" || t.state === "held") continue;
+      if (!r || t.state === "towed" || t.state === "gliding" || t.state === "burst" || t.state === "held" || t.state === "gone") continue;
       for (const m of this.meeples) {
         if (m.mode !== "idle" && m.mode !== "walk" && m.mode !== "drag") continue;
         const vx = m.wx + m.vx;
@@ -1651,7 +1683,7 @@ export class MeepleEngine {
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.drawFlowers();
     for (const t of this.squares) {
-      this.drawBloom(t);
+      this.drawGold(t);
       const size = t.rect ? t.rect.width / SQUARE_SPLIT : 0;
       for (const b of t.blocks) this.rect(Math.round(b.x), Math.round(b.y), size, size, t.blockColor);
     }
@@ -1823,7 +1855,7 @@ export class MeepleEngine {
    */
   private updateTints() {
     for (const t of this.tints) {
-      if (!t.rect || t.state === "burst") continue;
+      if (!t.rect || t.state === "burst" || t.state === "gone") continue;
       let best: Meeple | null = null;
       let bestArea = 0;
       for (const m of this.meeples) {
@@ -1872,12 +1904,9 @@ function hopHeight(m: Meeple) {
   return Math.round(Math.sin((Math.PI * (m.hop % HOP_TIME)) / HOP_TIME) * HOP_HEIGHT * k);
 }
 
-/** RYKER's period's height while squashed: slams flat, holds, then springs back. */
-function squash(t: number) {
-  if (t < 0.07) return 1 - (t / 0.07) * 0.75;
-  if (t < 0.3) return 0.25;
-  const u = t - 0.3;
-  return 1 - 0.75 * Math.exp(-6 * u) * Math.cos(16 * u);
+/** RYKER's period's height as it springs back up from flat, overshooting a little. */
+function springBack(u: number) {
+  return 1 - Math.exp(-7 * u) * Math.cos(14 * u);
 }
 
 function overlaps(a: DOMRect, b: DOMRect) {
