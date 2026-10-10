@@ -9,8 +9,8 @@
  *
  * They also make a little trouble: the Chaotic One charges the headline's
  * pixel squares out of their sockets, the Curious One lassos them (and the
- * cursor) and tows them home, the Shy One plants a pixel garden that the
- * Chaotic One tramples, and the Sleepy One wears a nightcap. At rest the
+ * cursor) and tows them home, the Shy and Curious Ones plant a pixel garden
+ * that the Chaotic One tramples, and the Sleepy One wears a nightcap. At rest the
  * headline always settles back to its grid-locked look.
  *
  * The canvas ignores pointer events. The engine listens on the page instead
@@ -57,11 +57,12 @@ const LASSO_THROW = 0.3;
 const LASSO_HOLD = 1.2;
 const LASSO_REEL = 0.3;
 
-// The Shy One's garden. Flowers are drawn in half meeple pixels and planted
-// on the meeple-pixel grid, so they sit on the graph paper too.
+// The garden, planted by the Shy and Curious Ones. Flowers are drawn in half
+// meeple pixels and planted on the meeple-pixel grid, so they sit on the
+// graph paper too.
 const F = P / 2;
 const PLANT_TIME = 0.9;
-const MAX_FLOWERS = 7;
+const MAX_FLOWERS = 10;
 const FLOWER_LIFE = 75;
 const WILT_TIME = 2;
 const TRAMPLED_TIME = 3;
@@ -140,7 +141,7 @@ type Meeple = {
   /** The Curious One's lasso, while it's out. */
   lasso: Lasso | null;
   lassoCooldown: number;
-  /** The Shy One's garden: seconds until it next plants, and digging progress (-1 when not). */
+  /** Gardeners only: seconds until it next plants, and digging progress (-1 when not). */
   plantIn: number;
   planting: number;
 };
@@ -504,6 +505,7 @@ export class MeepleEngine {
           this.startLasso(m, null);
           return;
         }
+        if (active) m.planting = -1;
         // Follows the cursor at a polite distance.
         if (active && d > 130) {
           const stop = { x: this.cursor.x - (toCursor.x / d) * 100, y: this.cursor.y - (toCursor.y / d) * 100 };
@@ -516,6 +518,8 @@ export class MeepleEngine {
           m.idleFor = Math.max(m.idleFor, 0.5);
           return;
         }
+        // With nothing to chase, it gardens too.
+        if (this.garden(m, dt)) return;
         break;
       }
       case "green": {
@@ -550,23 +554,7 @@ export class MeepleEngine {
           m.planting = -1;
           return;
         }
-        // Left alone, it gardens: stops, digs, and plants a flower beside it.
-        if (m.planting >= 0) {
-          m.planting += dt;
-          m.mode = "idle";
-          m.idleFor = Math.max(m.idleFor, 0.4);
-          if (m.planting >= PLANT_TIME) {
-            this.plant(m);
-            m.planting = -1;
-            m.plantIn = rand(7, 12);
-          }
-          return;
-        }
-        m.plantIn -= dt;
-        if (m.plantIn <= 0 && m.mode === "idle") {
-          if (this.plantSpot(m)) m.planting = 0;
-          else m.plantIn = rand(2, 4);
-        }
+        if (this.garden(m, dt)) return;
         break;
       }
       case "red": {
@@ -1113,6 +1101,7 @@ export class MeepleEngine {
 
   private startLasso(m: Meeple, square: TintTarget | null) {
     m.lasso = { phase: "twirl", t: 0, square, loop: this.hand(m), rope: ROPE };
+    m.planting = -1;
     m.target = null;
   }
 
@@ -1199,7 +1188,31 @@ export class MeepleEngine {
 
   // ---------------------------------------------------------------- garden
 
-  /** Where the Shy One would plant next, beside the foot it's facing, or null. */
+  /**
+   * The gardeners (the Shy One and the Curious One), when left alone, stop,
+   * dig, and plant a flower beside them. Returns true while digging.
+   */
+  private garden(m: Meeple, dt: number) {
+    if (m.planting >= 0) {
+      m.planting += dt;
+      m.mode = "idle";
+      m.idleFor = Math.max(m.idleFor, 0.4);
+      if (m.planting >= PLANT_TIME) {
+        this.plant(m);
+        m.planting = -1;
+        m.plantIn = rand(7, 12);
+      }
+      return true;
+    }
+    m.plantIn -= dt;
+    if (m.plantIn <= 0 && m.mode === "idle") {
+      if (this.plantSpot(m)) m.planting = 0;
+      else m.plantIn = rand(2, 4);
+    }
+    return false;
+  }
+
+  /** Where a gardener would plant next, beside the foot it's facing, or null. */
   private plantSpot(m: Meeple): Vec | null {
     const side = m.look.x < 0 ? -1 : 1;
     const cx = m.x + W / 2 + side * (W / 2 + 2 * F);
