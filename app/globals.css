@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens from CLAUDE.md §3, sampled from design/landing-mockup.png.
+ * Light mode only: there is intentionally no prefers-color-scheme block.
+ */
+@theme {
+  --color-bg: #ffffff;
+  --color-grid: #dddede;
+  --color-ink: #000000;
+  --color-ink-soft: #221f20;
+  --color-muted: #a1a3a6;
+  --color-accent: #58b9f8;
+
+  /* Meeples and small playful moments only. Never body text. */
+  --color-meeple-yellow: #fbec5a;
+  --color-meeple-green: #5fcc8a;
+  --color-meeple-purple: #985df6;
+  --color-meeple-red: #e05a32;
+  --color-meeple-blue: #58b9f8;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Pixel accent font: tags, metadata, 404, footer, meeple moments. Use sparingly. */
+  --font-pixel: var(--font-silkscreen), ui-monospace, monospace;
+}
+
+:root {
+  color-scheme: light;
+  /*
+   * One meeple pixel is 11px, and a grid cell is exactly four of them (44px,
+   * matching the mockup), so the meeples sit on the graph paper.
+   */
+  --meeple-px: 11px;
+  --grid-cell: calc(var(--meeple-px) * 4);
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Subtle full-viewport graph paper: 1px lines, anchored to the top-left corner. */
+.bg-graph {
+  background-color: var(--color-bg);
+  background-image:
+    linear-gradient(to right, var(--color-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-grid) 1px, transparent 1px);
+  background-size: var(--grid-cell) var(--grid-cell);
+}
+
+/* Visible focus states in the accent blue (§10). */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+/* Meeples are pixel art: never blur or anti-alias them. */
+.pixelated {
+  image-rendering: pixelated;
+  shape-rendering: crispEdges;
+}
