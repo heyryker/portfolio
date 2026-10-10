@@ -1,0 +1,280 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens from CLAUDE.md §3, sampled from design/landing-mockup.png.
+ * Light mode only: there is intentionally no prefers-color-scheme block.
+ */
+@theme {
+  --color-bg: #ffffff;
+  --color-grid: #dddede;
+  --color-ink: #000000;
+  --color-ink-soft: #221f20;
+  --color-muted: #a1a3a6;
+  --color-accent: #58b9f8;
+
+  /* Meeples and small playful moments only. Never body text. */
+  --color-meeple-yellow: #fbec5a;
+  --color-meeple-green: #5fcc8a;
+  --color-meeple-purple: #985df6;
+  --color-meeple-red: #e05a32;
+  --color-meeple-blue: #58b9f8;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Pixel accent font: tags, metadata, 404, footer, meeple moments. Use sparingly. */
+  --font-pixel: var(--font-silkscreen), ui-monospace, monospace;
+}
+
+:root {
+  color-scheme: light;
+  /*
+   * One meeple pixel is 11px, and a grid cell is exactly four of them (44px,
+   * matching the mockup), so the meeples sit on the graph paper.
+   */
+  --meeple-px: 11px;
+  --grid-cell: calc(var(--meeple-px) * 4);
+}
+
+/*
+ * Phones get a half-size grid (22px, two meeple pixels) so the headline can
+ * sit on grid lines with tight leading. At 44px the only on-grid choices were
+ * a one-cell gap between the lines (too loose) or none (overlapping).
+ * This matches the headline's smallest breakpoint below.
+ */
+@media not all and (min-width: 720px) and (min-height: 520px) {
+  :root {
+    --grid-cell: calc(var(--meeple-px) * 2);
+  }
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Subtle full-viewport graph paper: 1px lines, anchored to the top-left corner. */
+.bg-graph {
+  background-color: var(--color-bg);
+  background-image:
+    linear-gradient(to right, var(--color-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-grid) 1px, transparent 1px);
+  background-size: var(--grid-cell) var(--grid-cell);
+}
+
+/*
+ * The landing headline, locked to the grid (see components/Headline.tsx).
+ * Sizes are counted in grid cells: the cap height, the gap between the two
+ * lines and RYKER's indent. Inter's metrics at weight 800, in em: cap height
+ * 0.7275, cap top 0.1365 below the line box (at line-height 1), H and R left
+ * side bearing 0.057, and RYKER's ink is 3.23 wide with the -0.015em tracking.
+ */
+.headline-grid {
+  /* Phones, on the 22px grid. */
+  --hl-cap-cells: 2;
+  --hl-gap-cells: 1;
+  --hl-indent-cells: 5;
+
+  --hl-cap: calc(var(--hl-cap-cells) * var(--grid-cell));
+  --hl-line2-top: calc((var(--hl-cap-cells) + var(--hl-gap-cells)) * var(--grid-cell));
+  --hl-height: calc((var(--hl-cap-cells) * 2 + var(--hl-gap-cells)) * var(--grid-cell));
+  --hl-indent: calc(var(--hl-indent-cells) * var(--grid-cell));
+  --hl-ryker-ink: calc(var(--hl-cap) * 3.23 / 0.7275);
+  /* The pixel squares are the size of H's stem, since they're cut from it. */
+  --hl-square: 0.171em;
+  --hl-width: calc(var(--hl-indent) + var(--hl-ryker-ink) + var(--hl-square));
+
+  position: absolute;
+  width: var(--hl-width);
+  height: var(--hl-height);
+  font-size: calc(var(--hl-cap) / 0.7275);
+  /* Centered, then snapped to the nearest grid line. The page's grid is
+     anchored at its top-left corner, so whole cells from there land on lines. */
+  left: calc((100% - var(--hl-width)) / 2);
+  top: calc((100% - var(--hl-height)) / 2);
+  left: round(nearest, (100% - var(--hl-width)) / 2, var(--grid-cell));
+  top: round(nearest, (100% - var(--hl-height)) / 2, var(--grid-cell));
+}
+
+.headline-line {
+  position: absolute;
+  display: block;
+  white-space: nowrap;
+  /* Pull the ink, not the line box, onto the grid lines. */
+  margin-top: -0.1365em;
+  margin-left: -0.057em;
+}
+
+/*
+ * The modified letters. Coordinates are in em from the glyph's origin, at
+ * line-height 1: Inter's ink starts 0.057em in, the cap top is 0.1365em down
+ * and the baseline 0.864em down. R's leg starts 0.27em in at the cut height
+ * and its right edge there is at 0.555em.
+ */
+.hl-letter {
+  position: relative;
+  display: inline-block;
+}
+
+.hl-h,
+.hl-r {
+  display: inline-block;
+}
+
+/* Remove a stem-sized block from the top-left corner of H (the cut runs a
+   hair past the stem so its anti-aliased edge goes too; that's open counter). */
+.hl-h {
+  clip-path: polygon(
+    calc(0.077em + var(--hl-square)) -50%,
+    150% -50%,
+    150% 150%,
+    -50% 150%,
+    -50% calc(0.1365em + var(--hl-square)),
+    calc(0.077em + var(--hl-square)) calc(0.1365em + var(--hl-square))
+  );
+}
+
+/* Remove a stem-high slice from the bottom of R's leg. */
+.hl-r {
+  clip-path: polygon(
+    -50% -50%,
+    150% -50%,
+    150% calc(0.864em - var(--hl-square)),
+    0.327em calc(0.864em - var(--hl-square)),
+    0.327em 150%,
+    -50% 150%
+  );
+}
+
+.hl-square {
+  position: absolute;
+  width: var(--hl-square);
+  height: var(--hl-square);
+}
+
+/* Pushed up and left: it touches H only at the stem's new top-left corner. */
+.hl-square-h {
+  top: 0.1365em;
+  left: calc(0.057em - var(--hl-square));
+}
+
+/* Pushed right: it touches the cut end of R's leg at its top-left corner. */
+.hl-square-r {
+  top: calc(0.864em - var(--hl-square));
+  left: 0.555em;
+}
+
+@media (min-width: 720px) and (min-height: 520px) {
+  .headline-grid {
+    --hl-cap-cells: 2;
+    --hl-indent-cells: 6;
+  }
+}
+
+/* The mockup's size (1486×935): a 3-cell cap height. */
+@media (min-width: 1100px) and (min-height: 640px) {
+  .headline-grid {
+    --hl-cap-cells: 3;
+    --hl-indent-cells: 8;
+  }
+}
+
+@media (min-width: 1680px) and (min-height: 880px) {
+  .headline-grid {
+    --hl-cap-cells: 4;
+    --hl-gap-cells: 2;
+    --hl-indent-cells: 11;
+  }
+}
+
+/*
+ * The case-study links, on the grid (see components/CaseStudyNav.tsx). Labels
+ * sit in equal columns a whole number of cells wide, each starting on a
+ * vertical line, and are centered in a one-cell row (with line-height 1,
+ * Inter's caps are centered in the line box). Desktop is one row of five;
+ * phones get three over two, centered.
+ */
+.case-nav {
+  /* The widest label, [EDITORIAL], is about 6.2em. */
+  --nav-last: 6.2em;
+  --nav-slot: max(
+    var(--grid-cell) * 3,
+    round(down, (82vw - var(--nav-last)) / 4, var(--grid-cell))
+  );
+  --nav-width: calc(var(--nav-slot) * 4 + var(--nav-last));
+  --nav-height: var(--grid-cell);
+
+  position: absolute;
+  z-index: 10;
+  font-size: clamp(13px, 1.5vw, 22px);
+  left: calc((100% - var(--nav-width)) / 2);
+  left: round(nearest, (100% - var(--nav-width)) / 2, var(--grid-cell));
+  top: calc(100% - max(24px, 9.5vh) - var(--nav-height));
+  top: round(down, 100% - max(24px, 9.5vh) - var(--nav-height), var(--grid-cell));
+}
+
+.case-nav ul {
+  display: grid;
+  grid-template-columns: repeat(4, var(--nav-slot)) auto;
+  grid-auto-rows: var(--grid-cell);
+  row-gap: var(--grid-cell);
+  align-items: center;
+}
+
+/* Pull the bracket's ink, not its side bearing, onto the grid line. */
+.case-nav-link {
+  margin-left: -0.075em;
+}
+
+@media not all and (min-width: 720px) and (min-height: 520px) {
+  /*
+   * Phones: three over two, each row centered with equal gaps between the
+   * labels. Rows stay on the grid; with equal spacing, the labels' left edges
+   * can't all land on vertical lines, so centering wins here.
+   */
+  .case-nav {
+    --nav-width: 100%;
+    --nav-height: calc(var(--grid-cell) * 3);
+  }
+
+  .case-nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: calc(var(--grid-cell) * 2);
+    row-gap: 0;
+  }
+
+  .case-nav li {
+    display: flex;
+    align-items: center;
+    height: var(--grid-cell);
+  }
+
+  /* A full-width, one-cell spacer that breaks the list after the third label. */
+  .case-nav ul::before {
+    content: "";
+    flex-basis: 100%;
+    height: var(--grid-cell);
+    order: 1;
+  }
+
+  .case-nav li:nth-child(n + 4) {
+    order: 2;
+  }
+
+  .case-nav-link {
+    margin-left: 0;
+  }
+}
+
+/* Visible focus states in the accent blue (§10). */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+/* Meeples are pixel art: never blur or anti-alias them. */
+.pixelated {
+  image-rendering: pixelated;
+  shape-rendering: crispEdges;
+}
