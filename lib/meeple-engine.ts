@@ -769,6 +769,12 @@ export class MeepleEngine {
       const o = others[Math.floor(Math.random() * others.length)];
       if (o) return this.clampTarget(o.x, o.y);
     }
+    if (m.cfg.id === "green" && Math.random() < 0.85) {
+      // The Shy One's hideout is the bottom-left quarter of the page. It
+      // mostly potters about (and gardens) there, and heads back after a
+      // scare or the odd outing.
+      return this.clampTarget(rand(0, this.vw / 2 - W), rand(this.vh / 2, this.vh - H));
+    }
     // Meander: a short leg in a random direction.
     const a = rand(0, Math.PI * 2);
     const r = rand(80, 320);
