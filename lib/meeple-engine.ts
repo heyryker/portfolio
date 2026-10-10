@@ -13,6 +13,10 @@
  * that the Chaotic One tramples, and the Sleepy One wears a nightcap. At rest the
  * headline always settles back to its grid-locked look.
  *
+ * The two headline squares answer clicks too: HEY's square explodes and
+ * reassembles like a meeple, and RYKER's period squashes flat, which sends a
+ * shockwave that makes every meeple jump.
+ *
  * The canvas ignores pointer events. The engine listens on the page instead
  * and only claims a press that lands on a meeple and not on a link or button,
  * so meeples never block the case-study labels or the menu.
@@ -50,6 +54,15 @@ const PUSH_SPEED = 110;
 const SQUARE_FRICTION = 2.6;
 const SQUARE_REST = 1.2; // seconds at rest before the lasso goes after it
 const SQUARE_GIVE_UP = 8; // seconds loose before it glides home by itself
+
+// Clicking the headline squares. HEY's square bursts into a 4x4 of half
+// meeple pixels; RYKER's period squashes and the meeples hop.
+const SQUARE_SHAKE = 0.35;
+const SQUARE_SPLIT = 4;
+const SQUASH_TIME = 1.2;
+const HOP_TIME = 0.42; // one hop
+const HOP_HEIGHT = 16;
+const SHOCKWAVE_SPEED = 900; // px/s, so far meeples hop a beat later
 
 const ROPE = 64; // towing rope length
 const LASSO_TWIRL = 0.7;
@@ -148,6 +161,8 @@ type Meeple = {
   /** Gardeners only: seconds until it next plants, and digging progress (-1 when not). */
   plantIn: number;
   planting: number;
+  /** Seconds into a jump from the squash shockwave (negative while it travels; null when not). */
+  hop: number | null;
 };
 
 type TintTarget = {
@@ -159,7 +174,14 @@ type TintTarget = {
   holdUntil: number;
   /** Pixel squares can be knocked loose. Text stays put. */
   pushable: boolean;
-  state: "home" | "loose" | "towed" | "gliding";
+  state: "home" | "loose" | "towed" | "gliding" | "burst";
+  /** What a click does: HEY's square bursts, RYKER's period squashes. */
+  click: "burst" | "squash" | null;
+  /** Seconds into a burst or a squash (-1 when neither). */
+  clickT: number;
+  /** A burst square's pieces, and their color. */
+  blocks: Block[];
+  blockColor: string;
   off: Vec;
   v: Vec;
   /** Seconds loose, and seconds at rest while loose. */
@@ -247,6 +269,10 @@ export class MeepleEngine {
       holdUntil: 0,
       pushable: el.dataset.meepleTint !== "text",
       state: "home",
+      click: el.dataset.meepleClick === "burst" || el.dataset.meepleClick === "squash" ? el.dataset.meepleClick : null,
+      clickT: -1,
+      blocks: [],
+      blockColor: "",
       off: { x: 0, y: 0 },
       v: { x: 0, y: 0 },
       looseFor: 0,
@@ -311,6 +337,7 @@ export class MeepleEngine {
       t.el.style[t.prop] = "";
       t.el.style.transitionDuration = "";
       t.el.style.transform = "";
+      t.el.style.visibility = "";
     }
     this.root.style.cursor = "";
   }
@@ -366,6 +393,7 @@ export class MeepleEngine {
       lassoCooldown: rand(3, 6),
       plantIn: rand(5, 9),
       planting: -1,
+      hop: null,
     };
   }
 
@@ -463,6 +491,10 @@ export class MeepleEngine {
       }
       m.prev.x = m.x;
       m.prev.y = m.y;
+      if (m.hop !== null) {
+        m.hop += dt;
+        if (m.hop > HOP_TIME * 2) m.hop = null;
+      }
       this.updateFace(m, dt);
     }
     this.collide();
@@ -848,18 +880,23 @@ export class MeepleEngine {
   }
 
   private updateBlocks(m: Meeple, dt: number) {
+    this.moveBlocks(m.blocks, P, dt);
+  }
+
+  /** Scattered pixels glide to a stop and bounce off the viewport edges. */
+  private moveBlocks(blocks: Block[], size: number, dt: number) {
     const f = Math.exp(-2.4 * dt);
-    for (const b of m.blocks) {
+    for (const b of blocks) {
       b.x += b.vx * dt;
       b.y += b.vy * dt;
       b.vx *= f;
       b.vy *= f;
-      if (b.x < 0 || b.x > this.vw - P) {
-        b.x = clamp(b.x, 0, this.vw - P);
+      if (b.x < 0 || b.x > this.vw - size) {
+        b.x = clamp(b.x, 0, this.vw - size);
         b.vx = -b.vx * 0.6;
       }
-      if (b.y < 0 || b.y > this.vh - P) {
-        b.y = clamp(b.y, 0, this.vh - P);
+      if (b.y < 0 || b.y > this.vh - size) {
+        b.y = clamp(b.y, 0, this.vh - size);
         b.vy = -b.vy * 0.6;
       }
     }
@@ -931,7 +968,8 @@ export class MeepleEngine {
   private onTouchStart = (e: TouchEvent) => {
     const t = e.touches[0];
     if (!t || e.touches.length > 1 || this.isInteractive(e.target)) return;
-    if (this.hit(this.toLocal(t), 10)) e.preventDefault();
+    const p = this.toLocal(t);
+    if (this.hit(p, 10) || this.hitSquare(p, 10)) e.preventDefault();
   };
 
   private onPointerDown = (e: PointerEvent) => {
@@ -940,7 +978,14 @@ export class MeepleEngine {
     if (this.isInteractive(e.target)) return;
     const p = this.toLocal(e);
     const m = this.hit(p, e.pointerType === "mouse" ? 3 : 10);
-    if (!m) return;
+    if (!m) {
+      const sq = this.hitSquare(p, e.pointerType === "mouse" ? 3 : 10);
+      if (sq) {
+        e.preventDefault();
+        this.clickSquare(sq);
+      }
+      return;
+    }
     e.preventDefault();
 
     this.wake(m);
@@ -978,8 +1023,9 @@ export class MeepleEngine {
       return;
     }
     if (e.pointerType === "mouse" && !drag) {
-      const over = !this.isInteractive(e.target) && this.hit(this.toLocal(e), 3);
-      this.root.style.cursor = over ? "grab" : "";
+      const p = this.toLocal(e);
+      const free = !this.isInteractive(e.target);
+      this.root.style.cursor = free && this.hit(p, 3) ? "grab" : free && this.hitSquare(p, 3) ? "pointer" : "";
     }
   };
 
@@ -1075,6 +1121,9 @@ export class MeepleEngine {
           t.v.x = t.v.y = 0;
           break;
         }
+        case "burst":
+          this.updateBurst(t, dt);
+          break;
         case "gliding": {
           const k = 1 - Math.exp(-5 * dt);
           t.off.x -= t.off.x * k;
@@ -1086,11 +1135,111 @@ export class MeepleEngine {
           break;
         }
       }
+      let jx = 0;
+      let jy = 0;
+      if (t.state === "burst" && t.clickT < SQUARE_SHAKE) {
+        jx = Math.round(rand(-2, 2));
+        jy = Math.round(rand(-2, 2));
+      }
       // Whole device pixels, so the square stays crisp in flight.
-      const tx = Math.round(t.off.x * this.dpr) / this.dpr;
-      const ty = Math.round(t.off.y * this.dpr) / this.dpr;
-      const transform = tx || ty ? `translate(${tx}px, ${ty}px)` : "";
+      const tx = Math.round(t.off.x * this.dpr) / this.dpr + jx;
+      const ty = Math.round(t.off.y * this.dpr) / this.dpr + jy;
+      let transform = tx || ty ? `translate(${tx}px, ${ty}px)` : "";
+      if (t.click === "squash" && t.clickT >= 0) {
+        t.clickT += dt;
+        if (t.clickT > SQUASH_TIME) t.clickT = -1;
+        else {
+          const sy = squash(t.clickT);
+          // Spreads out as it flattens, and stays planted on its bottom edge
+          // (transform-origin in globals.css).
+          transform += ` scale(${(1 + (1 - sy) * 0.6).toFixed(3)}, ${sy.toFixed(3)})`;
+        }
+      }
       if (t.el.style.transform !== transform) t.el.style.transform = transform;
+    }
+  }
+
+  private hitSquare(p: Vec, pad: number): TintTarget | null {
+    for (const t of this.squares) {
+      const r = t.rect;
+      if (!r || !t.click || t.state === "burst") continue;
+      const x = r.x + t.off.x;
+      const y = r.y + t.off.y;
+      if (p.x >= x - pad && p.x <= x + r.width + pad && p.y >= y - pad && p.y <= y + r.height + pad) return t;
+    }
+    return null;
+  }
+
+  private clickSquare(t: TintTarget) {
+    if (t.click === "burst") {
+      // Let go of it first if it's on the Curious One's rope.
+      for (const m of this.meeples) if (m.lasso?.square === t) this.cancelLasso(m);
+      t.state = "burst";
+      t.clickT = 0;
+      t.v.x = t.v.y = 0;
+      return;
+    }
+    if (t.clickT >= 0) return;
+    t.clickT = 0;
+    // The thud travels outward, so nearby meeples hop first.
+    const c = squareCenter(t);
+    for (const m of this.meeples) {
+      if (m.mode !== "idle" && m.mode !== "walk") continue;
+      const mc = center(m);
+      m.hop = -Math.hypot(mc.x - c.x, mc.y - c.y) / SHOCKWAVE_SPEED;
+      this.wake(m);
+    }
+  }
+
+  /** HEY's square: shake, burst into pieces, then drift home and reassemble. */
+  private updateBurst(t: TintTarget, dt: number) {
+    const r = t.rect!;
+    const size = r.width / SQUARE_SPLIT;
+    t.clickT += dt;
+    if (t.clickT < SQUARE_SHAKE) return;
+
+    if (!t.blocks.length) {
+      t.blockColor = getComputedStyle(t.el).backgroundColor;
+      t.el.style.visibility = "hidden";
+      const c = squareCenter(t);
+      for (let i = 0; i < SQUARE_SPLIT * SQUARE_SPLIT; i++) {
+        const x = r.x + t.off.x + (i % SQUARE_SPLIT) * size;
+        const y = r.y + t.off.y + Math.floor(i / SQUARE_SPLIT) * size;
+        const a = Math.atan2(y + size / 2 - c.y, x + size / 2 - c.x) + rand(-0.6, 0.6);
+        const s = rand(220, 520);
+        t.blocks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, delay: 0 });
+      }
+      // It reassembles in its socket, wherever it was knocked to.
+      t.off.x = t.off.y = 0;
+      return;
+    }
+
+    this.moveBlocks(t.blocks, size, dt);
+    const since = t.clickT - SQUARE_SHAKE - SCATTER_TIME;
+    if (since < 0) return;
+    if (t.blocks[0].delay === 0) {
+      const order = t.blocks.map((_, i) => i).sort(() => Math.random() - 0.5);
+      order.forEach((bi, n) => (t.blocks[bi].delay = 0.001 + n * 0.05));
+    }
+    const pull = 1 - Math.exp(-2.6 * dt);
+    const damp = Math.exp(-8 * dt);
+    let done = true;
+    t.blocks.forEach((b, i) => {
+      const tx = r.x + (i % SQUARE_SPLIT) * size;
+      const ty = r.y + Math.floor(i / SQUARE_SPLIT) * size;
+      if (since >= b.delay) {
+        b.vx *= damp;
+        b.vy *= damp;
+        b.x += (tx - b.x) * pull;
+        b.y += (ty - b.y) * pull;
+      }
+      if (Math.abs(tx - b.x) > 0.5 || Math.abs(ty - b.y) > 0.5) done = false;
+    });
+    if (done) {
+      t.blocks = [];
+      t.state = "home";
+      t.clickT = -1;
+      t.el.style.visibility = "";
     }
   }
 
@@ -1102,7 +1251,7 @@ export class MeepleEngine {
   private shoveSquares() {
     for (const t of this.squares) {
       const r = t.rect;
-      if (!r || t.state === "towed" || t.state === "gliding") continue;
+      if (!r || t.state === "towed" || t.state === "gliding" || t.state === "burst") continue;
       for (const m of this.meeples) {
         if (m.mode !== "idle" && m.mode !== "walk" && m.mode !== "drag") continue;
         const vx = m.wx + m.vx;
@@ -1313,6 +1462,10 @@ export class MeepleEngine {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.drawFlowers();
+    for (const t of this.squares) {
+      const size = t.rect ? t.rect.width / SQUARE_SPLIT : 0;
+      for (const b of t.blocks) this.rect(Math.round(b.x), Math.round(b.y), size, size, t.blockColor);
+    }
     for (const m of this.meeples) {
       if (m.mode === "exploded" || m.mode === "reassemble") this.drawBlocks(m);
       else this.drawMeeple(m);
@@ -1333,7 +1486,7 @@ export class MeepleEngine {
       if (m.mode === "exploded" || m.mode === "reassemble" || m.lasso?.phase === "twirl") continue;
       // Clear of the nightcap on the Sleepy One.
       const lift = m.cfg.id === "blue" ? 13 : 6;
-      ctx.fillText(m.cfg.tag, Math.round(m.x + W / 2), Math.round(m.y) - lift);
+      ctx.fillText(m.cfg.tag, Math.round(m.x + W / 2), Math.round(m.y) - hopHeight(m) - lift);
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
@@ -1352,7 +1505,7 @@ export class MeepleEngine {
 
   private drawMeeple(m: Meeple) {
     let ox = Math.round(m.x);
-    let oy = Math.round(m.y);
+    let oy = Math.round(m.y) - hopHeight(m);
     if (m.mode === "shake") {
       ox += Math.round(rand(-2, 2));
       oy += Math.round(rand(-2, 2));
@@ -1480,7 +1633,7 @@ export class MeepleEngine {
    */
   private updateTints() {
     for (const t of this.tints) {
-      if (!t.rect) continue;
+      if (!t.rect || t.state === "burst") continue;
       let best: Meeple | null = null;
       let bestArea = 0;
       for (const m of this.meeples) {
@@ -1520,6 +1673,21 @@ function center(m: Meeple): Vec {
 function squareCenter(t: TintTarget): Vec {
   const r = t.rect!;
   return { x: r.x + t.off.x + r.width / 2, y: r.y + t.off.y + r.height / 2 };
+}
+
+/** How far a meeple is off the ground, in whole px: two hops, the second smaller. */
+function hopHeight(m: Meeple) {
+  if (m.hop === null || m.hop < 0) return 0;
+  const k = m.hop < HOP_TIME ? 1 : 0.55;
+  return Math.round(Math.sin((Math.PI * (m.hop % HOP_TIME)) / HOP_TIME) * HOP_HEIGHT * k);
+}
+
+/** RYKER's period's height while squashed: slams flat, holds, then springs back. */
+function squash(t: number) {
+  if (t < 0.07) return 1 - (t / 0.07) * 0.75;
+  if (t < 0.3) return 0.25;
+  const u = t - 0.3;
+  return 1 - 0.75 * Math.exp(-6 * u) * Math.cos(16 * u);
 }
 
 function overlaps(a: DOMRect, b: DOMRect) {

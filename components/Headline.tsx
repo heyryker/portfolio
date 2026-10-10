@@ -16,6 +16,7 @@ import { PixelSquare } from "./PixelSquare";
  * The blue elements carry data-meeple-tint ("fill" or "text") so the meeple
  * engine can recolor them when a meeple walks over. Their 900ms transition is
  * the fade back to the accent; the engine shortens it while tinting.
+ * data-meeple-click says what a click on a square does (see the engine).
  *
  * "[I'M]" links to the About page, where the rest of the sentence lives. The
  * link wraps the tinted span without padding, so nothing moves off the grid.
@@ -33,7 +34,7 @@ export function Headline() {
         <span aria-hidden="true">
           <span className="hl-letter">
             <span className="hl-h">H</span>
-            <PixelSquare data-meeple-tint="fill" className="transition-colors duration-900 hl-square hl-square-h" />
+            <PixelSquare data-meeple-tint="fill" data-meeple-click="burst" className="transition-colors duration-900 hl-square hl-square-h" />
           </span>
           EY
         </span>
@@ -60,7 +61,7 @@ export function Headline() {
         RYKE
         <span className="hl-letter">
           <span className="hl-r">R</span>
-          <PixelSquare data-meeple-tint="fill" className="transition-colors duration-900 hl-square hl-square-r" />
+          <PixelSquare data-meeple-tint="fill" data-meeple-click="squash" className="transition-colors duration-900 hl-square hl-square-r" />
         </span>
       </span>
     </h1>
