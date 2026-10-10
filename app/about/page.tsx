@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { CopyEmail } from "@/components/CopyEmail";
 import { Meeple } from "@/components/Meeple";
 import { PixelSquare } from "@/components/PixelSquare";
 import { SiteHeader } from "@/components/SiteHeader";
+import portrait from "@/public/ryker-marble.jpg";
 
 export const metadata: Metadata = {
   title: "About",
@@ -98,9 +100,16 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* TODO(ryker): photo (next/image, with alt text). */}
-          <div className="bg-graph grid aspect-[4/5] w-full max-w-[264px] place-items-center border border-grid">
-            <span className="font-pixel text-xs text-muted">PHOTO TBD</span>
+          <div className="relative aspect-[4/5] w-full max-w-[264px] overflow-hidden border border-grid">
+            <Image
+              src={portrait}
+              alt="Ryker Marble, in a denim shirt over a white tee, looking off to the side. Black and white."
+              fill
+              priority
+              sizes="264px"
+              placeholder="blur"
+              className="object-cover object-[50%_30%]"
+            />
           </div>
         </div>
 
