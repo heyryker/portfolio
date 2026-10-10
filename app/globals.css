@@ -34,6 +34,18 @@
   --grid-cell: calc(var(--meeple-px) * 4);
 }
 
+/*
+ * Phones get a half-size grid (22px, two meeple pixels) so the headline can
+ * sit on grid lines with tight leading. At 44px the only on-grid choices were
+ * a one-cell gap between the lines (too loose) or none (overlapping).
+ * This matches the headline's smallest breakpoint below.
+ */
+@media not all and (min-width: 720px) and (min-height: 520px) {
+  :root {
+    --grid-cell: calc(var(--meeple-px) * 2);
+  }
+}
+
 body {
   background: var(--color-bg);
   color: var(--color-ink);
@@ -57,17 +69,18 @@ body {
  * side bearing 0.057, and RYKER's ink is 3.23 wide with the -0.015em tracking.
  */
 .headline-grid {
-  --hl-cap-cells: 1;
+  /* Phones, on the 22px grid. */
+  --hl-cap-cells: 2;
   --hl-gap-cells: 1;
-  --hl-indent-cells: 2;
+  --hl-indent-cells: 5;
 
   --hl-cap: calc(var(--hl-cap-cells) * var(--grid-cell));
   --hl-line2-top: calc((var(--hl-cap-cells) + var(--hl-gap-cells)) * var(--grid-cell));
   --hl-height: calc((var(--hl-cap-cells) * 2 + var(--hl-gap-cells)) * var(--grid-cell));
   --hl-indent: calc(var(--hl-indent-cells) * var(--grid-cell));
   --hl-ryker-ink: calc(var(--hl-cap) * 3.23 / 0.7275);
-  /* Half a cell (two meeple pixels) at the desktop size. */
-  --hl-square: calc(var(--hl-cap) / 6);
+  /* Two meeple pixels at the desktop size, and never smaller than one. */
+  --hl-square: max(var(--hl-cap) / 6, var(--meeple-px));
   --hl-width: calc(var(--hl-indent) + var(--hl-ryker-ink) + var(--hl-square) * 2 / 3);
 
   position: absolute;
