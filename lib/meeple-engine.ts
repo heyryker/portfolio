@@ -10,7 +10,7 @@
  * They also make a little trouble: the Chaotic One charges the headline's
  * pixel squares out of their sockets, the Curious One lassos them (and the
  * cursor) and tows them home, they all plant a pixel garden (the Shy One
- * grows carrots in its corner, the Sleepy One plants in its sleep) that the
+ * grows carrots among the flowers in its corner, the Sleepy One plants in its sleep) that the
  * Chaotic One tramples, and the Sleepy One wears a nightcap. At rest the
  * headline always settles back to its grid-locked look.
  *
@@ -84,7 +84,7 @@ const LASSO_PULL = 2.4; // how long a roped cursor can drag the Curious One arou
 const ROPE_SNAP = 160; // a cursor that jumps further than this in a frame slips the loop
 const LASSO_REEL = 0.3;
 
-// The garden, planted by all five (the Shy One grows carrots). Flowers are
+// The garden, planted by all five (the Shy One adds a carrot every third go). Flowers are
 // drawn in half meeple pixels and planted on the meeple-pixel grid, so they
 // sit on the graph paper too.
 const F = P / 2;
@@ -199,6 +199,8 @@ type Meeple = {
   /** Gardeners only: seconds until it next plants, and digging progress (-1 when not). */
   plantIn: number;
   planting: number;
+  /** How many it has planted, so the Shy One can alternate flowers and carrots. */
+  planted: number;
   /** Seconds into a jump from the squash shockwave (negative while it travels; null when not). */
   hop: number | null;
 };
@@ -455,6 +457,7 @@ export class MeepleEngine {
       lassoCooldown: rand(3, 6),
       plantIn: rand(3, 6),
       planting: -1,
+      planted: 0,
       hop: null,
     };
   }
@@ -1730,7 +1733,7 @@ export class MeepleEngine {
 
   /**
    * Every meeple, when left alone, now and then stops, digs, and plants a
-   * flower beside it (the Shy One plants carrots). Returns true while digging.
+   * flower beside it (every third one the Shy One plants is a carrot). Returns true while digging.
    */
   private garden(m: Meeple, dt: number) {
     if (m.planting >= 0) {
@@ -1770,7 +1773,9 @@ export class MeepleEngine {
     if (!spot) return;
     // The period's wild flowers don't count toward the garden's limit.
     const healthy = this.flowers.filter((f) => f.fade < 0 && f.life === FLOWER_LIFE);
-    const carrot = m.cfg.id === "green";
+    // The Shy One plants two flowers for every carrot.
+    const carrot = m.cfg.id === "green" && m.planted % 3 === 2;
+    m.planted++;
     if (healthy.length >= MAX_FLOWERS) healthy[0].fade = 0;
     this.flowers.push({
       ...spot,
