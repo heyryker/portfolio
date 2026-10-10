@@ -3,6 +3,8 @@ export type MeepleId = "yellow" | "green" | "purple" | "red" | "blue";
 export type MeepleConfig = {
   id: MeepleId;
   name: string;
+  /** The little name tag drawn over its head on the landing page. */
+  tag: string;
   /** CSS color, from the meeple tokens in globals.css. */
   color: string;
   /** The same color as a hex literal, for the canvas (keep in sync with globals.css). */
@@ -21,6 +23,7 @@ export const MEEPLES: MeepleConfig[] = [
   {
     id: "yellow",
     name: "The Curious One",
+    tag: "CURIOUS AGENT",
     color: "var(--color-meeple-yellow)",
     hex: "#FBEC5A",
     personality: "Drifts toward the cursor and follows at a polite distance.",
@@ -29,6 +32,7 @@ export const MEEPLES: MeepleConfig[] = [
   {
     id: "purple",
     name: "The Watcher",
+    tag: "WATCHFUL AGENT",
     color: "var(--color-meeple-purple)",
     hex: "#985DF6",
     personality: "Perches near the headline and follows the cursor with its eyes.",
@@ -37,6 +41,7 @@ export const MEEPLES: MeepleConfig[] = [
   {
     id: "green",
     name: "The Shy One",
+    tag: "SCARED AGENT",
     color: "var(--color-meeple-green)",
     hex: "#5FCC8A",
     personality: "Scoots away when the cursor gets close, then peeks back.",
@@ -45,6 +50,7 @@ export const MEEPLES: MeepleConfig[] = [
   {
     id: "red",
     name: "The Chaotic One",
+    tag: "CHAOTIC AGENT",
     color: "var(--color-meeple-red)",
     hex: "#E05A32",
     personality: "Fast. Bumps into the others and rushes the cursor.",
@@ -53,6 +59,7 @@ export const MEEPLES: MeepleConfig[] = [
   {
     id: "blue",
     name: "The Sleepy One",
+    tag: "SLEEPY AGENT",
     color: "var(--color-meeple-blue)",
     hex: "#58B9F8",
     personality: "Naps. Only wakes if clicked or hit by a thrown meeple.",

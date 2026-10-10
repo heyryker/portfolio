@@ -99,9 +99,9 @@ type Traits = {
 const TRAITS: Record<MeepleId, Traits> = {
   yellow: { speed: 55, pause: [0.6, 2.2], step: 0.14 },
   green: { speed: 50, pause: [0.8, 2.6], step: 0.14 },
-  purple: { speed: 22, pause: [1.5, 4], step: 0.2 },
+  purple: { speed: 30, pause: [1.2, 3.5], step: 0.18 },
   red: { speed: 125, pause: [0.15, 0.7], step: 0.08 },
-  blue: { speed: 28, pause: [1, 3], step: 0.2 },
+  blue: { speed: 40, pause: [1, 3], step: 0.2 },
 };
 
 type Vec = { x: number; y: number };
@@ -130,6 +130,10 @@ type Meeple = {
   blinkIn: number;
   blinkFor: number;
   asleep: boolean;
+  /** Seconds until the Sleepy One sleepwalks to a new napping spot. */
+  napFor: number;
+  /** Width of its name tag, once the pixel font has loaded. */
+  tagWidth: number;
   awakeFor: number;
   scaredFor: number;
   fleeTo: Vec | null;
@@ -220,6 +224,7 @@ export class MeepleEngine {
   private noPlant: DOMRect[] = [];
   /** When the Chaotic One may next shove a square on purpose. */
   private nextShove = 6;
+  private tagFont = "700 8px monospace";
   private resizeObserver: ResizeObserver;
   private cleanups: (() => void)[] = [];
 
@@ -249,6 +254,20 @@ export class MeepleEngine {
     }));
     this.squares = this.tints.filter((t) => t.pushable);
     this.measureTints();
+
+    // Name tags use the pixel accent font. Nothing else on the page uses it
+    // yet, so ask for it explicitly, then re-measure the tags once it's in.
+    const pixel = getComputedStyle(document.documentElement).getPropertyValue("--font-silkscreen").trim();
+    if (pixel) {
+      // Bold at its native 8px size, so the letters stay crisp and chunky.
+      this.tagFont = `700 8px ${pixel}`;
+      document.fonts
+        ?.load(this.tagFont)
+        .then(() => {
+          for (const m of this.meeples) m.tagWidth = 0;
+        })
+        .catch(() => {});
+    }
 
     this.resizeObserver = new ResizeObserver(() => this.onResize());
     this.resizeObserver.observe(root);
@@ -333,6 +352,8 @@ export class MeepleEngine {
       blinkIn: rand(2, 6),
       blinkFor: 0,
       asleep: cfg.id === "blue",
+      napFor: rand(4, 7),
+      tagWidth: 0,
       awakeFor: 0,
       scaredFor: 0,
       fleeTo: null,
@@ -460,7 +481,25 @@ export class MeepleEngine {
     m.wx = 0;
     m.wy = 0;
 
-    if (m.asleep) return;
+    if (m.asleep) {
+      // Every so often the Sleepy One sleepwalks to a fresh napping spot,
+      // eyes shut and z's still going.
+      m.napFor -= dt;
+      if (m.napFor <= 0 && Math.hypot(m.vx, m.vy) < TUMBLE_SPEED) {
+        if (!m.target) {
+          const a = rand(0, Math.PI * 2);
+          const r = rand(140, 320);
+          m.target = this.clampTarget(m.x + Math.cos(a) * r, m.y + Math.sin(a) * r);
+        }
+        m.mode = "walk";
+        if (this.walkTo(m, m.target.x, m.target.y, 55, dt)) {
+          m.mode = "idle";
+          m.target = null;
+          m.napFor = rand(6, 11);
+        }
+      }
+      return;
+    }
     if (m.cfg.id === "blue") {
       m.awakeFor -= dt;
       if (m.awakeFor <= 0 && m.mode === "idle") {
@@ -557,6 +596,11 @@ export class MeepleEngine {
         if (this.garden(m, dt)) return;
         break;
       }
+      case "purple": {
+        // The Watcher tends a little garden around its perch.
+        if (this.garden(m, dt)) return;
+        break;
+      }
       case "red": {
         // The Chaotic One: rushes the cursor, then swerves off at the last moment.
         m.rushCooldown -= dt;
@@ -608,7 +652,7 @@ export class MeepleEngine {
       // The Watcher stays perched near its spot by the headline.
       const hx = Math.min(m.cfg.home.x * this.vw, this.vw - W - 8);
       const hy = Math.min(m.cfg.home.y * this.vh, this.vh - H - 8);
-      return this.clampTarget(hx + rand(-60, 60), hy + rand(-30, 30));
+      return this.clampTarget(hx + rand(-120, 120), hy + rand(-40, 60));
     }
     if (m.cfg.id === "red" && this.time > this.nextShove && Math.random() < 0.5) {
       // Charge straight through one of the headline's pixel squares.
@@ -1272,6 +1316,25 @@ export class MeepleEngine {
       if (m.mode === "exploded" || m.mode === "reassemble") this.drawBlocks(m);
       else this.drawMeeple(m);
     }
+    this.drawTags();
+  }
+
+  /** A small name tag over each meeple's head, in the pixel font. */
+  private drawTags() {
+    const { ctx } = this;
+    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    ctx.font = this.tagFont;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = ZZZ_COLOR;
+    for (const m of this.meeples) {
+      if (!m.tagWidth) m.tagWidth = ctx.measureText(m.cfg.tag).width;
+      if (m.mode === "exploded" || m.mode === "reassemble" || m.lasso?.phase === "twirl") continue;
+      // Clear of the nightcap on the Sleepy One.
+      const lift = m.cfg.id === "blue" ? 13 : 6;
+      ctx.fillText(m.cfg.tag, Math.round(m.x + W / 2), Math.round(m.y) - lift);
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
   /**
@@ -1309,7 +1372,7 @@ export class MeepleEngine {
     });
     if (m.cfg.id === "blue") for (const c of NIGHTCAP) this.rect(ox + P + c.x, oy + c.y, c.w, c.h, c.c);
     this.drawEyes(m, ox + P, oy);
-    if (m.asleep) this.drawZzz(ox, oy);
+    if (m.asleep) this.drawZzz(m, ox, oy);
     if (m.lasso) this.drawLasso(m, ox, oy);
   }
 
@@ -1391,12 +1454,13 @@ export class MeepleEngine {
   }
 
   /** Two small pixel z's drifting up from a napping meeple. */
-  private drawZzz(ox: number, oy: number) {
+  private drawZzz(m: Meeple, ox: number, oy: number) {
     const { ctx } = this;
     for (let k = 0; k < 2; k++) {
       const p = (this.time / 2.4 + k / 2) % 1;
       ctx.globalAlpha = p < 0.15 ? p / 0.15 : 1 - (p - 0.15) / 0.85;
-      const zx = Math.round(ox + W - 2 + p * 10);
+      // Start past the right end of the name tag.
+      const zx = Math.round(Math.max(ox + W - 2, ox + W / 2 + m.tagWidth / 2 + 3) + p * 10);
       const zy = Math.round(oy - 8 - p * 22);
       Z_GLYPH.forEach((row, ry) =>
         [...row].forEach((ch, rx) => {
