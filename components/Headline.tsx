@@ -12,8 +12,9 @@ import { PixelSquare } from "./PixelSquare";
  * block is pushed out diagonally as a blue pixel square that touches the
  * letter only at a corner. The cuts are clip-paths on `.hl-h` and `.hl-r`.
  *
- * The blue elements carry data-meeple-tint so the meeple engine (step 3) can
- * find them and recolor them when a meeple walks over.
+ * The blue elements carry data-meeple-tint ("fill" or "text") so the meeple
+ * engine can recolor them when a meeple walks over. Their 900ms transition is
+ * the fade back to the accent; the engine shortens it while tinting.
  */
 export function Headline() {
   return (
@@ -26,12 +27,12 @@ export function Headline() {
       <span aria-hidden="true" className="headline-line" style={{ top: 0, left: 0 }}>
         <span className="hl-letter">
           <span className="hl-h">H</span>
-          <PixelSquare data-meeple-tint="" className="hl-square hl-square-h" />
+          <PixelSquare data-meeple-tint="fill" className="transition-colors duration-900 hl-square hl-square-h" />
         </span>
         EY
         <span
-          data-meeple-tint=""
-          className="ml-[0.04em] text-[0.6em] font-semibold tracking-normal text-accent"
+          data-meeple-tint="text"
+          className="transition-colors duration-900 ml-[0.04em] text-[0.6em] font-semibold tracking-normal text-accent"
         >
           [I&rsquo;M]
         </span>
@@ -44,7 +45,7 @@ export function Headline() {
         RYKE
         <span className="hl-letter">
           <span className="hl-r">R</span>
-          <PixelSquare data-meeple-tint="" className="hl-square hl-square-r" />
+          <PixelSquare data-meeple-tint="fill" className="transition-colors duration-900 hl-square hl-square-r" />
         </span>
       </span>
     </h1>
