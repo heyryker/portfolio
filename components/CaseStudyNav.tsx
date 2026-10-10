@@ -13,7 +13,7 @@ export function CaseStudyNav() {
           <li key={slug}>
             <Link
               href={`/work/${slug}`}
-              className="block py-2 text-[clamp(14px,2vw,30px)] leading-none font-normal tracking-[0.02em] text-muted uppercase transition-colors duration-200 hover:text-ink focus-visible:text-ink"
+              className="block py-2 text-[clamp(13px,1.5vw,22px)] leading-none font-normal tracking-[0.02em] text-muted uppercase transition-colors duration-200 hover:text-ink focus-visible:text-ink"
             >
               [{label}]
             </Link>
