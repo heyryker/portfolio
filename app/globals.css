@@ -79,9 +79,9 @@ body {
   --hl-height: calc((var(--hl-cap-cells) * 2 + var(--hl-gap-cells)) * var(--grid-cell));
   --hl-indent: calc(var(--hl-indent-cells) * var(--grid-cell));
   --hl-ryker-ink: calc(var(--hl-cap) * 3.23 / 0.7275);
-  /* Two meeple pixels at the desktop size, and never smaller than one. */
-  --hl-square: max(var(--hl-cap) / 6, var(--meeple-px));
-  --hl-width: calc(var(--hl-indent) + var(--hl-ryker-ink) + var(--hl-square) * 2 / 3);
+  /* The pixel squares are the size of H's stem, since they're cut from it. */
+  --hl-square: 0.171em;
+  --hl-width: calc(var(--hl-indent) + var(--hl-ryker-ink) + var(--hl-square));
 
   position: absolute;
   width: var(--hl-width);
@@ -102,6 +102,65 @@ body {
   /* Pull the ink, not the line box, onto the grid lines. */
   margin-top: -0.1365em;
   margin-left: -0.057em;
+}
+
+/*
+ * The modified letters. Coordinates are in em from the glyph's origin, at
+ * line-height 1: Inter's ink starts 0.057em in, the cap top is 0.1365em down
+ * and the baseline 0.864em down. R's leg starts 0.27em in at the cut height
+ * and its right edge there is at 0.555em.
+ */
+.hl-letter {
+  position: relative;
+  display: inline-block;
+}
+
+.hl-h,
+.hl-r {
+  display: inline-block;
+}
+
+/* Remove a stem-sized block from the top-left corner of H (the cut runs a
+   hair past the stem so its anti-aliased edge goes too; that's open counter). */
+.hl-h {
+  clip-path: polygon(
+    calc(0.077em + var(--hl-square)) -50%,
+    150% -50%,
+    150% 150%,
+    -50% 150%,
+    -50% calc(0.1365em + var(--hl-square)),
+    calc(0.077em + var(--hl-square)) calc(0.1365em + var(--hl-square))
+  );
+}
+
+/* Remove a stem-high slice from the bottom of R's leg. */
+.hl-r {
+  clip-path: polygon(
+    -50% -50%,
+    150% -50%,
+    150% calc(0.864em - var(--hl-square)),
+    0.327em calc(0.864em - var(--hl-square)),
+    0.327em 150%,
+    -50% 150%
+  );
+}
+
+.hl-square {
+  position: absolute;
+  width: var(--hl-square);
+  height: var(--hl-square);
+}
+
+/* Pushed up and left: it touches H only at the stem's new top-left corner. */
+.hl-square-h {
+  top: 0.1365em;
+  left: calc(0.057em - var(--hl-square));
+}
+
+/* Pushed right: it touches the cut end of R's leg at its top-left corner. */
+.hl-square-r {
+  top: calc(0.864em - var(--hl-square));
+  left: 0.555em;
 }
 
 @media (min-width: 720px) and (min-height: 520px) {

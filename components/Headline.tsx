@@ -7,9 +7,10 @@ import { PixelSquare } from "./PixelSquare";
  * (cap height, line gap, RYKER's indent) are set per breakpoint in
  * globals.css under `.headline-grid`.
  *
- * The two pixel squares are deliberately askew from the letters, as Ryker drew
- * them in the mockup: the top-left one sits just outside H's corner, and the
- * bottom-right one overlaps the end of R's leg.
+ * The type is Inter with two letters modified, as Ryker drew it: the top-left
+ * corner of H's stem and the bottom of R's leg are cut out, and each cut-out
+ * block is pushed out diagonally as a blue pixel square that touches the
+ * letter only at a corner. The cuts are clip-paths on `.hl-h` and `.hl-r`.
  *
  * The blue elements carry data-meeple-tint so the meeple engine (step 3) can
  * find them and recolor them when a meeple walks over.
@@ -22,18 +23,12 @@ export function Headline() {
       // uses 800: the lighter end of the brief's range.
       className="headline-grid font-extrabold leading-none tracking-[-0.015em] text-ink select-none"
     >
-      <PixelSquare
-        data-meeple-tint=""
-        className="absolute"
-        style={{
-          width: "var(--hl-square)",
-          height: "var(--hl-square)",
-          top: 0,
-          left: "calc(var(--hl-square) * -1)",
-        }}
-      />
       <span aria-hidden="true" className="headline-line" style={{ top: 0, left: 0 }}>
-        HEY
+        <span className="hl-letter">
+          <span className="hl-h">H</span>
+          <PixelSquare data-meeple-tint="" className="hl-square hl-square-h" />
+        </span>
+        EY
         <span
           data-meeple-tint=""
           className="ml-[0.04em] text-[0.6em] font-semibold tracking-normal text-accent"
@@ -46,18 +41,12 @@ export function Headline() {
         className="headline-line"
         style={{ top: "var(--hl-line2-top)", left: "var(--hl-indent)" }}
       >
-        RYKER
+        RYKE
+        <span className="hl-letter">
+          <span className="hl-r">R</span>
+          <PixelSquare data-meeple-tint="" className="hl-square hl-square-r" />
+        </span>
       </span>
-      <PixelSquare
-        data-meeple-tint=""
-        className="absolute"
-        style={{
-          width: "var(--hl-square)",
-          height: "var(--hl-square)",
-          top: "calc(var(--hl-height) - var(--hl-square))",
-          left: "calc(var(--hl-indent) + var(--hl-ryker-ink) - var(--hl-square) / 3)",
-        }}
-      />
     </h1>
   );
 }
