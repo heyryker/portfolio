@@ -9,8 +9,9 @@
  *
  * They also make a little trouble: the Chaotic One charges the headline's
  * pixel squares out of their sockets, the Curious One lassos them (and the
- * cursor) and tows them home, the Shy and Curious Ones plant a pixel garden
- * that the Chaotic One tramples, and the Sleepy One wears a nightcap. At rest the
+ * cursor) and tows them home, they all plant a pixel garden (the Shy One
+ * grows carrots in its corner, the Sleepy One plants in its sleep) that the
+ * Chaotic One tramples, and the Sleepy One wears a nightcap. At rest the
  * headline always settles back to its grid-locked look.
  *
  * The two headline squares can be grabbed and thrown like meeples, and answer
@@ -83,13 +84,14 @@ const LASSO_PULL = 2.4; // how long a roped cursor can drag the Curious One arou
 const ROPE_SNAP = 160; // a cursor that jumps further than this in a frame slips the loop
 const LASSO_REEL = 0.3;
 
-// The garden, planted by the Shy and Curious Ones. Flowers are drawn in half
-// meeple pixels and planted on the meeple-pixel grid, so they sit on the
-// graph paper too.
+// The garden, planted by all five (the Shy One grows carrots). Flowers are
+// drawn in half meeple pixels and planted on the meeple-pixel grid, so they
+// sit on the graph paper too.
 const F = P / 2;
 const PLANT_TIME = 0.9;
-const MAX_FLOWERS = 10;
-const FLOWER_LIFE = 75;
+const PLANT_EVERY: [number, number] = [3, 6];
+const MAX_FLOWERS = 24;
+const FLOWER_LIFE = 120;
 const WILT_TIME = 2;
 const TRAMPLED_TIME = 3;
 const PETALS = ["#985DF6", "#E05A32", "#58B9F8", "#FBEC5A"];
@@ -120,6 +122,10 @@ const FLOWER_SEED = ["DDD"];
 const FLOWER_SPROUT = ["L.L", ".S.", ".S."];
 const FLOWER_BLOOM = [".P.", "PCP", ".P.", ".S.", "LS.", ".S."];
 const FLOWER_FLAT = ["LSSPCP"];
+// The Shy One's carrots: leafy tops with the orange shoulders poking out. O is carrot.
+const CARROT_GROWN = ["L.L", ".L.", "OOO", "OOO", ".O."];
+const CARROT_FLAT = ["LLOOO."];
+const CARROT = "#E05A32"; // meeple-red, which reads as carrot orange
 
 // The Sleepy One's nightcap, in px from its head block's top-left. It droops
 // to the left so it stays clear of the z's.
@@ -249,6 +255,7 @@ type Flower = {
   trampled: boolean;
   /** Seconds before it wilts. The period's wild flowers don't last as long. */
   life: number;
+  carrot: boolean;
 };
 
 type SquareDrag = {
@@ -296,7 +303,7 @@ export class MeepleEngine {
   private tints: TintTarget[] = [];
   private squares: TintTarget[] = [];
   private flowers: Flower[] = [];
-  /** Areas the garden keeps off: the headline and the case-study links. */
+  /** Areas the garden keeps off: the headline's two lines (not the whole box, so the gaps beside them can bloom), the links and the menu. */
   private noPlant: DOMRect[] = [];
   /** When the Chaotic One may next shove a square on purpose. */
   private nextShove = 6;
@@ -446,7 +453,7 @@ export class MeepleEngine {
       blocks: [],
       lasso: null,
       lassoCooldown: rand(3, 6),
-      plantIn: rand(5, 9),
+      plantIn: rand(3, 6),
       planting: -1,
       hop: null,
     };
@@ -474,7 +481,7 @@ export class MeepleEngine {
       const bottom = r.bottom - fs * 0.12;
       t.rect = new DOMRect(r.left - c.left, top - c.top, r.width, bottom - top);
     }
-    this.noPlant = Array.from(this.root.querySelectorAll<HTMLElement>("h1, nav, header a, header button")).map((el) => {
+    this.noPlant = Array.from(this.root.querySelectorAll<HTMLElement>(".headline-line, nav a, header a, header button")).map((el) => {
       const r = el.getBoundingClientRect();
       return new DOMRect(r.left - c.left - 12, r.top - c.top - 12, r.width + 24, r.height + 24);
     });
@@ -591,6 +598,8 @@ export class MeepleEngine {
           m.mode = "idle";
           m.target = null;
           m.napFor = rand(6, 11);
+          // Plants a flower in its sleep, now and then, wherever it ends up.
+          if (Math.random() < 0.6) this.plant(m);
         }
       }
       return;
@@ -718,6 +727,13 @@ export class MeepleEngine {
           m.rushing = true;
           return;
         }
+        // Even the Chaotic One plants a few (and tramples them later).
+        if (this.garden(m, dt)) return;
+        break;
+      }
+      case "blue": {
+        // Awake for once: it gardens like the rest.
+        if (this.garden(m, dt)) return;
         break;
       }
     }
@@ -1439,6 +1455,7 @@ export class MeepleEngine {
         fade: -1,
         trampled: false,
         life: rand(...WILD_LIFE),
+        carrot: false,
       });
     }
   }
@@ -1712,8 +1729,8 @@ export class MeepleEngine {
   // ---------------------------------------------------------------- garden
 
   /**
-   * The gardeners (the Shy One and the Curious One), when left alone, stop,
-   * dig, and plant a flower beside them. Returns true while digging.
+   * Every meeple, when left alone, now and then stops, digs, and plants a
+   * flower beside it (the Shy One plants carrots). Returns true while digging.
    */
   private garden(m: Meeple, dt: number) {
     if (m.planting >= 0) {
@@ -1723,7 +1740,7 @@ export class MeepleEngine {
       if (m.planting >= PLANT_TIME) {
         this.plant(m);
         m.planting = -1;
-        m.plantIn = rand(7, 12);
+        m.plantIn = rand(...PLANT_EVERY);
       }
       return true;
     }
@@ -1753,6 +1770,7 @@ export class MeepleEngine {
     if (!spot) return;
     // The period's wild flowers don't count toward the garden's limit.
     const healthy = this.flowers.filter((f) => f.fade < 0 && f.life === FLOWER_LIFE);
+    const carrot = m.cfg.id === "green";
     if (healthy.length >= MAX_FLOWERS) healthy[0].fade = 0;
     this.flowers.push({
       ...spot,
@@ -1761,6 +1779,7 @@ export class MeepleEngine {
       fade: -1,
       trampled: false,
       life: FLOWER_LIFE,
+      carrot,
     });
   }
 
@@ -1917,13 +1936,26 @@ export class MeepleEngine {
       if (f.age < 0) continue;
       const limit = f.trampled ? TRAMPLED_TIME : WILT_TIME;
       ctx.globalAlpha = f.fade < 0 ? 1 : Math.max(0, 1 - f.fade / limit);
-      const rows = f.trampled ? FLOWER_FLAT : f.age < 0.5 ? FLOWER_SEED : f.age < 1.8 ? FLOWER_SPROUT : FLOWER_BLOOM;
+      const grown = f.carrot ? CARROT_GROWN : FLOWER_BLOOM;
+      const flat = f.carrot ? CARROT_FLAT : FLOWER_FLAT;
+      const rows = f.trampled ? flat : f.age < 0.5 ? FLOWER_SEED : f.age < 1.8 ? FLOWER_SPROUT : grown;
       const left = f.x - ((rows[0].length - 3) / 2) * F;
       const top = f.y - rows.length * F;
       const middle = f.petal === "#FBEC5A" ? "#E05A32" : "#FBEC5A";
       rows.forEach((row, ry) =>
         [...row].forEach((ch, rx) => {
-          const color = ch === "S" || ch === "L" ? STEM : ch === "P" ? f.petal : ch === "C" ? middle : ch === "D" ? DIRT : null;
+          const color =
+            ch === "S" || ch === "L"
+              ? STEM
+              : ch === "P"
+                ? f.petal
+                : ch === "C"
+                  ? middle
+                  : ch === "O"
+                    ? CARROT
+                    : ch === "D"
+                      ? DIRT
+                      : null;
           if (color) this.rect(left + rx * F, top + ry * F, F, F, color);
         }),
       );
