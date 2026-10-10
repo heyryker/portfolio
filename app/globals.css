@@ -49,6 +49,71 @@ body {
   background-size: var(--grid-cell) var(--grid-cell);
 }
 
+/*
+ * The landing headline, locked to the grid (see components/Headline.tsx).
+ * Sizes are counted in grid cells: the cap height, the gap between the two
+ * lines and RYKER's indent. Inter's metrics at weight 800, in em: cap height
+ * 0.7275, cap top 0.1365 below the line box (at line-height 1), H and R left
+ * side bearing 0.057, and RYKER's ink is 3.23 wide with the -0.015em tracking.
+ */
+.headline-grid {
+  --hl-cap-cells: 1;
+  --hl-gap-cells: 1;
+  --hl-indent-cells: 2;
+
+  --hl-cap: calc(var(--hl-cap-cells) * var(--grid-cell));
+  --hl-line2-top: calc((var(--hl-cap-cells) + var(--hl-gap-cells)) * var(--grid-cell));
+  --hl-height: calc((var(--hl-cap-cells) * 2 + var(--hl-gap-cells)) * var(--grid-cell));
+  --hl-indent: calc(var(--hl-indent-cells) * var(--grid-cell));
+  --hl-ryker-ink: calc(var(--hl-cap) * 3.23 / 0.7275);
+  /* Half a cell (two meeple pixels) at the desktop size. */
+  --hl-square: calc(var(--hl-cap) / 6);
+  --hl-width: calc(var(--hl-indent) + var(--hl-ryker-ink) + var(--hl-square) * 2 / 3);
+
+  position: absolute;
+  width: var(--hl-width);
+  height: var(--hl-height);
+  font-size: calc(var(--hl-cap) / 0.7275);
+  /* Centered, then snapped to the nearest grid line. The page's grid is
+     anchored at its top-left corner, so whole cells from there land on lines. */
+  left: calc((100% - var(--hl-width)) / 2);
+  top: calc((100% - var(--hl-height)) / 2);
+  left: round(nearest, (100% - var(--hl-width)) / 2, var(--grid-cell));
+  top: round(nearest, (100% - var(--hl-height)) / 2, var(--grid-cell));
+}
+
+.headline-line {
+  position: absolute;
+  display: block;
+  white-space: nowrap;
+  /* Pull the ink, not the line box, onto the grid lines. */
+  margin-top: -0.1365em;
+  margin-left: -0.057em;
+}
+
+@media (min-width: 720px) and (min-height: 520px) {
+  .headline-grid {
+    --hl-cap-cells: 2;
+    --hl-indent-cells: 6;
+  }
+}
+
+/* The mockup's size (1486×935): a 3-cell cap height. */
+@media (min-width: 1100px) and (min-height: 640px) {
+  .headline-grid {
+    --hl-cap-cells: 3;
+    --hl-indent-cells: 8;
+  }
+}
+
+@media (min-width: 1680px) and (min-height: 880px) {
+  .headline-grid {
+    --hl-cap-cells: 4;
+    --hl-gap-cells: 2;
+    --hl-indent-cells: 11;
+  }
+}
+
 /* Visible focus states in the accent blue (§10). */
 :focus-visible {
   outline: 2px solid var(--color-accent);
