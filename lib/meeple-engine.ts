@@ -13,9 +13,10 @@
  * that the Chaotic One tramples, and the Sleepy One wears a nightcap. At rest the
  * headline always settles back to its grid-locked look.
  *
- * The two headline squares answer clicks too: HEY's square explodes and
- * reassembles like a meeple, and RYKER's period squashes flat, which sends a
- * shockwave that makes every meeple jump.
+ * The two headline squares can be grabbed and thrown like meeples, and answer
+ * clicks: HEY's square explodes and reassembles like a meeple, and RYKER's
+ * period squashes flat (every meeple jumps at the thud), then blooms into a
+ * big flower while little ones pop up all over the page.
  *
  * The canvas ignores pointer events. The engine listens on the page instead
  * and only claims a press that lands on a meeple and not on a link or button,
@@ -56,10 +57,15 @@ const SQUARE_REST = 1.2; // seconds at rest before the lasso goes after it
 const SQUARE_GIVE_UP = 8; // seconds loose before it glides home by itself
 
 // Clicking the headline squares. HEY's square bursts into a 4x4 of half
-// meeple pixels; RYKER's period squashes and the meeples hop.
+// meeple pixels; RYKER's period squashes, the meeples hop, and it blooms.
 const SQUARE_SHAKE = 0.35;
 const SQUARE_SPLIT = 4;
 const SQUASH_TIME = 1.2;
+const BLOOM_STEM = [0.3, 0.7]; // the stem grows down in this window
+const BLOOM_PETALS = 0.7; // then the petals pop, one after another
+const BLOOM_LIFE = 9;
+const BLOOM_FADE = 1;
+const WILD_LIFE: [number, number] = [14, 20]; // the little flowers it sets off
 const HOP_TIME = 0.42; // one hop
 const HOP_HEIGHT = 16;
 const SHOCKWAVE_SPEED = 900; // px/s, so far meeples hop a beat later
@@ -174,7 +180,7 @@ type TintTarget = {
   holdUntil: number;
   /** Pixel squares can be knocked loose. Text stays put. */
   pushable: boolean;
-  state: "home" | "loose" | "towed" | "gliding" | "burst";
+  state: "home" | "loose" | "towed" | "gliding" | "burst" | "held";
   /** What a click does: HEY's square bursts, RYKER's period squashes. */
   click: "burst" | "squash" | null;
   /** Seconds into a burst or a squash (-1 when neither). */
@@ -182,6 +188,10 @@ type TintTarget = {
   /** A burst square's pieces, and their color. */
   blocks: Block[];
   blockColor: string;
+  /** RYKER's period's flower: seconds since it started (-1 when none), petal color, and where it bloomed. */
+  bloomT: number;
+  bloomPetal: string;
+  bloomAt: Vec;
   off: Vec;
   v: Vec;
   /** Seconds loose, and seconds at rest while loose. */
@@ -209,6 +219,19 @@ type Flower = {
   /** Seconds since it started wilting or was trampled; -1 while healthy. */
   fade: number;
   trampled: boolean;
+  /** Seconds before it wilts. The period's wild flowers don't last as long. */
+  life: number;
+};
+
+type SquareDrag = {
+  t: TintTarget;
+  pointerId: number;
+  offX: number;
+  offY: number;
+  t0: number;
+  start: Vec;
+  moved: number;
+  samples: { t: number; x: number; y: number }[];
 };
 
 type Drag = {
@@ -239,6 +262,7 @@ export class MeepleEngine {
   private cursor = { x: 0, y: 0, inside: false, lastMove: -Infinity };
   private glance: { at: Vec; until: number } | null = null;
   private drag: Drag | null = null;
+  private squareDrag: SquareDrag | null = null;
   private tints: TintTarget[] = [];
   private squares: TintTarget[] = [];
   private flowers: Flower[] = [];
@@ -273,6 +297,9 @@ export class MeepleEngine {
       clickT: -1,
       blocks: [],
       blockColor: "",
+      bloomT: -1,
+      bloomPetal: "",
+      bloomAt: { x: 0, y: 0 },
       off: { x: 0, y: 0 },
       v: { x: 0, y: 0 },
       looseFor: 0,
@@ -453,6 +480,7 @@ export class MeepleEngine {
     else {
       this.pause();
       if (this.drag) this.release(this.drag, performance.now(), false);
+      if (this.squareDrag) this.releaseSquare(this.squareDrag, performance.now(), false);
     }
   };
 
@@ -974,7 +1002,7 @@ export class MeepleEngine {
 
   private onPointerDown = (e: PointerEvent) => {
     this.moveCursor(e);
-    if (this.drag || !e.isPrimary || (e.pointerType === "mouse" && e.button !== 0)) return;
+    if (this.drag || this.squareDrag || !e.isPrimary || (e.pointerType === "mouse" && e.button !== 0)) return;
     if (this.isInteractive(e.target)) return;
     const p = this.toLocal(e);
     const m = this.hit(p, e.pointerType === "mouse" ? 3 : 10);
@@ -982,7 +1010,7 @@ export class MeepleEngine {
       const sq = this.hitSquare(p, e.pointerType === "mouse" ? 3 : 10);
       if (sq) {
         e.preventDefault();
-        this.clickSquare(sq);
+        this.grabSquare(sq, e, p);
       }
       return;
     }
@@ -1012,6 +1040,17 @@ export class MeepleEngine {
 
   private onPointerMove = (e: PointerEvent) => {
     this.moveCursor(e);
+    const sd = this.squareDrag;
+    if (sd && e.pointerId === sd.pointerId) {
+      const p = this.toLocal(e);
+      const r = sd.t.rect!;
+      sd.t.off.x = clamp(p.x - sd.offX, 0, this.vw - r.width) - r.x;
+      sd.t.off.y = clamp(p.y - sd.offY, 0, this.vh - r.height) - r.y;
+      sd.moved = Math.max(sd.moved, Math.hypot(p.x - sd.start.x, p.y - sd.start.y));
+      sd.samples.push({ t: e.timeStamp, ...p });
+      while (sd.samples.length > 2 && e.timeStamp - sd.samples[0].t > 100) sd.samples.shift();
+      return;
+    }
     const drag = this.drag;
     if (drag && e.pointerId === drag.pointerId) {
       const p = this.toLocal(e);
@@ -1025,11 +1064,13 @@ export class MeepleEngine {
     if (e.pointerType === "mouse" && !drag) {
       const p = this.toLocal(e);
       const free = !this.isInteractive(e.target);
-      this.root.style.cursor = free && this.hit(p, 3) ? "grab" : free && this.hitSquare(p, 3) ? "pointer" : "";
+      this.root.style.cursor = free && (this.hit(p, 3) || this.hitSquare(p, 3)) ? "grab" : "";
     }
   };
 
   private onPointerUp = (e: PointerEvent) => {
+    const sd = this.squareDrag;
+    if (sd && e.pointerId === sd.pointerId) this.releaseSquare(sd, e.timeStamp, e.type === "pointerup");
     const drag = this.drag;
     if (!drag || e.pointerId !== drag.pointerId) return;
     this.release(drag, e.timeStamp, e.type === "pointerup");
@@ -1135,6 +1176,14 @@ export class MeepleEngine {
           break;
         }
       }
+      if (t.bloomT >= 0) {
+        t.bloomT += dt;
+        // Moving the square knocks the petals off early.
+        const moved = Math.hypot(t.off.x - t.bloomAt.x, t.off.y - t.bloomAt.y) > 1;
+        if (moved && t.bloomT < BLOOM_LIFE) t.bloomT = BLOOM_LIFE;
+        if (t.bloomT > BLOOM_LIFE + BLOOM_FADE) t.bloomT = -1;
+      }
+      if (t.state === "loose" && Math.hypot(t.v.x, t.v.y) > 200) this.squareHits(t);
       let jx = 0;
       let jy = 0;
       if (t.state === "burst" && t.clickT < SQUARE_SHAKE) {
@@ -1162,12 +1211,60 @@ export class MeepleEngine {
   private hitSquare(p: Vec, pad: number): TintTarget | null {
     for (const t of this.squares) {
       const r = t.rect;
-      if (!r || !t.click || t.state === "burst") continue;
+      if (!r || !t.click || t.state === "burst" || t.state === "held") continue;
       const x = r.x + t.off.x;
       const y = r.y + t.off.y;
       if (p.x >= x - pad && p.x <= x + r.width + pad && p.y >= y - pad && p.y <= y + r.height + pad) return t;
     }
     return null;
+  }
+
+  /** Pick up a headline square, like a meeple. A press without a drag is a click. */
+  private grabSquare(t: TintTarget, e: PointerEvent, p: Vec) {
+    for (const m of this.meeples) if (m.lasso?.square === t) this.cancelLasso(m);
+    t.state = "held";
+    t.v.x = t.v.y = 0;
+    const r = t.rect!;
+    this.squareDrag = {
+      t,
+      pointerId: e.pointerId,
+      offX: p.x - (r.x + t.off.x),
+      offY: p.y - (r.y + t.off.y),
+      t0: e.timeStamp,
+      start: p,
+      moved: 0,
+      samples: [{ t: e.timeStamp, ...p }],
+    };
+    this.root.style.cursor = "grabbing";
+  }
+
+  private releaseSquare(sd: SquareDrag, now: number, allowClick: boolean) {
+    const { t } = sd;
+    this.squareDrag = null;
+    this.root.style.cursor = "";
+    t.state = "loose";
+    t.looseFor = 0;
+    t.restFor = 0;
+    if (allowClick && sd.moved < 6 && now - sd.t0 < 400) {
+      // Back in place if it was home, then do its trick.
+      if (Math.hypot(t.off.x, t.off.y) < 0.5) t.state = "home";
+      this.clickSquare(t);
+      return;
+    }
+    // Thrown, with the pointer's speed over the last ~100ms.
+    const first = sd.samples[0];
+    const last = sd.samples[sd.samples.length - 1];
+    const span = (last.t - first.t) / 1000;
+    t.v.x = t.v.y = 0;
+    if (span > 0.008 && now - last.t < 80) {
+      t.v.x = (last.x - first.x) / span;
+      t.v.y = (last.y - first.y) / span;
+      const sp = Math.hypot(t.v.x, t.v.y);
+      if (sp > MAX_THROW) {
+        t.v.x = (t.v.x / sp) * MAX_THROW;
+        t.v.y = (t.v.y / sp) * MAX_THROW;
+      }
+    }
   }
 
   private clickSquare(t: TintTarget) {
@@ -1179,8 +1276,13 @@ export class MeepleEngine {
       t.v.x = t.v.y = 0;
       return;
     }
-    if (t.clickT >= 0) return;
+    if (t.clickT >= 0 || t.bloomT >= 0) return;
     t.clickT = 0;
+    t.bloomT = 0;
+    t.bloomAt = { ...t.off };
+    // Any meeple color but blue, so the petals stand apart from the square.
+    t.bloomPetal = PETALS.filter((c) => c !== "#58B9F8")[Math.floor(Math.random() * 3)];
+    this.scatterFlowers(t);
     // The thud travels outward, so nearby meeples hop first.
     const c = squareCenter(t);
     for (const m of this.meeples) {
@@ -1189,6 +1291,84 @@ export class MeepleEngine {
       m.hop = -Math.hypot(mc.x - c.x, mc.y - c.y) / SHOCKWAVE_SPEED;
       this.wake(m);
     }
+  }
+
+  /** A thrown square that flies into a meeple knocks it along, and wakes it. */
+  private squareHits(t: TintTarget) {
+    const r = t.rect!;
+    const sx = r.x + t.off.x;
+    const sy = r.y + t.off.y;
+    for (const m of this.meeples) {
+      if (m.mode !== "idle" && m.mode !== "walk") continue;
+      if (sx > m.x + W || sx + r.width < m.x || sy > m.y + H || sy + r.height < m.y) continue;
+      m.vx += t.v.x * 0.7;
+      m.vy += t.v.y * 0.7;
+      t.v.x *= -0.3;
+      t.v.y *= -0.3;
+      this.wake(m);
+      return;
+    }
+  }
+
+  /**
+   * The period's bloom sets off little flowers all over the page, popping up
+   * in a wave outward from it. They're on the same half-pixel grid as the
+   * garden, keep off the headline and links, and wilt sooner.
+   */
+  private scatterFlowers(t: TintTarget) {
+    const c = squareCenter(t);
+    const n = clamp(Math.round((this.vw * this.vh) / 45000), 6, 20);
+    const made: Vec[] = [];
+    for (let tries = 0; made.length < n && tries < n * 30; tries++) {
+      const x = Math.round(rand(MARGIN, this.vw - MARGIN - 3 * F) / F) * F;
+      const y = Math.round(rand(64 + FLOWER_BLOOM.length * F, this.vh - MARGIN) / F) * F;
+      const r = new DOMRect(x, y - FLOWER_BLOOM.length * F, 3 * F, FLOWER_BLOOM.length * F);
+      if (this.noPlant.some((z) => overlaps(z, r))) continue;
+      const near = (f: Vec) => Math.abs(f.x - x) < 6 * F && Math.abs(f.y - y) < 9 * F;
+      if (made.some(near) || this.flowers.some((f) => f.fade < 0 && near(f))) continue;
+      made.push({ x, y });
+      this.flowers.push({
+        x,
+        y,
+        age: -(BLOOM_PETALS + Math.hypot(x - c.x, y - c.y) / SHOCKWAVE_SPEED + rand(0, 0.3)),
+        petal: PETALS[Math.floor(Math.random() * PETALS.length)],
+        fade: -1,
+        trampled: false,
+        life: rand(...WILD_LIFE),
+      });
+    }
+  }
+
+  /**
+   * RYKER's period as the middle of a big flower: one square per pixel, so
+   * the petals and stem are each the period's size. The stem grows down
+   * first, then the petals pop, then they fade after a while.
+   */
+  private drawBloom(t: TintTarget) {
+    const r = t.rect;
+    if (!r || t.bloomT < BLOOM_STEM[0]) return;
+    const s = r.width;
+    const x0 = r.x + t.off.x - s;
+    const y0 = r.y + t.off.y - s;
+    const { ctx } = this;
+    ctx.globalAlpha = t.bloomT > BLOOM_LIFE ? Math.max(0, 1 - (t.bloomT - BLOOM_LIFE) / BLOOM_FADE) : 1;
+    const grow = clamp((t.bloomT - BLOOM_STEM[0]) / (BLOOM_STEM[1] - BLOOM_STEM[0]), 0, 1);
+    const rows = Math.ceil(grow * 3);
+    FLOWER_BLOOM.forEach((row, ry) =>
+      [...row].forEach((ch, rx) => {
+        if (ch === "S" || ch === "L") {
+          if (ry - 2 > rows) return;
+          this.rect(x0 + rx * s, y0 + ry * s, s, s, STEM);
+        } else if (ch === "P") {
+          // Top, left, right, bottom, popping one after another.
+          const k = ry * 3 + rx;
+          const at = BLOOM_PETALS + (k === 1 ? 0 : k === 3 ? 0.08 : k === 5 ? 0.16 : 0.24);
+          if (t.bloomT >= at) this.rect(x0 + rx * s, y0 + ry * s, s, s, t.bloomPetal);
+        }
+        // The middle is the period itself, so it's not drawn.
+      }),
+    );
+    ctx.globalAlpha = 1;
   }
 
   /** HEY's square: shake, burst into pieces, then drift home and reassemble. */
@@ -1251,7 +1431,7 @@ export class MeepleEngine {
   private shoveSquares() {
     for (const t of this.squares) {
       const r = t.rect;
-      if (!r || t.state === "towed" || t.state === "gliding" || t.state === "burst") continue;
+      if (!r || t.state === "towed" || t.state === "gliding" || t.state === "burst" || t.state === "held") continue;
       for (const m of this.meeples) {
         if (m.mode !== "idle" && m.mode !== "walk" && m.mode !== "drag") continue;
         const vx = m.wx + m.vx;
@@ -1422,9 +1602,17 @@ export class MeepleEngine {
   private plant(m: Meeple) {
     const spot = this.plantSpot(m);
     if (!spot) return;
-    const healthy = this.flowers.filter((f) => f.fade < 0);
+    // The period's wild flowers don't count toward the garden's limit.
+    const healthy = this.flowers.filter((f) => f.fade < 0 && f.life === FLOWER_LIFE);
     if (healthy.length >= MAX_FLOWERS) healthy[0].fade = 0;
-    this.flowers.push({ ...spot, age: 0, petal: PETALS[Math.floor(Math.random() * PETALS.length)], fade: -1, trampled: false });
+    this.flowers.push({
+      ...spot,
+      age: 0,
+      petal: PETALS[Math.floor(Math.random() * PETALS.length)],
+      fade: -1,
+      trampled: false,
+      life: FLOWER_LIFE,
+    });
   }
 
   private updateFlowers(dt: number) {
@@ -1434,7 +1622,7 @@ export class MeepleEngine {
         f.fade += dt;
         continue;
       }
-      if (f.age > FLOWER_LIFE) {
+      if (f.age > f.life) {
         f.fade = 0;
         continue;
       }
@@ -1463,6 +1651,7 @@ export class MeepleEngine {
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.drawFlowers();
     for (const t of this.squares) {
+      this.drawBloom(t);
       const size = t.rect ? t.rect.width / SQUARE_SPLIT : 0;
       for (const b of t.blocks) this.rect(Math.round(b.x), Math.round(b.y), size, size, t.blockColor);
     }
@@ -1568,6 +1757,7 @@ export class MeepleEngine {
   private drawFlowers() {
     const { ctx } = this;
     for (const f of this.flowers) {
+      if (f.age < 0) continue;
       const limit = f.trampled ? TRAMPLED_TIME : WILT_TIME;
       ctx.globalAlpha = f.fade < 0 ? 1 : Math.max(0, 1 - f.fade / limit);
       const rows = f.trampled ? FLOWER_FLAT : f.age < 0.5 ? FLOWER_SEED : f.age < 1.8 ? FLOWER_SPROUT : FLOWER_BLOOM;
