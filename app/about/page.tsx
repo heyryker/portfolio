@@ -61,7 +61,9 @@ export default function AboutPage() {
       </div>
 
       <main className="mx-auto max-w-[968px] px-[22px] pt-11 pb-22 md:px-11">
-        <p className="text-sm tracking-[0.08em] text-accent uppercase">[I&rsquo;M] Ryker Marble</p>
+        <p className="text-sm tracking-[0.08em] uppercase">
+          HEY <span className="text-accent">[I&rsquo;M]</span> RYKER
+        </p>
         <h1 className="mt-5 text-[clamp(32px,5.2vw,56px)] leading-[1.05] font-extrabold tracking-[-0.015em] text-balance">
           I&rsquo;m a brand designer interested in strategy, production and art direction.
         </h1>
@@ -78,7 +80,24 @@ export default function AboutPage() {
               Most of my work is turning complex, sometimes regulated subject matter into visual systems
               people can actually use: guidelines, campaigns, events and the videos that go with them.
             </p>
-            <p className="text-muted">Based in Logan, Utah.</p>
+            <p className="text-muted">Based in Utah.</p>
+            <div className="flex flex-wrap gap-3 pt-3">
+              <a
+                href={RESUME}
+                download="Ryker-Marble-Resume.pdf"
+                className="inline-flex h-11 items-center bg-accent px-5 text-sm font-semibold tracking-[0.08em] text-white uppercase transition-colors hover:bg-ink focus-visible:bg-ink"
+              >
+                Download PDF
+              </a>
+              <a
+                href={RESUME}
+                target="_blank"
+                rel="noopener"
+                className="inline-flex h-11 items-center border border-ink px-5 text-sm font-semibold tracking-[0.08em] uppercase transition-colors hover:border-accent hover:text-accent focus-visible:text-accent"
+              >
+                View in browser
+              </a>
+            </div>
           </div>
 
           {/* TODO(ryker): photo (next/image, with alt text). */}
@@ -86,44 +105,6 @@ export default function AboutPage() {
             <span className="font-pixel text-xs text-muted">PHOTO TBD</span>
           </div>
         </div>
-
-        <section aria-labelledby="experience" className="mt-22">
-          <SectionLabel id="experience">EXPERIENCE</SectionLabel>
-          <ul className="mt-2 divide-y divide-grid border-y border-grid">
-            {EXPERIENCE.map((job) => (
-              <li key={job.role + job.org} className="grid gap-x-6 py-3 sm:grid-cols-[1fr_auto]">
-                <span>
-                  <span className="font-semibold">{job.role}</span>, {job.org}
-                </span>
-                <span className="font-pixel text-xs leading-6 text-muted">{job.years}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-3 text-sm text-muted">
-            Utah State University: BFA, Graphic Design; BS, Political Science.
-          </p>
-        </section>
-
-        <section aria-labelledby="resume" className="mt-22">
-          <SectionLabel id="resume">RESUME</SectionLabel>
-          <div className="mt-2 flex flex-wrap gap-3">
-            <a
-              href={RESUME}
-              download="Ryker-Marble-Resume.pdf"
-              className="inline-flex h-11 items-center bg-accent px-5 text-sm font-semibold tracking-[0.08em] text-white uppercase transition-colors hover:bg-ink focus-visible:bg-ink"
-            >
-              Download PDF
-            </a>
-            <a
-              href={RESUME}
-              target="_blank"
-              rel="noopener"
-              className="inline-flex h-11 items-center border border-ink px-5 text-sm font-semibold tracking-[0.08em] uppercase transition-colors hover:border-accent hover:text-accent focus-visible:text-accent"
-            >
-              View in browser
-            </a>
-          </div>
-        </section>
 
         <section aria-labelledby="contact" className="mt-22 scroll-mt-11">
           <SectionLabel id="contact">CONTACT</SectionLabel>
@@ -144,6 +125,30 @@ export default function AboutPage() {
               </div>
             ))}
           </dl>
+        </section>
+
+        <section aria-labelledby="experience" className="mt-22">
+          <SectionLabel id="experience">EXPERIENCE</SectionLabel>
+          <ul className="mt-2 divide-y divide-grid border-y border-grid">
+            {EXPERIENCE.map((job) => (
+              <li key={job.role + job.org} className="grid gap-x-6 py-3 sm:grid-cols-[1fr_auto]">
+                <span>
+                  <span className="font-semibold">{job.role}</span>, {job.org}
+                </span>
+                <span className="font-pixel text-xs leading-6 text-muted">{job.years}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section aria-labelledby="education" className="mt-22">
+          <SectionLabel id="education">EDUCATION</SectionLabel>
+          <ul className="mt-2 divide-y divide-grid border-y border-grid">
+            <li className="py-3">
+              <span className="font-semibold">Utah State University</span>, BFA, Graphic Design; BS, Political
+              Science and Government; minor in Art History
+            </li>
+          </ul>
         </section>
 
         {/* TODO(ryker): approve line */}
