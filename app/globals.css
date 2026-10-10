@@ -6,7 +6,10 @@
  */
 @theme {
   --color-bg: #ffffff;
-  --color-grid: #dddede;
+  /* Lighter than the mockup's #dddede at Ryker's request, so the graph paper
+     recedes further behind the headline. Cell size is unchanged because the
+     headline, cut squares, links and meeples are all snapped to it. */
+  --color-grid: #eeefef;
   --color-ink: #000000;
   --color-ink-soft: #221f20;
   --color-muted: #a1a3a6;

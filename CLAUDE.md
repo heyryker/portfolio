@@ -30,7 +30,7 @@ The landing page mockup is in `/design/landing-mockup.png`. Match it closely.
 | Token | Hex | Use |
 |---|---|---|
 | `bg` | `#FFFFFF` | Page background |
-| `grid` | `#DDDEDE` | Background grid lines |
+| `grid` | `#EEEFEF` | Background grid lines (lightened from the mockup's `#DDDEDE`) |
 | `ink` | `#000000` | Headlines, body text |
 | `ink-soft` | `#221F20` | Hamburger icon, UI chrome |
 | `muted` | `#A1A3A6` | Bracket nav labels, captions |
