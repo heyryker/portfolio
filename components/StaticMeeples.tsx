@@ -4,8 +4,8 @@ import { Meeple } from "./Meeple";
 /**
  * The five meeples, standing still in their mockup positions.
  *
- * Build step 2 only: the engine in step 3 replaces this with the moving,
- * draggable version. These poses stay as the reduced-motion fallback.
+ * This is what the server renders and what anyone with reduced motion sees.
+ * MeepleField swaps it for the live canvas engine in the browser.
  *
  * The layer sits above the headline (so meeples can walk over it) but below
  * the nav and header, and ignores pointer events so it never blocks a click.

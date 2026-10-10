@@ -5,6 +5,8 @@ export type MeepleConfig = {
   name: string;
   /** CSS color, from the meeple tokens in globals.css. */
   color: string;
+  /** The same color as a hex literal, for the canvas (keep in sync with globals.css). */
+  hex: string;
   /** Short note on how it reacts to the cursor (CLAUDE.md §5). */
   personality: string;
   /**
@@ -20,6 +22,7 @@ export const MEEPLES: MeepleConfig[] = [
     id: "yellow",
     name: "The Curious One",
     color: "var(--color-meeple-yellow)",
+    hex: "#FBEC5A",
     personality: "Drifts toward the cursor and follows at a polite distance.",
     home: { x: 0.221, y: 0.143 },
   },
@@ -27,6 +30,7 @@ export const MEEPLES: MeepleConfig[] = [
     id: "purple",
     name: "The Watcher",
     color: "var(--color-meeple-purple)",
+    hex: "#985DF6",
     personality: "Perches near the headline and follows the cursor with its eyes.",
     home: { x: 0.528, y: 0.13 },
   },
@@ -34,6 +38,7 @@ export const MEEPLES: MeepleConfig[] = [
     id: "green",
     name: "The Shy One",
     color: "var(--color-meeple-green)",
+    hex: "#5FCC8A",
     personality: "Scoots away when the cursor gets close, then peeks back.",
     home: { x: 0.818, y: 0.24 },
   },
@@ -41,6 +46,7 @@ export const MEEPLES: MeepleConfig[] = [
     id: "red",
     name: "The Chaotic One",
     color: "var(--color-meeple-red)",
+    hex: "#E05A32",
     personality: "Fast. Bumps into the others and rushes the cursor.",
     home: { x: 0.11, y: 0.609 },
   },
@@ -48,6 +54,7 @@ export const MEEPLES: MeepleConfig[] = [
     id: "blue",
     name: "The Sleepy One",
     color: "var(--color-meeple-blue)",
+    hex: "#58B9F8",
     personality: "Naps. Only wakes if clicked or hit by a thrown meeple.",
     home: { x: 0.937, y: 0.871 },
   },

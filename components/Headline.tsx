@@ -8,8 +8,9 @@ import { PixelSquare } from "./PixelSquare";
  * from design/landing-mockup.png (HEY cap height ≈ 140px at a 1490px-wide
  * viewport).
  *
- * The blue elements carry data-meeple-tint so the meeple engine (step 3) can
- * find them and recolor them when a meeple walks over.
+ * The blue elements carry data-meeple-tint ("fill" or "text") so the meeple
+ * engine can recolor them when a meeple walks over. Their 900ms transition is
+ * the fade back to the accent; the engine shortens it while tinting.
  */
 export function Headline() {
   return (
@@ -22,8 +23,8 @@ export function Headline() {
     >
       <span aria-hidden="true" className="relative block whitespace-nowrap">
         <PixelSquare
-          data-meeple-tint=""
-          className="absolute"
+          data-meeple-tint="fill"
+          className="absolute transition-colors duration-900"
           style={{
             width: "0.13em",
             height: "0.13em",
@@ -34,8 +35,8 @@ export function Headline() {
         />
         HEY
         <span
-          data-meeple-tint=""
-          className="ml-[0.04em] text-[0.6em] font-semibold tracking-normal text-accent"
+          data-meeple-tint="text"
+          className="transition-colors duration-900 ml-[0.04em] text-[0.6em] font-semibold tracking-normal text-accent"
         >
           [I&rsquo;M]
         </span>
@@ -46,8 +47,8 @@ export function Headline() {
       >
         RYKER
         <PixelSquare
-          data-meeple-tint=""
-          className="-ml-[0.08em]"
+          data-meeple-tint="fill"
+          className="-ml-[0.08em] transition-colors duration-900"
           style={{ width: "0.13em", height: "0.13em" }}
         />
       </span>
