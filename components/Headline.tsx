@@ -1,12 +1,16 @@
 import { PixelSquare } from "./PixelSquare";
 
 /**
- * HEY [I'M] / RYKER, staggered as in the mockup.
+ * HEY [I'M] / RYKER, staggered as in the mockup and locked to the graph-paper
+ * grid: the cap tops and baselines of both lines sit on horizontal grid lines,
+ * and the left edges of H and R sit on vertical ones. The sizes in cells
+ * (cap height, line gap, RYKER's indent) are set per breakpoint in
+ * globals.css under `.headline-grid`.
  *
- * Everything is sized in em off one font size, so the whole lockup scales
- * with the viewport and keeps its proportions. The offsets were measured
- * from design/landing-mockup.png (HEY cap height ≈ 140px at a 1490px-wide
- * viewport).
+ * The type is Inter with two letters modified, as Ryker drew it: the top-left
+ * corner of H's stem and the bottom of R's leg are cut out, and each cut-out
+ * block is pushed out diagonally as a blue pixel square that touches the
+ * letter only at a corner. The cuts are clip-paths on `.hl-h` and `.hl-r`.
  *
  * The blue elements carry data-meeple-tint ("fill" or "text") so the meeple
  * engine can recolor them when a meeple walks over. Their 900ms transition is
@@ -18,22 +22,14 @@ export function Headline() {
       aria-label="Hey, I'm Ryker."
       // The brief asks for 800–900. The mockup reads closer to 700, so this
       // uses 800: the lighter end of the brief's range.
-      className="relative font-extrabold leading-none tracking-[-0.015em] text-ink select-none"
-      style={{ fontSize: "var(--headline-size)" }}
+      className="headline-grid font-extrabold leading-none tracking-[-0.015em] text-ink select-none"
     >
-      <span aria-hidden="true" className="relative block whitespace-nowrap">
-        <PixelSquare
-          data-meeple-tint="fill"
-          className="absolute transition-colors duration-900"
-          style={{
-            width: "0.13em",
-            height: "0.13em",
-            left: "-0.07em",
-            // Inter's cap top sits ~0.136em below the line box at line-height 1.
-            top: "0.135em",
-          }}
-        />
-        HEY
+      <span aria-hidden="true" className="headline-line" style={{ top: 0, left: 0 }}>
+        <span className="hl-letter">
+          <span className="hl-h">H</span>
+          <PixelSquare data-meeple-tint="fill" className="transition-colors duration-900 hl-square hl-square-h" />
+        </span>
+        EY
         <span
           data-meeple-tint="text"
           className="transition-colors duration-900 ml-[0.04em] text-[0.6em] font-semibold tracking-normal text-accent"
@@ -43,14 +39,14 @@ export function Headline() {
       </span>
       <span
         aria-hidden="true"
-        className="mt-[0.03em] block whitespace-nowrap pl-[2em]"
+        className="headline-line"
+        style={{ top: "var(--hl-line2-top)", left: "var(--hl-indent)" }}
       >
-        RYKER
-        <PixelSquare
-          data-meeple-tint="fill"
-          className="-ml-[0.08em] transition-colors duration-900"
-          style={{ width: "0.13em", height: "0.13em" }}
-        />
+        RYKE
+        <span className="hl-letter">
+          <span className="hl-r">R</span>
+          <PixelSquare data-meeple-tint="fill" className="transition-colors duration-900 hl-square hl-square-r" />
+        </span>
       </span>
     </h1>
   );
