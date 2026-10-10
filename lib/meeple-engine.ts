@@ -17,7 +17,8 @@
  * clicks: HEY's square explodes and reassembles like a meeple, and RYKER's
  * period squashes flat until it's gone (every meeple jumps at the thud), and
  * a shiny gold flower pops up in its place while little ones pop up all over
- * the page. Then the period springs back.
+ * the page. All five meeples gather round the gold flower and hop in praise
+ * until it fades, then the period springs back.
  *
  * The canvas ignores pointer events. The engine listens on the page instead
  * and only claims a press that lands on a meeple and not on a link or button,
@@ -65,6 +66,10 @@ const FLATTEN_TIME = 0.14;
 const GOLD_LIFE = 9; // seconds from the click until the gold flower goes
 const GOLD_FADE = 0.6;
 const SPRING_BACK = 0.6; // then the period springs back up
+const PRAISE_RADIUS = 92; // how far from the gold flower the meeples gather
+// Where each meeple stands around it, in degrees either side of the most open
+// direction (down and toward the middle of the page).
+const PRAISE_ANGLES = [-80, -40, 0, 40, 80];
 const WILD_LIFE: [number, number] = [14, 20]; // the little flowers it sets off
 const HOP_TIME = 0.42; // one hop
 const HOP_HEIGHT = 16;
@@ -280,6 +285,8 @@ export class MeepleEngine {
   private glance: { at: Vec; until: number } | null = null;
   private drag: Drag | null = null;
   private squareDrag: SquareDrag | null = null;
+  /** While the gold flower is up: the flower's head and each meeple's spot around it. */
+  private praise: { square: TintTarget; head: Vec; spots: Map<Meeple, Vec> } | null = null;
   private tints: TintTarget[] = [];
   private squares: TintTarget[] = [];
   private flowers: Flower[] = [];
@@ -511,6 +518,7 @@ export class MeepleEngine {
   };
 
   private update(dt: number) {
+    this.updatePraise();
     for (const m of this.meeples) {
       m.modeT += dt;
       switch (m.mode) {
@@ -556,6 +564,11 @@ export class MeepleEngine {
   private think(m: Meeple, dt: number) {
     m.wx = 0;
     m.wy = 0;
+
+    if (this.praise) {
+      this.worship(m, dt);
+      return;
+    }
 
     if (m.asleep) {
       // Every so often the Sleepy One sleepwalks to a fresh napping spot,
@@ -761,6 +774,69 @@ export class MeepleEngine {
       x: clamp(x, MARGIN, Math.max(MARGIN, this.vw - W - MARGIN)),
       y: clamp(y, MARGIN, Math.max(MARGIN, this.vh - H - MARGIN)),
     };
+  }
+
+  /**
+   * The gold flower's fan club. From the moment it sprouts until it fades,
+   * every meeple drops what it's doing (the Sleepy One wakes up), walks to its
+   * own spot around it, and hops in praise while gazing at it.
+   */
+  private updatePraise() {
+    const gold = this.squares.find((t) => t.bloomT >= FLATTEN_TIME + 0.35 && t.bloomT < GOLD_LIFE && t.rect);
+    if (!gold) {
+      this.praise = null;
+      return;
+    }
+    if (this.praise?.square !== gold) {
+      const r = gold.rect!;
+      const g = r.width / 2;
+      // The flower's head, matching drawGold: centered 2.5 of its pixels in, 5.5 up.
+      const head = { x: r.x + gold.off.x + 2.5 * g, y: r.y + gold.off.y + r.height - 5.5 * g };
+      // Face the fan club down and toward the middle of the page, where there's room.
+      const toMiddle = clamp((this.vw / 2 - head.x) / (this.vw / 2), -1, 1);
+      const open = Math.atan2(1, toMiddle);
+      // Hand out the spots in the order the meeples already sit around the
+      // flower, so their paths don't cross and they don't jostle on the way.
+      const bearing = (v: Vec) => {
+        const b = Math.atan2(v.y - head.y, v.x - head.x) - open;
+        return Math.atan2(Math.sin(b), Math.cos(b));
+      };
+      const ordered = [...this.meeples].sort((a, b) => bearing(center(a)) - bearing(center(b)));
+      const spots = new Map<Meeple, Vec>();
+      ordered.forEach((m, i) => {
+        const a = open + (PRAISE_ANGLES[i] * Math.PI) / 180;
+        spots.set(m, this.clampTarget(head.x + Math.cos(a) * PRAISE_RADIUS - W / 2, head.y + Math.sin(a) * PRAISE_RADIUS - H / 2));
+      });
+      this.praise = { square: gold, head, spots };
+      for (const m of this.meeples) {
+        this.wake(m);
+        this.cancelLasso(m);
+        m.planting = -1;
+        m.target = null;
+        m.rushing = false;
+        m.scaredFor = 0;
+        m.fleeTo = null;
+      }
+    }
+    this.glance = { at: this.praise.head, until: this.time + 0.3 };
+  }
+
+  private worship(m: Meeple, dt: number) {
+    const p = this.praise!;
+    this.wake(m);
+    // Sliding after a throw or a bump: let it slow down first.
+    if (Math.hypot(m.vx, m.vy) > TUMBLE_SPEED) return;
+    const spot = p.spots.get(m)!;
+    // Everyone hurries, even the slow ones.
+    const speed = Math.max(m.traits.speed * 2, 190);
+    if (!this.walkTo(m, spot.x, spot.y, speed, dt)) {
+      m.mode = "walk";
+      return;
+    }
+    m.mode = "idle";
+    m.idleFor = 0.5;
+    // Hop, hop, a short breath, again. Each on its own beat.
+    if (m.hop === null) m.hop = -rand(0.05, 0.35);
   }
 
   /** Sets the walking velocity toward (x, y). Returns true on arrival. */
