@@ -284,8 +284,9 @@ export class MeepleEngine {
     this.listen(document.documentElement, "pointerleave", this.onPointerLeave);
     this.listen(document, "visibilitychange", this.onVisibility);
 
-    // A meeple may glance at a case-study label when it's hovered or focused.
-    for (const link of root.querySelectorAll<HTMLElement>("nav a")) {
+    // A meeple may glance at a case-study label (or the headline's [I'M] link)
+    // when it's hovered or focused.
+    for (const link of root.querySelectorAll<HTMLElement>("nav a, [data-meeple-glance]")) {
       const look = () => {
         const r = link.getBoundingClientRect();
         const c = this.canvas.getBoundingClientRect();

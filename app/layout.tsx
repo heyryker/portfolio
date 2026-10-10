@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     template: "%s | Ryker Marble",
   },
   description:
-    "Ryker Marble is a brand and creative lead in Utah, working across strategy, production and art direction for B2B SaaS, cybersecurity, Web3 and fintech brands.",
+    "Ryker Marble is a brand and creative lead in Utah, working across strategy, craft and art direction for B2B SaaS, cybersecurity, Web3 and fintech brands.",
 };
 
 export const viewport: Viewport = {
