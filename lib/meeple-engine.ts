@@ -9,9 +9,17 @@
  *
  * They also make a little trouble: the Chaotic One charges the headline's
  * pixel squares out of their sockets, the Curious One lassos them (and the
- * cursor) and tows them home, the Shy and Curious Ones plant a pixel garden
- * that the Chaotic One tramples, and the Sleepy One wears a nightcap. At rest the
+ * cursor) and tows them home, they all plant a pixel garden (the Shy One
+ * grows carrots among the flowers in its corner, the Sleepy One plants in its sleep) that the
+ * Chaotic One tramples, and the Sleepy One wears a nightcap. At rest the
  * headline always settles back to its grid-locked look.
+ *
+ * The two headline squares can be grabbed and thrown like meeples, and answer
+ * clicks: HEY's square explodes and reassembles like a meeple, and RYKER's
+ * period squashes flat until it's gone (every meeple jumps at the thud), and
+ * a shiny gold flower pops up in its place while little ones pop up all over
+ * the page. All five meeples gather round the gold flower and hop in praise
+ * until it fades, then the period springs back.
  *
  * The canvas ignores pointer events. The engine listens on the page instead
  * and only claims a press that lands on a meeple and not on a link or button,
@@ -51,30 +59,73 @@ const SQUARE_FRICTION = 2.6;
 const SQUARE_REST = 1.2; // seconds at rest before the lasso goes after it
 const SQUARE_GIVE_UP = 8; // seconds loose before it glides home by itself
 
+// Clicking the headline squares. HEY's square bursts into a 4x4 of half
+// meeple pixels; RYKER's period flattens away and a gold flower pops up.
+const SQUARE_SHAKE = 0.35;
+const SQUARE_SPLIT = 4;
+const FLATTEN_TIME = 0.14;
+const GOLD_LIFE = 9; // seconds from the click until the gold flower goes
+const GOLD_FADE = 0.6;
+const SPRING_BACK = 0.6; // then the period springs back up
+const PRAISE_RADIUS = 92; // how far from the gold flower the meeples gather
+// Where each meeple stands around it, in degrees either side of the most open
+// direction (down and toward the middle of the page).
+const PRAISE_ANGLES = [-80, -40, 0, 40, 80];
+const WILD_LIFE: [number, number] = [14, 20]; // the little flowers it sets off
+const HOP_TIME = 0.42; // one hop
+const HOP_HEIGHT = 16;
+const SHOCKWAVE_SPEED = 900; // px/s, so far meeples hop a beat later
+
 const ROPE = 64; // towing rope length
 const LASSO_TWIRL = 0.7;
 const LASSO_THROW = 0.3;
 const LASSO_HOLD = 1.2;
+const LASSO_PULL = 2.4; // how long a roped cursor can drag the Curious One around
+const ROPE_SNAP = 160; // a cursor that jumps further than this in a frame slips the loop
 const LASSO_REEL = 0.3;
 
-// The garden, planted by the Shy and Curious Ones. Flowers are drawn in half
-// meeple pixels and planted on the meeple-pixel grid, so they sit on the
-// graph paper too.
+// The garden, planted by all five (the Shy One adds a carrot every third go). Flowers are
+// drawn in half meeple pixels and planted on the meeple-pixel grid, so they
+// sit on the graph paper too.
 const F = P / 2;
 const PLANT_TIME = 0.9;
-const MAX_FLOWERS = 10;
-const FLOWER_LIFE = 75;
+const PLANT_EVERY: [number, number] = [3, 6];
+const MAX_FLOWERS = 24;
+const FLOWER_LIFE = 120;
 const WILT_TIME = 2;
 const TRAMPLED_TIME = 3;
 const PETALS = ["#985DF6", "#E05A32", "#58B9F8", "#FBEC5A"];
 const STEM = "#5FCC8A";
 const DIRT = "#A1A3A6";
 
+// The gold flower from RYKER's period: H highlight, P gold petal, C amber center.
+const GOLD_BLOOM = [".HPP.", "HPCPP", ".PPP.", "..S..", ".LS..", "..SL.", "..S.."];
+const GOLD_COLORS: Record<string, string> = {
+  H: "#FFF1A8",
+  P: "#F5C518",
+  C: "#E0860B",
+  S: "#5FCC8A",
+  L: "#5FCC8A",
+  D: "#A1A3A6",
+};
+// Sparkles around its head: x from the flower's middle and y from its top, in its pixels, and a phase.
+const GOLD_SPARKLES: [number, number, number][] = [
+  [-3.6, -0.6, 0],
+  [3.4, 0.4, 0.35],
+  [-2.8, 3.2, 0.6],
+  [3.1, 2.6, 0.15],
+  [0.4, -1.8, 0.8],
+];
+
 // Rows top to bottom. S stem, L leaf, P petal, C center, D dirt.
 const FLOWER_SEED = ["DDD"];
 const FLOWER_SPROUT = ["L.L", ".S.", ".S."];
 const FLOWER_BLOOM = [".P.", "PCP", ".P.", ".S.", "LS.", ".S."];
 const FLOWER_FLAT = ["LSSPCP"];
+// The Shy One's carrots: leafy tops with the orange shoulders poking out. O is carrot.
+const CARROT_GROWN = ["L.L", ".L.", "OOO", "OOO", ".O."];
+const CARROT_FLAT = ["LLOOO."];
+const CARROT = "#E05A32"; // meeple-red, which reads as carrot orange
 
 // The Sleepy One's nightcap, in px from its head block's top-left. It droops
 // to the left so it stays clear of the z's.
@@ -148,6 +199,10 @@ type Meeple = {
   /** Gardeners only: seconds until it next plants, and digging progress (-1 when not). */
   plantIn: number;
   planting: number;
+  /** How many it has planted, so the Shy One can alternate flowers and carrots. */
+  planted: number;
+  /** Seconds into a jump from the squash shockwave (negative while it travels; null when not). */
+  hop: number | null;
 };
 
 type TintTarget = {
@@ -159,7 +214,16 @@ type TintTarget = {
   holdUntil: number;
   /** Pixel squares can be knocked loose. Text stays put. */
   pushable: boolean;
-  state: "home" | "loose" | "towed" | "gliding";
+  state: "home" | "loose" | "towed" | "gliding" | "burst" | "held" | "gone";
+  /** What a click does: HEY's square bursts, RYKER's period squashes. */
+  click: "burst" | "squash" | null;
+  /** Seconds into a burst (-1 when not). */
+  clickT: number;
+  /** A burst square's pieces, and their color. */
+  blocks: Block[];
+  blockColor: string;
+  /** RYKER's period: seconds since it was clicked (-1 when not), through flattening, the gold flower and springing back. */
+  bloomT: number;
   off: Vec;
   v: Vec;
   /** Seconds loose, and seconds at rest while loose. */
@@ -176,6 +240,10 @@ type Lasso = {
   loop: Vec;
   /** Rope paid out while towing; reeled in to ROPE. */
   rope: number;
+  /** A roped cursor: seconds spent dragging the meeple, whether it's dragging this frame, and where it was. */
+  pull: number;
+  tugging: boolean;
+  last: Vec;
 };
 
 type Flower = {
@@ -187,6 +255,20 @@ type Flower = {
   /** Seconds since it started wilting or was trampled; -1 while healthy. */
   fade: number;
   trampled: boolean;
+  /** Seconds before it wilts. The period's wild flowers don't last as long. */
+  life: number;
+  carrot: boolean;
+};
+
+type SquareDrag = {
+  t: TintTarget;
+  pointerId: number;
+  offX: number;
+  offY: number;
+  t0: number;
+  start: Vec;
+  moved: number;
+  samples: { t: number; x: number; y: number }[];
 };
 
 type Drag = {
@@ -217,10 +299,13 @@ export class MeepleEngine {
   private cursor = { x: 0, y: 0, inside: false, lastMove: -Infinity };
   private glance: { at: Vec; until: number } | null = null;
   private drag: Drag | null = null;
+  private squareDrag: SquareDrag | null = null;
+  /** While the gold flower is up: the flower's head and each meeple's spot around it. */
+  private praise: { square: TintTarget; head: Vec; spots: Map<Meeple, Vec> } | null = null;
   private tints: TintTarget[] = [];
   private squares: TintTarget[] = [];
   private flowers: Flower[] = [];
-  /** Areas the garden keeps off: the headline and the case-study links. */
+  /** Areas the garden keeps off: the headline's two lines (not the whole box, so the gaps beside them can bloom), the links and the menu. */
   private noPlant: DOMRect[] = [];
   /** When the Chaotic One may next shove a square on purpose. */
   private nextShove = 6;
@@ -247,6 +332,11 @@ export class MeepleEngine {
       holdUntil: 0,
       pushable: el.dataset.meepleTint !== "text",
       state: "home",
+      click: el.dataset.meepleClick === "burst" || el.dataset.meepleClick === "squash" ? el.dataset.meepleClick : null,
+      clickT: -1,
+      blocks: [],
+      blockColor: "",
+      bloomT: -1,
       off: { x: 0, y: 0 },
       v: { x: 0, y: 0 },
       looseFor: 0,
@@ -311,6 +401,7 @@ export class MeepleEngine {
       t.el.style[t.prop] = "";
       t.el.style.transitionDuration = "";
       t.el.style.transform = "";
+      t.el.style.visibility = "";
     }
     this.root.style.cursor = "";
   }
@@ -364,8 +455,10 @@ export class MeepleEngine {
       blocks: [],
       lasso: null,
       lassoCooldown: rand(3, 6),
-      plantIn: rand(5, 9),
+      plantIn: rand(3, 6),
       planting: -1,
+      planted: 0,
+      hop: null,
     };
   }
 
@@ -391,7 +484,7 @@ export class MeepleEngine {
       const bottom = r.bottom - fs * 0.12;
       t.rect = new DOMRect(r.left - c.left, top - c.top, r.width, bottom - top);
     }
-    this.noPlant = Array.from(this.root.querySelectorAll<HTMLElement>("h1, nav, header a, header button")).map((el) => {
+    this.noPlant = Array.from(this.root.querySelectorAll<HTMLElement>(".headline-line, nav a, header a, header button")).map((el) => {
       const r = el.getBoundingClientRect();
       return new DOMRect(r.left - c.left - 12, r.top - c.top - 12, r.width + 24, r.height + 24);
     });
@@ -425,6 +518,7 @@ export class MeepleEngine {
     else {
       this.pause();
       if (this.drag) this.release(this.drag, performance.now(), false);
+      if (this.squareDrag) this.releaseSquare(this.squareDrag, performance.now(), false);
     }
   };
 
@@ -440,6 +534,7 @@ export class MeepleEngine {
   };
 
   private update(dt: number) {
+    this.updatePraise();
     for (const m of this.meeples) {
       m.modeT += dt;
       switch (m.mode) {
@@ -463,6 +558,10 @@ export class MeepleEngine {
       }
       m.prev.x = m.x;
       m.prev.y = m.y;
+      if (m.hop !== null) {
+        m.hop += dt;
+        if (m.hop > HOP_TIME * 2) m.hop = null;
+      }
       this.updateFace(m, dt);
     }
     this.collide();
@@ -482,6 +581,11 @@ export class MeepleEngine {
     m.wx = 0;
     m.wy = 0;
 
+    if (this.praise) {
+      this.worship(m, dt);
+      return;
+    }
+
     if (m.asleep) {
       // Every so often the Sleepy One sleepwalks to a fresh napping spot,
       // eyes shut and z's still going.
@@ -497,6 +601,8 @@ export class MeepleEngine {
           m.mode = "idle";
           m.target = null;
           m.napFor = rand(6, 11);
+          // Plants a flower in its sleep, now and then, wherever it ends up.
+          if (Math.random() < 0.6) this.plant(m);
         }
       }
       return;
@@ -624,6 +730,13 @@ export class MeepleEngine {
           m.rushing = true;
           return;
         }
+        // Even the Chaotic One plants a few (and tramples them later).
+        if (this.garden(m, dt)) return;
+        break;
+      }
+      case "blue": {
+        // Awake for once: it gardens like the rest.
+        if (this.garden(m, dt)) return;
         break;
       }
     }
@@ -675,6 +788,12 @@ export class MeepleEngine {
       const o = others[Math.floor(Math.random() * others.length)];
       if (o) return this.clampTarget(o.x, o.y);
     }
+    if (m.cfg.id === "green" && Math.random() < 0.85) {
+      // The Shy One's hideout is the bottom-left quarter of the page. It
+      // mostly potters about (and gardens) there, and heads back after a
+      // scare or the odd outing.
+      return this.clampTarget(rand(0, this.vw / 2 - W), rand(this.vh / 2, this.vh - H));
+    }
     // Meander: a short leg in a random direction.
     const a = rand(0, Math.PI * 2);
     const r = rand(80, 320);
@@ -686,6 +805,69 @@ export class MeepleEngine {
       x: clamp(x, MARGIN, Math.max(MARGIN, this.vw - W - MARGIN)),
       y: clamp(y, MARGIN, Math.max(MARGIN, this.vh - H - MARGIN)),
     };
+  }
+
+  /**
+   * The gold flower's fan club. From the moment it sprouts until it fades,
+   * every meeple drops what it's doing (the Sleepy One wakes up), walks to its
+   * own spot around it, and hops in praise while gazing at it.
+   */
+  private updatePraise() {
+    const gold = this.squares.find((t) => t.bloomT >= FLATTEN_TIME + 0.35 && t.bloomT < GOLD_LIFE && t.rect);
+    if (!gold) {
+      this.praise = null;
+      return;
+    }
+    if (this.praise?.square !== gold) {
+      const r = gold.rect!;
+      const g = r.width / 2;
+      // The flower's head, matching drawGold: centered 2.5 of its pixels in, 5.5 up.
+      const head = { x: r.x + gold.off.x + 2.5 * g, y: r.y + gold.off.y + r.height - 5.5 * g };
+      // Face the fan club down and toward the middle of the page, where there's room.
+      const toMiddle = clamp((this.vw / 2 - head.x) / (this.vw / 2), -1, 1);
+      const open = Math.atan2(1, toMiddle);
+      // Hand out the spots in the order the meeples already sit around the
+      // flower, so their paths don't cross and they don't jostle on the way.
+      const bearing = (v: Vec) => {
+        const b = Math.atan2(v.y - head.y, v.x - head.x) - open;
+        return Math.atan2(Math.sin(b), Math.cos(b));
+      };
+      const ordered = [...this.meeples].sort((a, b) => bearing(center(a)) - bearing(center(b)));
+      const spots = new Map<Meeple, Vec>();
+      ordered.forEach((m, i) => {
+        const a = open + (PRAISE_ANGLES[i] * Math.PI) / 180;
+        spots.set(m, this.clampTarget(head.x + Math.cos(a) * PRAISE_RADIUS - W / 2, head.y + Math.sin(a) * PRAISE_RADIUS - H / 2));
+      });
+      this.praise = { square: gold, head, spots };
+      for (const m of this.meeples) {
+        this.wake(m);
+        this.cancelLasso(m);
+        m.planting = -1;
+        m.target = null;
+        m.rushing = false;
+        m.scaredFor = 0;
+        m.fleeTo = null;
+      }
+    }
+    this.glance = { at: this.praise.head, until: this.time + 0.3 };
+  }
+
+  private worship(m: Meeple, dt: number) {
+    const p = this.praise!;
+    this.wake(m);
+    // Sliding after a throw or a bump: let it slow down first.
+    if (Math.hypot(m.vx, m.vy) > TUMBLE_SPEED) return;
+    const spot = p.spots.get(m)!;
+    // Everyone hurries, even the slow ones.
+    const speed = Math.max(m.traits.speed * 2, 190);
+    if (!this.walkTo(m, spot.x, spot.y, speed, dt)) {
+      m.mode = "walk";
+      return;
+    }
+    m.mode = "idle";
+    m.idleFor = 0.5;
+    // Hop, hop, a short breath, again. Each on its own beat.
+    if (m.hop === null) m.hop = -rand(0.05, 0.35);
   }
 
   /** Sets the walking velocity toward (x, y). Returns true on arrival. */
@@ -848,18 +1030,23 @@ export class MeepleEngine {
   }
 
   private updateBlocks(m: Meeple, dt: number) {
+    this.moveBlocks(m.blocks, P, dt);
+  }
+
+  /** Scattered pixels glide to a stop and bounce off the viewport edges. */
+  private moveBlocks(blocks: Block[], size: number, dt: number) {
     const f = Math.exp(-2.4 * dt);
-    for (const b of m.blocks) {
+    for (const b of blocks) {
       b.x += b.vx * dt;
       b.y += b.vy * dt;
       b.vx *= f;
       b.vy *= f;
-      if (b.x < 0 || b.x > this.vw - P) {
-        b.x = clamp(b.x, 0, this.vw - P);
+      if (b.x < 0 || b.x > this.vw - size) {
+        b.x = clamp(b.x, 0, this.vw - size);
         b.vx = -b.vx * 0.6;
       }
-      if (b.y < 0 || b.y > this.vh - P) {
-        b.y = clamp(b.y, 0, this.vh - P);
+      if (b.y < 0 || b.y > this.vh - size) {
+        b.y = clamp(b.y, 0, this.vh - size);
         b.vy = -b.vy * 0.6;
       }
     }
@@ -931,16 +1118,24 @@ export class MeepleEngine {
   private onTouchStart = (e: TouchEvent) => {
     const t = e.touches[0];
     if (!t || e.touches.length > 1 || this.isInteractive(e.target)) return;
-    if (this.hit(this.toLocal(t), 10)) e.preventDefault();
+    const p = this.toLocal(t);
+    if (this.hit(p, 10) || this.hitSquare(p, 10)) e.preventDefault();
   };
 
   private onPointerDown = (e: PointerEvent) => {
     this.moveCursor(e);
-    if (this.drag || !e.isPrimary || (e.pointerType === "mouse" && e.button !== 0)) return;
+    if (this.drag || this.squareDrag || !e.isPrimary || (e.pointerType === "mouse" && e.button !== 0)) return;
     if (this.isInteractive(e.target)) return;
     const p = this.toLocal(e);
     const m = this.hit(p, e.pointerType === "mouse" ? 3 : 10);
-    if (!m) return;
+    if (!m) {
+      const sq = this.hitSquare(p, e.pointerType === "mouse" ? 3 : 10);
+      if (sq) {
+        e.preventDefault();
+        this.grabSquare(sq, e, p);
+      }
+      return;
+    }
     e.preventDefault();
 
     this.wake(m);
@@ -967,6 +1162,17 @@ export class MeepleEngine {
 
   private onPointerMove = (e: PointerEvent) => {
     this.moveCursor(e);
+    const sd = this.squareDrag;
+    if (sd && e.pointerId === sd.pointerId) {
+      const p = this.toLocal(e);
+      const r = sd.t.rect!;
+      sd.t.off.x = clamp(p.x - sd.offX, 0, this.vw - r.width) - r.x;
+      sd.t.off.y = clamp(p.y - sd.offY, 0, this.vh - r.height) - r.y;
+      sd.moved = Math.max(sd.moved, Math.hypot(p.x - sd.start.x, p.y - sd.start.y));
+      sd.samples.push({ t: e.timeStamp, ...p });
+      while (sd.samples.length > 2 && e.timeStamp - sd.samples[0].t > 100) sd.samples.shift();
+      return;
+    }
     const drag = this.drag;
     if (drag && e.pointerId === drag.pointerId) {
       const p = this.toLocal(e);
@@ -978,12 +1184,15 @@ export class MeepleEngine {
       return;
     }
     if (e.pointerType === "mouse" && !drag) {
-      const over = !this.isInteractive(e.target) && this.hit(this.toLocal(e), 3);
-      this.root.style.cursor = over ? "grab" : "";
+      const p = this.toLocal(e);
+      const free = !this.isInteractive(e.target);
+      this.root.style.cursor = free && (this.hit(p, 3) || this.hitSquare(p, 3)) ? "grab" : "";
     }
   };
 
   private onPointerUp = (e: PointerEvent) => {
+    const sd = this.squareDrag;
+    if (sd && e.pointerId === sd.pointerId) this.releaseSquare(sd, e.timeStamp, e.type === "pointerup");
     const drag = this.drag;
     if (!drag || e.pointerId !== drag.pointerId) return;
     this.release(drag, e.timeStamp, e.type === "pointerup");
@@ -1075,6 +1284,9 @@ export class MeepleEngine {
           t.v.x = t.v.y = 0;
           break;
         }
+        case "burst":
+          this.updateBurst(t, dt);
+          break;
         case "gliding": {
           const k = 1 - Math.exp(-5 * dt);
           t.off.x -= t.off.x * k;
@@ -1086,11 +1298,268 @@ export class MeepleEngine {
           break;
         }
       }
+      let sy = 1;
+      if (t.bloomT >= 0) {
+        t.bloomT += dt;
+        const back = t.bloomT - GOLD_LIFE - GOLD_FADE;
+        if (t.bloomT < FLATTEN_TIME) sy = 1 - t.bloomT / FLATTEN_TIME;
+        else if (back < 0) sy = 0;
+        else if (back < SPRING_BACK) sy = springBack(back);
+        else {
+          t.bloomT = -1;
+          t.state = Math.hypot(t.off.x, t.off.y) < 0.5 ? "home" : "loose";
+          t.looseFor = t.restFor = 0;
+        }
+        const hide = sy <= 0 ? "hidden" : "";
+        if (t.el.style.visibility !== hide) t.el.style.visibility = hide;
+      }
+      if (t.state === "loose" && Math.hypot(t.v.x, t.v.y) > 200) this.squareHits(t);
+      let jx = 0;
+      let jy = 0;
+      if (t.state === "burst" && t.clickT < SQUARE_SHAKE) {
+        jx = Math.round(rand(-2, 2));
+        jy = Math.round(rand(-2, 2));
+      }
       // Whole device pixels, so the square stays crisp in flight.
-      const tx = Math.round(t.off.x * this.dpr) / this.dpr;
-      const ty = Math.round(t.off.y * this.dpr) / this.dpr;
-      const transform = tx || ty ? `translate(${tx}px, ${ty}px)` : "";
+      const tx = Math.round(t.off.x * this.dpr) / this.dpr + jx;
+      const ty = Math.round(t.off.y * this.dpr) / this.dpr + jy;
+      let transform = tx || ty ? `translate(${tx}px, ${ty}px)` : "";
+      if (sy !== 1) {
+        // Spreads out as it flattens, and stays planted on its bottom edge
+        // (transform-origin in globals.css).
+        transform += ` scale(${(1 + (1 - Math.min(sy, 1)) * 0.6).toFixed(3)}, ${Math.max(sy, 0.001).toFixed(3)})`;
+      }
       if (t.el.style.transform !== transform) t.el.style.transform = transform;
+    }
+  }
+
+  private hitSquare(p: Vec, pad: number): TintTarget | null {
+    for (const t of this.squares) {
+      const r = t.rect;
+      if (!r || !t.click || t.state === "burst" || t.state === "held" || t.state === "gone") continue;
+      const x = r.x + t.off.x;
+      const y = r.y + t.off.y;
+      if (p.x >= x - pad && p.x <= x + r.width + pad && p.y >= y - pad && p.y <= y + r.height + pad) return t;
+    }
+    return null;
+  }
+
+  /** Pick up a headline square, like a meeple. A press without a drag is a click. */
+  private grabSquare(t: TintTarget, e: PointerEvent, p: Vec) {
+    for (const m of this.meeples) if (m.lasso?.square === t) this.cancelLasso(m);
+    t.state = "held";
+    t.v.x = t.v.y = 0;
+    const r = t.rect!;
+    this.squareDrag = {
+      t,
+      pointerId: e.pointerId,
+      offX: p.x - (r.x + t.off.x),
+      offY: p.y - (r.y + t.off.y),
+      t0: e.timeStamp,
+      start: p,
+      moved: 0,
+      samples: [{ t: e.timeStamp, ...p }],
+    };
+    this.root.style.cursor = "grabbing";
+  }
+
+  private releaseSquare(sd: SquareDrag, now: number, allowClick: boolean) {
+    const { t } = sd;
+    this.squareDrag = null;
+    this.root.style.cursor = "";
+    t.state = "loose";
+    t.looseFor = 0;
+    t.restFor = 0;
+    if (allowClick && sd.moved < 6 && now - sd.t0 < 400) {
+      // Back in place if it was home, then do its trick.
+      if (Math.hypot(t.off.x, t.off.y) < 0.5) t.state = "home";
+      this.clickSquare(t);
+      return;
+    }
+    // Thrown, with the pointer's speed over the last ~100ms.
+    const first = sd.samples[0];
+    const last = sd.samples[sd.samples.length - 1];
+    const span = (last.t - first.t) / 1000;
+    t.v.x = t.v.y = 0;
+    if (span > 0.008 && now - last.t < 80) {
+      t.v.x = (last.x - first.x) / span;
+      t.v.y = (last.y - first.y) / span;
+      const sp = Math.hypot(t.v.x, t.v.y);
+      if (sp > MAX_THROW) {
+        t.v.x = (t.v.x / sp) * MAX_THROW;
+        t.v.y = (t.v.y / sp) * MAX_THROW;
+      }
+    }
+  }
+
+  private clickSquare(t: TintTarget) {
+    if (t.click === "burst") {
+      // Let go of it first if it's on the Curious One's rope.
+      for (const m of this.meeples) if (m.lasso?.square === t) this.cancelLasso(m);
+      t.state = "burst";
+      t.clickT = 0;
+      t.v.x = t.v.y = 0;
+      return;
+    }
+    if (t.bloomT >= 0) return;
+    t.bloomT = 0;
+    t.state = "gone";
+    t.v.x = t.v.y = 0;
+    this.scatterFlowers(t);
+    // The thud travels outward, so nearby meeples hop first.
+    const c = squareCenter(t);
+    for (const m of this.meeples) {
+      if (m.mode !== "idle" && m.mode !== "walk") continue;
+      const mc = center(m);
+      m.hop = -Math.hypot(mc.x - c.x, mc.y - c.y) / SHOCKWAVE_SPEED;
+      this.wake(m);
+    }
+  }
+
+  /** A thrown square that flies into a meeple knocks it along, and wakes it. */
+  private squareHits(t: TintTarget) {
+    const r = t.rect!;
+    const sx = r.x + t.off.x;
+    const sy = r.y + t.off.y;
+    for (const m of this.meeples) {
+      if (m.mode !== "idle" && m.mode !== "walk") continue;
+      if (sx > m.x + W || sx + r.width < m.x || sy > m.y + H || sy + r.height < m.y) continue;
+      m.vx += t.v.x * 0.7;
+      m.vy += t.v.y * 0.7;
+      t.v.x *= -0.3;
+      t.v.y *= -0.3;
+      this.wake(m);
+      return;
+    }
+  }
+
+  /**
+   * The period's bloom sets off little flowers all over the page, popping up
+   * in a wave outward from it. They're on the same half-pixel grid as the
+   * garden, keep off the headline and links, and wilt sooner.
+   */
+  private scatterFlowers(t: TintTarget) {
+    const c = squareCenter(t);
+    const n = clamp(Math.round((this.vw * this.vh) / 45000), 6, 20);
+    const made: Vec[] = [];
+    for (let tries = 0; made.length < n && tries < n * 30; tries++) {
+      const x = Math.round(rand(MARGIN, this.vw - MARGIN - 3 * F) / F) * F;
+      const y = Math.round(rand(64 + FLOWER_BLOOM.length * F, this.vh - MARGIN) / F) * F;
+      const r = new DOMRect(x, y - FLOWER_BLOOM.length * F, 3 * F, FLOWER_BLOOM.length * F);
+      if (this.noPlant.some((z) => overlaps(z, r))) continue;
+      const near = (f: Vec) => Math.abs(f.x - x) < 6 * F && Math.abs(f.y - y) < 9 * F;
+      if (made.some(near) || this.flowers.some((f) => f.fade < 0 && near(f))) continue;
+      made.push({ x, y });
+      this.flowers.push({
+        x,
+        y,
+        age: -(FLATTEN_TIME + 0.3 + Math.hypot(x - c.x, y - c.y) / SHOCKWAVE_SPEED + rand(0, 0.3)),
+        petal: PETALS[Math.floor(Math.random() * PETALS.length)],
+        fade: -1,
+        trampled: false,
+        life: rand(...WILD_LIFE),
+        carrot: false,
+      });
+    }
+  }
+
+  /**
+   * The gold flower that pops up where RYKER's period was. It grows through
+   * the same seed, sprout and bloom stages as the garden's flowers, at twice
+   * their pixel size (half the period), with a highlight on the petals and
+   * pixel sparkles twinkling around it.
+   */
+  private drawGold(t: TintTarget) {
+    const r = t.rect;
+    if (!r || t.bloomT < 0) return;
+    const age = t.bloomT - FLATTEN_TIME;
+    if (age < 0 || age > GOLD_LIFE - FLATTEN_TIME + GOLD_FADE) return;
+    const { ctx } = this;
+    const fading = age - (GOLD_LIFE - FLATTEN_TIME);
+    ctx.globalAlpha = fading > 0 ? Math.max(0, 1 - fading / GOLD_FADE) : 1;
+    const g = r.width / 2;
+    // Its left edge lines up with the period's, so it stays clear of R's leg.
+    const cx = r.x + t.off.x + 2.5 * g;
+    const base = r.y + t.off.y + r.height;
+    const rows = age < 0.35 ? FLOWER_SEED : age < 1 ? FLOWER_SPROUT : GOLD_BLOOM;
+    const left = cx - (rows[0].length * g) / 2;
+    const top = base - rows.length * g;
+    rows.forEach((row, ry) =>
+      [...row].forEach((ch, rx) => {
+        const color = GOLD_COLORS[ch];
+        if (color) this.rect(left + rx * g, top + ry * g, g, g, color);
+      }),
+    );
+    if (rows === GOLD_BLOOM) {
+      // Sparkles around the head, each twinkling on its own beat.
+      GOLD_SPARKLES.forEach(([sx, sy, phase], i) => {
+        const k = Math.sin((age * 2.2 + phase) * Math.PI * 2);
+        if (k <= 0) return;
+        const arm = Math.round(k * g * 0.5);
+        const x = Math.round(cx + sx * g);
+        const y = Math.round(top + sy * g);
+        const c = i % 2 ? GOLD_COLORS.H : GOLD_COLORS.P;
+        this.rect(x - 1, y - 1, 2, 2, c);
+        if (arm > 1) {
+          this.rect(x - 1, y - 1 - arm, 2, arm, c);
+          this.rect(x - 1, y + 1, 2, arm, c);
+          this.rect(x - 1 - arm, y - 1, arm, 2, c);
+          this.rect(x + 1, y - 1, arm, 2, c);
+        }
+      });
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /** HEY's square: shake, burst into pieces, then drift home and reassemble. */
+  private updateBurst(t: TintTarget, dt: number) {
+    const r = t.rect!;
+    const size = r.width / SQUARE_SPLIT;
+    t.clickT += dt;
+    if (t.clickT < SQUARE_SHAKE) return;
+
+    if (!t.blocks.length) {
+      t.blockColor = getComputedStyle(t.el).backgroundColor;
+      t.el.style.visibility = "hidden";
+      const c = squareCenter(t);
+      for (let i = 0; i < SQUARE_SPLIT * SQUARE_SPLIT; i++) {
+        const x = r.x + t.off.x + (i % SQUARE_SPLIT) * size;
+        const y = r.y + t.off.y + Math.floor(i / SQUARE_SPLIT) * size;
+        const a = Math.atan2(y + size / 2 - c.y, x + size / 2 - c.x) + rand(-0.6, 0.6);
+        const s = rand(220, 520);
+        t.blocks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, delay: 0 });
+      }
+      // It reassembles in its socket, wherever it was knocked to.
+      t.off.x = t.off.y = 0;
+      return;
+    }
+
+    this.moveBlocks(t.blocks, size, dt);
+    const since = t.clickT - SQUARE_SHAKE - SCATTER_TIME;
+    if (since < 0) return;
+    if (t.blocks[0].delay === 0) {
+      const order = t.blocks.map((_, i) => i).sort(() => Math.random() - 0.5);
+      order.forEach((bi, n) => (t.blocks[bi].delay = 0.001 + n * 0.05));
+    }
+    const pull = 1 - Math.exp(-2.6 * dt);
+    const damp = Math.exp(-8 * dt);
+    let done = true;
+    t.blocks.forEach((b, i) => {
+      const tx = r.x + (i % SQUARE_SPLIT) * size;
+      const ty = r.y + Math.floor(i / SQUARE_SPLIT) * size;
+      if (since >= b.delay) {
+        b.vx *= damp;
+        b.vy *= damp;
+        b.x += (tx - b.x) * pull;
+        b.y += (ty - b.y) * pull;
+      }
+      if (Math.abs(tx - b.x) > 0.5 || Math.abs(ty - b.y) > 0.5) done = false;
+    });
+    if (done) {
+      t.blocks = [];
+      t.state = "home";
+      t.clickT = -1;
+      t.el.style.visibility = "";
     }
   }
 
@@ -1102,7 +1571,7 @@ export class MeepleEngine {
   private shoveSquares() {
     for (const t of this.squares) {
       const r = t.rect;
-      if (!r || t.state === "towed" || t.state === "gliding") continue;
+      if (!r || t.state === "towed" || t.state === "gliding" || t.state === "burst" || t.state === "held" || t.state === "gone") continue;
       for (const m of this.meeples) {
         if (m.mode !== "idle" && m.mode !== "walk" && m.mode !== "drag") continue;
         const vx = m.wx + m.vx;
@@ -1145,7 +1614,8 @@ export class MeepleEngine {
   }
 
   private startLasso(m: Meeple, square: TintTarget | null) {
-    m.lasso = { phase: "twirl", t: 0, square, loop: this.hand(m), rope: ROPE };
+    const loop = this.hand(m);
+    m.lasso = { phase: "twirl", t: 0, square, loop, rope: ROPE, pull: 0, tugging: false, last: loop };
     m.planting = -1;
     m.target = null;
   }
@@ -1184,19 +1654,47 @@ export class MeepleEngine {
         const k = Math.min(1, l.t / LASSO_THROW);
         l.loop = { x: hand.x + (goal.x - hand.x) * k, y: hand.y + (goal.y - hand.y) * k };
         if (k < 1) break;
-        if (!sq) next("hold");
-        else if (sq.state === "loose") {
+        if (!sq) {
+          // The rope is as long as the throw, so the cursor only drags it once it pulls away.
+          l.rope = Math.max(ROPE, Math.hypot(goal.x - hand.x, goal.y - hand.y));
+          l.last = goal;
+          next("hold");
+        } else if (sq.state === "loose") {
           sq.state = "towed";
           l.rope = Math.max(ROPE, Math.hypot(goal.x - hand.x, goal.y - hand.y));
           next("tow");
         } else next("reel");
         break;
       }
-      case "hold":
-        // Caught the cursor. It slips off if the cursor gets away.
+      case "hold": {
+        // Caught the cursor. Pull away and it drags the meeple along, skidding
+        // on its heels, until the loop slips off (or the cursor jumps away).
         l.loop = goal;
-        if (l.t > LASSO_HOLD || !this.cursorActive || Math.hypot(goal.x - hand.x, goal.y - hand.y) > 280) next("reel");
+        const dx = goal.x - hand.x;
+        const dy = goal.y - hand.y;
+        const d = Math.hypot(dx, dy);
+        const excess = d - l.rope;
+        l.tugging = false;
+        let slip = !this.cursorActive || l.t > (l.pull > 0 ? LASSO_PULL : LASSO_HOLD);
+        if (excess > ROPE_SNAP) slip = true;
+        else if (excess > 0) {
+          m.x = clamp(m.x + (dx / d) * excess, 0, this.vw - W);
+          m.y = clamp(m.y + (dy / d) * excess, 0, this.vh - H);
+          l.pull += dt;
+          l.tugging = excess > 0.5;
+          this.glance = null;
+        }
+        if (slip) {
+          // Let go mid-drag and it keeps sliding a little.
+          if (l.tugging && dt > 0) {
+            m.vx = clamp(((goal.x - l.last.x) / dt) * 0.6, -600, 600);
+            m.vy = clamp(((goal.y - l.last.y) / dt) * 0.6, -600, 600);
+          }
+          next("reel");
+        }
+        l.last = goal;
         break;
+      }
       case "tow": {
         if (!sq || sq.state !== "towed" || !sq.rect) {
           next("reel");
@@ -1234,8 +1732,8 @@ export class MeepleEngine {
   // ---------------------------------------------------------------- garden
 
   /**
-   * The gardeners (the Shy One and the Curious One), when left alone, stop,
-   * dig, and plant a flower beside them. Returns true while digging.
+   * Every meeple, when left alone, now and then stops, digs, and plants a
+   * flower beside it (every third one the Shy One plants is a carrot). Returns true while digging.
    */
   private garden(m: Meeple, dt: number) {
     if (m.planting >= 0) {
@@ -1245,7 +1743,7 @@ export class MeepleEngine {
       if (m.planting >= PLANT_TIME) {
         this.plant(m);
         m.planting = -1;
-        m.plantIn = rand(7, 12);
+        m.plantIn = rand(...PLANT_EVERY);
       }
       return true;
     }
@@ -1273,9 +1771,21 @@ export class MeepleEngine {
   private plant(m: Meeple) {
     const spot = this.plantSpot(m);
     if (!spot) return;
-    const healthy = this.flowers.filter((f) => f.fade < 0);
+    // The period's wild flowers don't count toward the garden's limit.
+    const healthy = this.flowers.filter((f) => f.fade < 0 && f.life === FLOWER_LIFE);
+    // The Shy One plants two flowers for every carrot.
+    const carrot = m.cfg.id === "green" && m.planted % 3 === 2;
+    m.planted++;
     if (healthy.length >= MAX_FLOWERS) healthy[0].fade = 0;
-    this.flowers.push({ ...spot, age: 0, petal: PETALS[Math.floor(Math.random() * PETALS.length)], fade: -1, trampled: false });
+    this.flowers.push({
+      ...spot,
+      age: 0,
+      petal: PETALS[Math.floor(Math.random() * PETALS.length)],
+      fade: -1,
+      trampled: false,
+      life: FLOWER_LIFE,
+      carrot,
+    });
   }
 
   private updateFlowers(dt: number) {
@@ -1285,7 +1795,7 @@ export class MeepleEngine {
         f.fade += dt;
         continue;
       }
-      if (f.age > FLOWER_LIFE) {
+      if (f.age > f.life) {
         f.fade = 0;
         continue;
       }
@@ -1313,6 +1823,11 @@ export class MeepleEngine {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.drawFlowers();
+    for (const t of this.squares) {
+      this.drawGold(t);
+      const size = t.rect ? t.rect.width / SQUARE_SPLIT : 0;
+      for (const b of t.blocks) this.rect(Math.round(b.x), Math.round(b.y), size, size, t.blockColor);
+    }
     for (const m of this.meeples) {
       if (m.mode === "exploded" || m.mode === "reassemble") this.drawBlocks(m);
       else this.drawMeeple(m);
@@ -1333,7 +1848,7 @@ export class MeepleEngine {
       if (m.mode === "exploded" || m.mode === "reassemble" || m.lasso?.phase === "twirl") continue;
       // Clear of the nightcap on the Sleepy One.
       const lift = m.cfg.id === "blue" ? 13 : 6;
-      ctx.fillText(m.cfg.tag, Math.round(m.x + W / 2), Math.round(m.y) - lift);
+      ctx.fillText(m.cfg.tag, Math.round(m.x + W / 2), Math.round(m.y) - hopHeight(m) - lift);
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
@@ -1352,7 +1867,7 @@ export class MeepleEngine {
 
   private drawMeeple(m: Meeple) {
     let ox = Math.round(m.x);
-    let oy = Math.round(m.y);
+    let oy = Math.round(m.y) - hopHeight(m);
     if (m.mode === "shake") {
       ox += Math.round(rand(-2, 2));
       oy += Math.round(rand(-2, 2));
@@ -1375,6 +1890,14 @@ export class MeepleEngine {
     this.drawEyes(m, ox + P, oy);
     if (m.asleep) this.drawZzz(m, ox, oy);
     if (m.lasso) this.drawLasso(m, ox, oy);
+    if (m.lasso?.tugging) {
+      // Heels dug in: dust kicks up behind its feet, away from the pull.
+      const l = m.lasso;
+      const back = Math.sign(this.hand(m).x - l.loop.x) || 1;
+      const k = (this.time * 4) % 1;
+      this.rect(ox + W / 2 + back * (W / 2 + 2 + k * 9), oy + H - 3 - k * 9, 2, 2, DIRT);
+      this.rect(ox + W / 2 + back * (W / 2 + 5 + ((k + 0.5) % 1) * 6), oy + H - 2 - ((k + 0.5) % 1) * 6, 2, 2, DIRT);
+    }
   }
 
   private drawLasso(m: Meeple, ox: number, oy: number) {
@@ -1415,15 +1938,29 @@ export class MeepleEngine {
   private drawFlowers() {
     const { ctx } = this;
     for (const f of this.flowers) {
+      if (f.age < 0) continue;
       const limit = f.trampled ? TRAMPLED_TIME : WILT_TIME;
       ctx.globalAlpha = f.fade < 0 ? 1 : Math.max(0, 1 - f.fade / limit);
-      const rows = f.trampled ? FLOWER_FLAT : f.age < 0.5 ? FLOWER_SEED : f.age < 1.8 ? FLOWER_SPROUT : FLOWER_BLOOM;
+      const grown = f.carrot ? CARROT_GROWN : FLOWER_BLOOM;
+      const flat = f.carrot ? CARROT_FLAT : FLOWER_FLAT;
+      const rows = f.trampled ? flat : f.age < 0.5 ? FLOWER_SEED : f.age < 1.8 ? FLOWER_SPROUT : grown;
       const left = f.x - ((rows[0].length - 3) / 2) * F;
       const top = f.y - rows.length * F;
       const middle = f.petal === "#FBEC5A" ? "#E05A32" : "#FBEC5A";
       rows.forEach((row, ry) =>
         [...row].forEach((ch, rx) => {
-          const color = ch === "S" || ch === "L" ? STEM : ch === "P" ? f.petal : ch === "C" ? middle : ch === "D" ? DIRT : null;
+          const color =
+            ch === "S" || ch === "L"
+              ? STEM
+              : ch === "P"
+                ? f.petal
+                : ch === "C"
+                  ? middle
+                  : ch === "O"
+                    ? CARROT
+                    : ch === "D"
+                      ? DIRT
+                      : null;
           if (color) this.rect(left + rx * F, top + ry * F, F, F, color);
         }),
       );
@@ -1480,7 +2017,7 @@ export class MeepleEngine {
    */
   private updateTints() {
     for (const t of this.tints) {
-      if (!t.rect) continue;
+      if (!t.rect || t.state === "burst" || t.state === "gone") continue;
       let best: Meeple | null = null;
       let bestArea = 0;
       for (const m of this.meeples) {
@@ -1520,6 +2057,18 @@ function center(m: Meeple): Vec {
 function squareCenter(t: TintTarget): Vec {
   const r = t.rect!;
   return { x: r.x + t.off.x + r.width / 2, y: r.y + t.off.y + r.height / 2 };
+}
+
+/** How far a meeple is off the ground, in whole px: two hops, the second smaller. */
+function hopHeight(m: Meeple) {
+  if (m.hop === null || m.hop < 0) return 0;
+  const k = m.hop < HOP_TIME ? 1 : 0.55;
+  return Math.round(Math.sin((Math.PI * (m.hop % HOP_TIME)) / HOP_TIME) * HOP_HEIGHT * k);
+}
+
+/** RYKER's period's height as it springs back up from flat, overshooting a little. */
+function springBack(u: number) {
+  return 1 - Math.exp(-7 * u) * Math.cos(14 * u);
 }
 
 function overlaps(a: DOMRect, b: DOMRect) {

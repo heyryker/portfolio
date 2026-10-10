@@ -44,8 +44,9 @@ export const MEEPLES: MeepleConfig[] = [
     tag: "SCARED AGENT",
     color: "var(--color-meeple-green)",
     hex: "#5FCC8A",
-    personality: "Scoots away when the cursor gets close, then peeks back.",
-    home: { x: 0.818, y: 0.24 },
+    personality: "Scoots away when the cursor gets close, then peeks back. Gardens in the bottom-left corner, two flowers to every carrot.",
+    // Starts in its bottom-left hideout, between HEY and the case-study links.
+    home: { x: 0.27, y: 0.67 },
   },
   {
     id: "red",
