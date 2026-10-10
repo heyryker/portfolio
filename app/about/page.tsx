@@ -61,9 +61,7 @@ export default function AboutPage() {
       </div>
 
       <main className="mx-auto max-w-[968px] px-[22px] pt-11 pb-22 md:px-11">
-        <p className="text-sm tracking-[0.08em] uppercase">
-          HEY <span className="text-accent">[I&rsquo;M]</span> RYKER
-        </p>
+        <p className="text-sm tracking-[0.08em] text-accent uppercase">HEY [I&rsquo;M] RYKER</p>
         <h1 className="mt-5 text-[clamp(32px,5.2vw,56px)] leading-[1.05] font-extrabold tracking-[-0.015em] text-balance">
           I&rsquo;m a brand designer interested in strategy, production and art direction.
         </h1>
