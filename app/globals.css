@@ -127,6 +127,59 @@ body {
   }
 }
 
+/*
+ * The case-study links, on the grid (see components/CaseStudyNav.tsx). Labels
+ * sit in equal columns a whole number of cells wide, each starting on a
+ * vertical line, and are centered in a one-cell row (with line-height 1,
+ * Inter's caps are centered in the line box). Desktop is one row of five;
+ * phones get three over two.
+ */
+.case-nav {
+  /* The widest label, [EDITORIAL], is about 6.2em. */
+  --nav-last: 6.2em;
+  --nav-slot: max(
+    var(--grid-cell) * 3,
+    round(down, (82vw - var(--nav-last)) / 4, var(--grid-cell))
+  );
+  --nav-width: calc(var(--nav-slot) * 4 + var(--nav-last));
+  --nav-height: var(--grid-cell);
+
+  position: absolute;
+  z-index: 10;
+  font-size: clamp(13px, 1.5vw, 22px);
+  left: calc((100% - var(--nav-width)) / 2);
+  left: round(nearest, (100% - var(--nav-width)) / 2, var(--grid-cell));
+  top: calc(100% - max(24px, 9.5vh) - var(--nav-height));
+  top: round(down, 100% - max(24px, 9.5vh) - var(--nav-height), var(--grid-cell));
+}
+
+.case-nav ul {
+  display: grid;
+  grid-template-columns: repeat(4, var(--nav-slot)) auto;
+  grid-auto-rows: var(--grid-cell);
+  row-gap: var(--grid-cell);
+  align-items: center;
+}
+
+/* Pull the bracket's ink, not its side bearing, onto the grid line. */
+.case-nav-link {
+  margin-left: -0.075em;
+}
+
+@media not all and (min-width: 720px) and (min-height: 520px) {
+  .case-nav {
+    /* [MOTION] ends the top row. */
+    --nav-last: 4.9em;
+    --nav-slot: calc(var(--grid-cell) * 5);
+    --nav-width: calc(var(--nav-slot) * 2 + var(--nav-last));
+    --nav-height: calc(var(--grid-cell) * 3);
+  }
+
+  .case-nav ul {
+    grid-template-columns: repeat(3, var(--nav-slot));
+  }
+}
+
 /* Visible focus states in the accent blue (§10). */
 :focus-visible {
   outline: 2px solid var(--color-accent);
