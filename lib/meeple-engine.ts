@@ -98,6 +98,25 @@ const PETALS = ["#985DF6", "#E05A32", "#58B9F8", "#FBEC5A"];
 const STEM = "#5FCC8A";
 const DIRT = "#A1A3A6";
 
+// Grass that sprouts in every meeple's footsteps as it walks: little tufts of
+// half-pixel blades that grow up over about a second, then fade after a while
+// so the page never fills in.
+const GRASS = "#5FCC8A";
+const GRASS_STEP = 6 * F; // at most one tuft within this distance
+const GRASS_GROW = 1.2;
+const GRASS_LIFE: [number, number] = [18, 28];
+const GRASS_FADE = 3;
+const MAX_GRASS = 260;
+// Blade heights per column, in half pixels.
+const TUFTS = [
+  [1, 2, 1],
+  [0, 2, 1],
+  [1, 3, 1],
+  [1, 1, 0],
+  [2, 1, 2],
+  [0, 1, 2],
+];
+
 // The gold flower from RYKER's period: H highlight, P gold petal, C amber center.
 const GOLD_BLOOM = [".HPP.", "HPCPP", ".PPP.", "..S..", ".LS..", "..SL.", "..S.."];
 const GOLD_COLORS: Record<string, string> = {
@@ -260,6 +279,15 @@ type Flower = {
   carrot: boolean;
 };
 
+type Tuft = {
+  /** Left edge and baseline. */
+  x: number;
+  y: number;
+  age: number;
+  life: number;
+  blades: number[];
+};
+
 type SquareDrag = {
   t: TintTarget;
   pointerId: number;
@@ -305,6 +333,7 @@ export class MeepleEngine {
   private tints: TintTarget[] = [];
   private squares: TintTarget[] = [];
   private flowers: Flower[] = [];
+  private grass: Tuft[] = [];
   /** Areas the garden keeps off: the headline's two lines (not the whole box, so the gaps beside them can bloom), the links and the menu. */
   private noPlant: DOMRect[] = [];
   /** When the Chaotic One may next shove a square on purpose. */
@@ -568,6 +597,7 @@ export class MeepleEngine {
     this.updateSquares(dt);
     this.shoveSquares();
     this.updateFlowers(dt);
+    this.updateGrass(dt);
   }
 
   // ---------------------------------------------------------- personality
@@ -1816,12 +1846,45 @@ export class MeepleEngine {
     this.flowers = this.flowers.filter((f) => f.fade < (f.trampled ? TRAMPLED_TIME : WILT_TIME));
   }
 
+  private updateGrass(dt: number) {
+    for (const g of this.grass) g.age += dt;
+    this.grass = this.grass.filter((g) => g.age < g.life + GRASS_FADE);
+    for (const m of this.meeples) {
+      if (m.mode !== "walk" || m.hop !== null) continue;
+      // Between the feet, snapped to the half-pixel grid like the flowers.
+      // A little scatter either side, so trails read as tufts, not a hedge.
+      const x = Math.round((m.x + W / 2 - 1.5 * F) / F + rand(-1.5, 1.5)) * F;
+      const y = Math.round((m.y + H) / F) * F;
+      if (this.grass.some((g) => Math.hypot(g.x - x, g.y - y) < GRASS_STEP)) continue;
+      if (Math.random() < 0.04 * 60 * dt) continue;
+      const r = new DOMRect(x, y - 3 * F, 3 * F, 3 * F);
+      if (r.top < 64 || r.bottom > this.vh || this.noPlant.some((n) => overlaps(n, r))) continue;
+      if (this.grass.length >= MAX_GRASS) this.grass.shift();
+      this.grass.push({ x, y, age: 0, life: rand(...GRASS_LIFE), blades: TUFTS[Math.floor(Math.random() * TUFTS.length)] });
+    }
+  }
+
+  private drawGrass() {
+    const { ctx } = this;
+    for (const g of this.grass) {
+      ctx.globalAlpha = g.age < g.life ? 1 : Math.max(0, 1 - (g.age - g.life) / GRASS_FADE);
+      // Blades come up one half pixel at a time.
+      const grown = Math.min(1, g.age / GRASS_GROW);
+      g.blades.forEach((h, i) => {
+        const now = Math.ceil(h * grown);
+        if (now) this.rect(g.x + i * F, g.y - now * F, F, now * F, GRASS);
+      });
+    }
+    ctx.globalAlpha = 1;
+  }
+
   // ---------------------------------------------------------------- render
 
   private render() {
     const { ctx } = this;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.drawGrass();
     this.drawFlowers();
     for (const t of this.squares) {
       this.drawGold(t);
