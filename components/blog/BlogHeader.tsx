@@ -9,7 +9,7 @@ import { SiteHeader } from "@/components/SiteHeader";
  */
 export function BlogHeader({ back }: { back: { href: string; label: string } }) {
   return (
-    <div className="bg-graph relative h-[calc(var(--grid-cell)*4)] md:h-[calc(var(--grid-cell)*3)]">
+    <div className="bg-graph relative h-[calc(var(--grid-cell)*6)] md:h-[calc(var(--grid-cell)*3)]">
       <SiteHeader />
       <Link
         href={back.href}

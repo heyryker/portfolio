@@ -46,7 +46,7 @@ export default function AboutPage() {
           mainEntity: person,
         }}
       />
-      <div className="bg-graph relative h-[calc(var(--grid-cell)*4)] md:h-[calc(var(--grid-cell)*3)]">
+      <div className="bg-graph relative h-[calc(var(--grid-cell)*6)] md:h-[calc(var(--grid-cell)*3)]">
         <SiteHeader />
         <Link
           href="/"
