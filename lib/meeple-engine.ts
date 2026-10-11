@@ -333,10 +333,10 @@ export class MeepleEngine {
   /** When a meeple may next set off across the headline. */
   private nextCrossing = 2;
   /**
-   * Where meeples never go: the blurb and the case-study cards, so they
-   * never sit on something a visitor wants to read or click. Walkers slide
-   * around them and thrown meeples bounce off. The cards move as the page
-   * scrolls, so this is re-measured on scroll.
+   * Where meeples never go: the blurb, so they never sit on something a
+   * visitor wants to read. Walkers slide around it and thrown meeples bounce
+   * off. Re-measured on scroll, along with the no-planting zones (the
+   * case-study cards move as the page scrolls).
    */
   private keepOut: DOMRect[] = [];
   private tagFont = "700 8px monospace";
@@ -532,21 +532,9 @@ export class MeepleEngine {
 
   private measureKeepOut() {
     const c = this.canvas.getBoundingClientRect();
-    // The cards count as one block: the gaps between them are too narrow for
-    // a meeple, which would end up wedged in (and hidden under) the cards.
-    const cards = Array.from(this.root.querySelectorAll(".case-card"), (el) => el.getBoundingClientRect());
-    const deck = cards.length
-      ? [
-          DOMRect.fromRect({
-            x: Math.min(...cards.map((r) => r.left)),
-            y: Math.min(...cards.map((r) => r.top)),
-            width: Math.max(...cards.map((r) => r.right)) - Math.min(...cards.map((r) => r.left)),
-            height: Math.max(...cards.map((r) => r.bottom)) - Math.min(...cards.map((r) => r.top)),
-          }),
-        ]
-      : [];
+    // The case-study cards aren't on the list: meeples walk right over them.
     const blurb = Array.from(this.root.querySelectorAll(".landing-blurb"), (el) => el.getBoundingClientRect());
-    this.keepOut = [...blurb, ...deck].map((r) => {
+    this.keepOut = blurb.map((r) => {
       // Wider at the sides and below, for the name tag (and z's) drawn above a meeple's head.
       const side = KEEP_OUT_PAD + TAG_OVERHANG;
       return new DOMRect(r.left - c.left - side, r.top - c.top - KEEP_OUT_PAD, r.width + side * 2, r.height + KEEP_OUT_PAD * 2 + TAG_HEIGHT);
