@@ -34,6 +34,7 @@
  * grass still scrolls.
  */
 import { MEEPLE_BLOCKS, MEEPLES, type MeepleConfig, type MeepleId } from "./meeples";
+import { HATS, hatHeight } from "./meeple-hats";
 
 /** One meeple pixel, in CSS px. Buildings, plants and trees use half pixels (U). */
 const P = 11;
@@ -158,14 +159,6 @@ const MAX_BUNNIES = 12;
 
 // The pixel z drifting up from a napping meeple (and the Sleepy One's chimney).
 const Z_GLYPH = ["XXX", "..X", ".X.", "X..", "XXX"];
-
-// The Sleepy One's nightcap, from the landing page.
-const NIGHTCAP = [
-  { x: -1, y: -3, w: 13, h: 4, c: C.red },
-  { x: 1, y: -6, w: 8, h: 3, c: C.red },
-  { x: -2, y: -8, w: 5, h: 2, c: C.red },
-  { x: -5, y: -9, w: 3, h: 3, c: C.yellow },
-];
 
 // Little pictures for speech bubbles, in 2px pixels.
 type IconKind = "heart" | "flower" | "carrot" | "star";
@@ -2612,7 +2605,7 @@ export class VillageEngine {
     this.drawLabels();
     for (const m of this.meeples) {
       if (m.inside || m.mode === "exploded" || m.mode === "reassemble") continue;
-      const top = m.y - hopHeight(m) - (m.cfg.id === "blue" || m.cfg.id === "purple" ? 12 : 4) - (m.carry ? 18 : 0);
+      const top = m.y - hopHeight(m) - (hatHeight(m.cfg.id) + 2) - (m.carry ? 18 : 0);
       if (m.bubble && m.bubble.t >= 0) this.drawBubble(m.x + W / 2, top, m.bubble);
       else if (this.showTag(m)) this.text(m.cfg.tag, m.x + W / 2, top - 2, C.muted);
     }
@@ -2848,13 +2841,7 @@ export class VillageEngine {
       this.rect(ox + b.x * P, oy + b.y * P + lift, P, P, m.cfg.hex);
     });
     const hx = ox + P;
-    if (m.cfg.id === "blue") for (const c of NIGHTCAP) this.rect(hx + c.x, oy + c.y, c.w, c.h, c.c);
-    if (m.cfg.id === "purple") {
-      // The mayor's top hat.
-      this.rect(hx - 2, oy - 2, 15, 2, C.ink);
-      this.rect(hx + 1, oy - 10, 9, 8, C.ink);
-      this.rect(hx + 1, oy - 5, 9, 2, C.gold);
-    }
+    for (const c of HATS[m.cfg.id]) this.rect(hx + c.x, oy + c.y, c.w, c.h, c.c);
     this.drawEyes(m, hx, oy);
     if (m.tool === "water") {
       // A watering can, tipped at the plant.
@@ -2864,7 +2851,7 @@ export class VillageEngine {
       this.rect(side > 0 ? cx + 8 : cx - 4, oy + P + 1, 4, 2, C.accent);
     }
     if (m.carry) {
-      const lift = m.cfg.id === "blue" || m.cfg.id === "purple" ? 10 : 2;
+      const lift = hatHeight(m.cfg.id) + 1;
       this.drawItem(m.carry, ox + W / 2, oy - lift, 3);
     }
     if (m.asleep) this.drawZzz(ox, oy);

@@ -11,7 +11,7 @@
  * pixel squares out of their sockets, the Curious One lassos them (and the
  * cursor) and tows them home, they all plant a pixel garden (the Shy One
  * grows carrots among the flowers in its corner, the Sleepy One plants in its sleep) that the
- * Chaotic One tramples, and the Sleepy One wears a nightcap. At rest the
+ * Chaotic One tramples, and everyone wears a hat (lib/meeple-hats.ts). At rest the
  * headline always settles back to its grid-locked look.
  *
  * The two headline squares can be grabbed and thrown like meeples, and answer
@@ -26,6 +26,7 @@
  * so meeples never block the case-study labels or the menu.
  */
 import { MEEPLE_BLOCKS, MEEPLES, homeOf, type MeepleConfig, type MeepleId } from "./meeples";
+import { HATS, hatHeight } from "./meeple-hats";
 
 /** One meeple pixel, in CSS px. A grid cell is four of these. */
 const P = 11;
@@ -143,15 +144,6 @@ const SHAPES: Record<Plant, { grown: string[]; flat: string[] }> = {
 // Shy One only) carrots.
 const PLANTS: Plant[] = ["flower", "grass", "flower"];
 const SHY_PLANTS: Plant[] = ["flower", "grass", "flower", "grass", "flower", "carrot"];
-
-// The Sleepy One's nightcap, in px from its head block's top-left. It droops
-// to the left so it stays clear of the z's.
-const NIGHTCAP = [
-  { x: -1, y: -3, w: 13, h: 4, c: "#E05A32" },
-  { x: 1, y: -6, w: 8, h: 3, c: "#E05A32" },
-  { x: -2, y: -8, w: 5, h: 2, c: "#E05A32" },
-  { x: -5, y: -9, w: 3, h: 3, c: "#FBEC5A" },
-];
 
 type Mode = "idle" | "walk" | "drag" | "shake" | "exploded" | "reassemble";
 
@@ -1979,8 +1971,8 @@ export class MeepleEngine {
     for (const m of this.meeples) {
       if (!m.tagWidth) m.tagWidth = ctx.measureText(m.cfg.tag).width;
       if (m.mode === "exploded" || m.mode === "reassemble" || m.lasso?.phase === "twirl") continue;
-      // Clear of the nightcap on the Sleepy One.
-      const lift = m.cfg.id === "blue" ? 13 : 6;
+      // Clear of its hat.
+      const lift = hatHeight(m.cfg.id) + 4;
       ctx.fillText(m.cfg.tag, Math.round(m.x + W / 2), Math.round(m.y) - hopHeight(m) - lift);
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -2019,7 +2011,7 @@ export class MeepleEngine {
       const lift = walking && ((i === 5 && m.stepFrame === 0) || (i === 6 && m.stepFrame === 1)) ? -2 : 0;
       this.rect(ox + b.x * P, oy + b.y * P + lift, P, P, m.cfg.hex);
     });
-    if (m.cfg.id === "blue") for (const c of NIGHTCAP) this.rect(ox + P + c.x, oy + c.y, c.w, c.h, c.c);
+    for (const c of HATS[m.cfg.id]) this.rect(ox + P + c.x, oy + c.y, c.w, c.h, c.c);
     this.drawEyes(m, ox + P, oy);
     if (m.asleep) this.drawZzz(m, ox, oy);
     if (m.lasso) this.drawLasso(m, ox, oy);
