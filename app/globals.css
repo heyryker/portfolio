@@ -321,27 +321,22 @@ body {
 }
 
 /*
- * The case-study buttons, on the grid (see components/CaseStudyNav.tsx). On
- * desktop the row spans exactly the headline's width: HACKATHON's left edge
- * is on the same vertical grid line as H, EDITORIAL's right edge sits under
- * RYKER's period, and the four gaps between buttons are equal. (Equal
- * columns put every button on a line but left the gaps uneven, since the
- * labels differ in width; Ryker asked for even spacing.) Each button is one
- * grid cell tall, filling one grid row. Phones get three over two, centered.
+ * The case-study buttons (see components/CaseStudyNav.tsx). On desktop they
+ * form a compact row starting on H's vertical grid line, like the blurb above
+ * them, with a meeple pixel (11px) between buttons. Each button is three
+ * meeple pixels tall, centered in a one-cell grid row. Phones get three over
+ * two, centered.
  */
 .case-nav {
-  /* From H's left edge to the right edge of RYKER's period: the indent,
-     RYKER's ink, and the period's overhang past it (0.1097em of the
-     headline's type, measured), in px since the nav's em is smaller. */
   --nav-width: calc(
     var(--hl-indent) + var(--hl-ryker-ink) + var(--hl-cap) / 0.7275 * 0.1097
   );
   --nav-height: var(--grid-cell);
-  --button-height: var(--grid-cell);
+  --button-height: calc(var(--meeple-px) * 3);
 
   position: absolute;
   z-index: 10;
-  font-size: clamp(13px, 1.15vw, 18px);
+  font-size: 13px;
   width: var(--nav-width);
   /* The headline's own box (.headline-grid's --hl-width), so both snap to
      the same grid line. */
@@ -354,7 +349,7 @@ body {
 
 .case-nav ul {
   display: flex;
-  justify-content: space-between;
+  gap: var(--meeple-px);
   align-items: center;
   height: var(--grid-cell);
 }
@@ -393,32 +388,28 @@ body {
 
 @media not all and (min-width: 720px) and (min-height: 520px) {
   /*
-   * Phones: three over two, each row centered with equal gaps between the
-   * buttons. Buttons are two cells tall (the phone grid is 22px), with one
-   * cell between the rows. With equal spacing, the buttons' left edges can't
-   * all land on vertical lines, so centering wins here.
+   * Phones: three over two, from H's left edge like the blurb, with a meeple
+   * pixel between buttons and between rows. The two rows sit in four 22px
+   * grid cells.
    */
   .case-nav {
-    --nav-width: 100%;
-    --nav-box: 100%;
-    --nav-height: calc(var(--grid-cell) * 5);
-    --button-height: calc(var(--grid-cell) * 2);
+    --nav-height: calc(var(--grid-cell) * 4);
+    font-size: 12px;
   }
 
   .case-nav ul {
-    display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    column-gap: var(--grid-cell);
-    row-gap: 0;
-    height: auto;
+    align-content: center;
+    gap: var(--meeple-px);
+    height: var(--nav-height);
   }
 
-  /* A full-width, one-cell spacer that breaks the list after the third button. */
+  /* A full-width spacer that breaks the list after the third button. It
+     takes back one row gap, so the rows are one gap apart. */
   .case-nav ul::before {
     content: "";
     flex-basis: 100%;
-    height: var(--grid-cell);
+    margin-top: calc(var(--meeple-px) * -1);
     order: 1;
   }
 
