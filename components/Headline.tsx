@@ -10,8 +10,9 @@ import { PixelSquare } from "./PixelSquare";
  *
  * The type is Inter with two letters modified, as Ryker drew it: the top-left
  * corner of H's stem and the bottom of R's leg are cut out, and each cut-out
- * block is pushed out diagonally as a blue pixel square that touches the
- * letter only at a corner. The cuts are clip-paths on `.hl-h` and `.hl-r`.
+ * block is a light blue pixel square that starts back in its socket, lined
+ * up with the letter. The meeples knock the squares off kilter as they walk
+ * across them. The cuts are clip-paths on `.hl-h` and `.hl-r`.
  *
  * The blue elements carry data-meeple-tint ("fill" or "text") so the meeple
  * engine can recolor them when a meeple walks over. Their 900ms transition is
@@ -34,7 +35,7 @@ export function Headline() {
         <span aria-hidden="true">
           <span className="hl-letter">
             <span className="hl-h">H</span>
-            <PixelSquare data-meeple-tint="fill" data-meeple-click="burst" className="transition-colors duration-900 hl-square hl-square-h" />
+            <PixelSquare light data-meeple-tint="fill" data-meeple-click="burst" className="transition-colors duration-900 hl-square hl-square-h" />
           </span>
           EY
         </span>
@@ -61,7 +62,7 @@ export function Headline() {
         RYKE
         <span className="hl-letter">
           <span className="hl-r">R</span>
-          <PixelSquare data-meeple-tint="fill" data-meeple-click="squash" className="transition-colors duration-900 hl-square hl-square-r" />
+          <PixelSquare light data-meeple-tint="fill" data-meeple-click="squash" className="transition-colors duration-900 hl-square hl-square-r" />
         </span>
       </span>
     </h1>

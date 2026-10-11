@@ -9,10 +9,12 @@
  *
  * They also make a little trouble: the Chaotic One charges the headline's
  * pixel squares out of their sockets, the Curious One lassos them (and the
- * cursor) and tows them home, they all plant a pixel garden (the Shy One
+ * cursor) and tows them home, the slower ones knock the squares off kilter
+ * as they amble across them, they all plant a pixel garden (the Shy One
  * grows carrots among the flowers in its corner, the Sleepy One plants in its sleep) that the
- * Chaotic One tramples, and the Sleepy One wears a nightcap. At rest the
- * headline always settles back to its grid-locked look.
+ * Chaotic One tramples, and the Sleepy One wears a nightcap. The squares
+ * start lined up in their sockets; a square that gets knocked loose glides
+ * back in straight, ready to be nudged crooked again.
  *
  * The two headline squares can be grabbed and thrown like meeples, and answer
  * clicks: HEY's square explodes and reassembles like a meeple, and RYKER's
@@ -58,6 +60,12 @@ const PUSH_SPEED = 110;
 const SQUARE_FRICTION = 2.6;
 const SQUARE_REST = 1.2; // seconds at rest before the lasso goes after it
 const SQUARE_GIVE_UP = 8; // seconds loose before it glides home by itself
+// Slow walkers knock a square in its socket off kilter: they nudge it along
+// and twist it a little, and it stays crooked until it's knocked loose.
+const KILTER_SHIFT = 0.3; // furthest a nudge moves it, as a fraction of its size
+const KILTER_TURN = 14; // most it twists, in degrees
+const KILTER_GAIN = 0.25; // how much of the walker's speed it picks up
+const SQUARE_SPIN_DRAG = 3;
 
 // Clicking the headline squares. HEY's square bursts into a 4x4 of half
 // meeple pixels; RYKER's period flattens away and a gold flower pops up.
@@ -238,6 +246,9 @@ type TintTarget = {
   bloomT: number;
   off: Vec;
   v: Vec;
+  /** How far it's twisted, in degrees, and how fast it's turning while loose. */
+  rot: number;
+  spin: number;
   /** Seconds loose, and seconds at rest while loose. */
   looseFor: number;
   restFor: number;
@@ -323,6 +334,8 @@ export class MeepleEngine {
   private noPlant: DOMRect[] = [];
   /** When the Chaotic One may next shove a square on purpose. */
   private nextShove = 6;
+  /** When the Curious One or the Watcher may next amble across a straight square. */
+  private nextNudge = 2;
   private tagFont = "700 8px monospace";
   private resizeObserver: ResizeObserver;
   private cleanups: (() => void)[] = [];
@@ -353,6 +366,8 @@ export class MeepleEngine {
       bloomT: -1,
       off: { x: 0, y: 0 },
       v: { x: 0, y: 0 },
+      rot: 0,
+      spin: 0,
       looseFor: 0,
       restFor: 0,
     }));
@@ -487,9 +502,11 @@ export class MeepleEngine {
   private measureTints() {
     const c = this.canvas.getBoundingClientRect();
     for (const t of this.tints) {
-      // The box includes any shove; take it off to get the resting spot.
-      const b = t.el.getBoundingClientRect();
-      const r = new DOMRect(b.left - t.off.x, b.top - t.off.y, b.width, b.height);
+      // Measure the resting spot, without any shove or twist.
+      const transform = t.el.style.transform;
+      t.el.style.transform = "";
+      const r = t.el.getBoundingClientRect();
+      t.el.style.transform = transform;
       // A text box includes the line's empty space above and below the
       // glyphs. Trim it to roughly the bracket height, so a meeple only
       // tints [I'M] when it actually touches the letters.
@@ -580,7 +597,7 @@ export class MeepleEngine {
     }
     this.collide();
     this.updateSquares(dt);
-    this.shoveSquares();
+    this.shoveSquares(dt);
     this.updateFlowers(dt);
   }
 
@@ -776,6 +793,20 @@ export class MeepleEngine {
   }
 
   private pickTarget(m: Meeple): Vec {
+    if ((m.cfg.id === "yellow" || m.cfg.id === "purple") && this.time > this.nextNudge && Math.random() < 0.5) {
+      // Amble straight across a square that's still lined up, to knock it crooked.
+      const straight = this.squares.filter((s) => s.state === "home" && s.rect && Math.abs(s.rot) < 2);
+      const s = straight[Math.floor(Math.random() * straight.length)];
+      if (s?.rect) {
+        const sc = { x: s.rect.x + s.rect.width / 2, y: s.rect.y + s.rect.height / 2 };
+        const c = center(m);
+        const d = Math.hypot(sc.x - c.x, sc.y - c.y);
+        if (d > 40 && d < 700) {
+          this.nextNudge = this.time + rand(10, 20);
+          return this.clampTarget(sc.x + ((sc.x - c.x) / d) * 60 - W / 2, sc.y + ((sc.y - c.y) / d) * 60 - H / 2);
+        }
+      }
+    }
     if (m.cfg.id === "purple") {
       // The Watcher stays perched near its spot by the headline.
       const hx = Math.min(m.cfg.home.x * this.vw, this.vw - W - 8);
@@ -1265,6 +1296,8 @@ export class MeepleEngine {
           const f = Math.exp(-SQUARE_FRICTION * dt);
           t.v.x *= f;
           t.v.y *= f;
+          t.rot += t.spin * dt;
+          t.spin *= Math.exp(-SQUARE_SPIN_DRAG * dt);
           // Bounce off the viewport edges.
           const x = r.x + t.off.x;
           const y = r.y + t.off.y;
@@ -1305,9 +1338,14 @@ export class MeepleEngine {
           const k = 1 - Math.exp(-5 * dt);
           t.off.x -= t.off.x * k;
           t.off.y -= t.off.y * k;
-          if (Math.hypot(t.off.x, t.off.y) < 0.5) {
+          // Back in straight, lined up with the letter again.
+          t.rot = (((t.rot % 360) + 540) % 360) - 180;
+          t.rot -= t.rot * k;
+          t.spin = 0;
+          if (Math.hypot(t.off.x, t.off.y) < 0.5 && Math.abs(t.rot) < 0.5) {
             t.state = "home";
             t.off.x = t.off.y = 0;
+            t.rot = 0;
           }
           break;
         }
@@ -1321,7 +1359,7 @@ export class MeepleEngine {
         else if (back < SPRING_BACK) sy = springBack(back);
         else {
           t.bloomT = -1;
-          t.state = Math.hypot(t.off.x, t.off.y) < 0.5 ? "home" : "loose";
+          t.state = inSocket(t) ? "home" : "loose";
           t.looseFor = t.restFor = 0;
         }
         const hide = sy <= 0 ? "hidden" : "";
@@ -1338,6 +1376,7 @@ export class MeepleEngine {
       const tx = Math.round(t.off.x * this.dpr) / this.dpr + jx;
       const ty = Math.round(t.off.y * this.dpr) / this.dpr + jy;
       let transform = tx || ty ? `translate(${tx}px, ${ty}px)` : "";
+      if (Math.abs(t.rot) >= 0.05) transform += ` rotate(${t.rot.toFixed(1)}deg)`;
       if (sy !== 1) {
         // Spreads out as it flattens, and stays planted on its bottom edge
         // (transform-origin in globals.css).
@@ -1386,7 +1425,7 @@ export class MeepleEngine {
     t.restFor = 0;
     if (allowClick && sd.moved < 6 && now - sd.t0 < 400) {
       // Back in place if it was home, then do its trick.
-      if (Math.hypot(t.off.x, t.off.y) < 0.5) t.state = "home";
+      if (inSocket(t)) t.state = "home";
       this.clickSquare(t);
       return;
     }
@@ -1543,8 +1582,9 @@ export class MeepleEngine {
         const s = rand(220, 520);
         t.blocks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, delay: 0 });
       }
-      // It reassembles in its socket, wherever it was knocked to.
+      // It reassembles in its socket, lined up, wherever it was knocked to.
       t.off.x = t.off.y = 0;
+      t.rot = t.spin = 0;
       return;
     }
 
@@ -1579,10 +1619,12 @@ export class MeepleEngine {
 
   /**
    * A fast meeple (a charge, a throw, a drag) knocks a square out of its
-   * socket. Slow walkers just tint it, as before. Once a square is loose,
-   * anyone walking into it kicks it along.
+   * socket. A slow walker knocks it off kilter instead: the square shifts a
+   * little the way the meeple is going and twists about where it was bumped,
+   * and stays that way. Once a square is loose, anyone walking into it kicks
+   * it along.
    */
-  private shoveSquares() {
+  private shoveSquares(dt: number) {
     for (const t of this.squares) {
       const r = t.rect;
       if (!r || t.state === "towed" || t.state === "gliding" || t.state === "burst" || t.state === "held" || t.state === "gone") continue;
@@ -1591,7 +1633,8 @@ export class MeepleEngine {
         const vx = m.wx + m.vx;
         const vy = m.wy + m.vy;
         const speed = Math.hypot(vx, vy);
-        if (m.mode !== "drag" && speed < (t.state === "home" ? PUSH_SPEED : 20)) continue;
+        const nudge = t.state === "home" && m.mode !== "drag" && speed < PUSH_SPEED;
+        if (m.mode !== "drag" && !nudge && speed < 20) continue;
 
         const sx = r.x + t.off.x;
         const sy = r.y + t.off.y;
@@ -1599,9 +1642,25 @@ export class MeepleEngine {
         const oy = Math.min(m.y + H - 3, sy + r.height) - Math.max(m.y + 3, sy);
         if (ox <= 0 || oy <= 0) continue;
 
-        // Push it out along the axis of least overlap, at the meeple's speed or a bit more.
         const sc = squareCenter(t);
         const mc = center(m);
+        if (nudge) {
+          if (speed < 5) continue;
+          const max = r.width * KILTER_SHIFT;
+          t.off.x += vx * KILTER_GAIN * dt;
+          t.off.y += vy * KILTER_GAIN * dt;
+          const d = Math.hypot(t.off.x, t.off.y);
+          if (d > max) {
+            t.off.x *= max / d;
+            t.off.y *= max / d;
+          }
+          // Bumped off center, it turns: the meeple's push about the square's middle.
+          const torque = ((mc.x - sc.x) * vy - (mc.y - sc.y) * vx) / (r.width * W);
+          t.rot = clamp(t.rot - torque * 15 * dt, -KILTER_TURN, KILTER_TURN);
+          continue;
+        }
+
+        // Push it out along the axis of least overlap, at the meeple's speed or a bit more.
         if (ox < oy) {
           const n = Math.sign(sc.x - mc.x) || 1;
           t.off.x += n * ox;
@@ -1613,7 +1672,10 @@ export class MeepleEngine {
           t.v.y = n * Math.max(vy * n * 1.4, 160);
           t.v.x = vx * 0.6;
         }
-        if (t.state === "home") t.looseFor = 0;
+        if (t.state === "home") {
+          t.looseFor = 0;
+          t.spin = rand(-260, 260);
+        }
         t.state = "loose";
         t.restFor = 0;
       }
@@ -2066,6 +2128,11 @@ export class MeepleEngine {
 
 function center(m: Meeple): Vec {
   return { x: m.x + W / 2, y: m.y + H / 2 };
+}
+
+/** Still in its socket: lined up, or only knocked off kilter. */
+function inSocket(t: TintTarget) {
+  return !!t.rect && Math.hypot(t.off.x, t.off.y) <= t.rect.width * KILTER_SHIFT + 0.5;
 }
 
 function squareCenter(t: TintTarget): Vec {

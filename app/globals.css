@@ -14,6 +14,8 @@
   --color-ink-soft: #221f20;
   --color-muted: #a1a3a6;
   --color-accent: #58b9f8;
+  /* The headline's cut-out squares at rest: the accent, half way to white. */
+  --color-accent-light: #acdcfc;
 
   /* Meeples and small playful moments only. Never body text. */
   --color-meeple-yellow: #fbec5a;
@@ -136,14 +138,16 @@ body {
   );
 }
 
-/* Remove a stem-high slice from the bottom of R's leg. */
+/* Remove a stem-high slice from the bottom of R's leg. The cut's left side
+   lines up with the square's, so the square sits flush against what's left
+   of the slanted leg when it's in its socket. */
 .hl-r {
   clip-path: polygon(
     -50% -50%,
     150% -50%,
     150% calc(0.864em - var(--hl-square)),
-    0.327em calc(0.864em - var(--hl-square)),
-    0.327em 150%,
+    calc(0.555em - var(--hl-square)) calc(0.864em - var(--hl-square)),
+    calc(0.555em - var(--hl-square)) 150%,
     -50% 150%
   );
 }
@@ -154,16 +158,18 @@ body {
   height: var(--hl-square);
 }
 
-/* Pushed up and left: it touches H only at the stem's new top-left corner. */
+/* In place: it fills the corner cut from H's stem. Meeples knock it off
+   kilter from here (lib/meeple-engine.ts). */
 .hl-square-h {
   top: 0.1365em;
-  left: calc(0.057em - var(--hl-square));
+  left: 0.057em;
 }
 
-/* Pushed right: it touches the cut end of R's leg at its top-left corner. */
+/* In place: it fills the slice cut from the bottom of R's leg, flush with
+   the leg's outer edge, sitting on the baseline. */
 .hl-square-r {
   top: calc(0.864em - var(--hl-square));
-  left: 0.555em;
+  left: calc(0.555em - var(--hl-square));
   /* Squashes flat onto its bottom edge when clicked (lib/meeple-engine.ts). */
   transform-origin: 50% 100%;
 }
