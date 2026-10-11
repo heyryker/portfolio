@@ -3,6 +3,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, WEBSITE_ID, pageMetadata, person } from "@/lib/site";
 import { CaseStudyNav } from "@/components/CaseStudyNav";
 import { Headline } from "@/components/Headline";
+import { LandingBlurb } from "@/components/LandingBlurb";
 import { MeepleField } from "@/components/MeepleField";
 import { SiteHeader } from "@/components/SiteHeader";
 import { LandingMarker } from "@/components/work/LandingMarker";
@@ -32,6 +33,7 @@ export default function Home() {
       <SiteHeader />
       <main className="absolute inset-0">
         <Headline />
+        <LandingBlurb />
       </main>
       <MeepleField />
       <CaseStudyNav />

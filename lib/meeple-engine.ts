@@ -25,7 +25,7 @@
  * and only claims a press that lands on a meeple and not on a link or button,
  * so meeples never block the case-study labels or the menu.
  */
-import { MEEPLE_BLOCKS, MEEPLES, type MeepleConfig, type MeepleId } from "./meeples";
+import { MEEPLE_BLOCKS, MEEPLES, homeOf, type MeepleConfig, type MeepleId } from "./meeples";
 
 /** One meeple pixel, in CSS px. A grid cell is four of these. */
 const P = 11;
@@ -319,7 +319,7 @@ export class MeepleEngine {
   private tints: TintTarget[] = [];
   private squares: TintTarget[] = [];
   private flowers: Flower[] = [];
-  /** Areas the garden keeps off: the headline's two lines (not the whole box, so the gaps beside them can bloom), the links and the menu. */
+  /** Areas the garden keeps off: the headline's two lines (not the whole box, so the gaps beside them can bloom), the blurb, the links and the menu. */
   private noPlant: DOMRect[] = [];
   /** When the Chaotic One may next shove a square on purpose. */
   private nextShove = 6;
@@ -444,8 +444,8 @@ export class MeepleEngine {
   private createMeeple(cfg: MeepleConfig): Meeple {
     // Start exactly where the static (server-rendered) meeples stand, so the
     // swap to the canvas is seamless.
-    const x = Math.min(cfg.home.x * this.vw, this.vw - W - 8);
-    const y = Math.min(cfg.home.y * this.vh, this.vh - H - 8);
+    const x = Math.min(homeOf(cfg).x * this.vw, this.vw - W - 8);
+    const y = Math.min(homeOf(cfg).y * this.vh, this.vh - H - 8);
     const traits = TRAITS[cfg.id];
     return {
       cfg,
@@ -506,7 +506,7 @@ export class MeepleEngine {
       const bottom = r.bottom - fs * 0.12;
       t.rect = new DOMRect(r.left - c.left, top - c.top, r.width, bottom - top);
     }
-    this.noPlant = Array.from(this.root.querySelectorAll<HTMLElement>(".headline-line, nav a, header a, header button")).map((el) => {
+    this.noPlant = Array.from(this.root.querySelectorAll<HTMLElement>(".headline-line, .landing-blurb, nav a, header a, header button")).map((el) => {
       const r = el.getBoundingClientRect();
       return new DOMRect(r.left - c.left - 12, r.top - c.top - 12, r.width + 24, r.height + 24);
     });
@@ -791,8 +791,8 @@ export class MeepleEngine {
   private pickTarget(m: Meeple): Vec {
     if (m.cfg.id === "purple") {
       // The Watcher stays perched near its spot by the headline.
-      const hx = Math.min(m.cfg.home.x * this.vw, this.vw - W - 8);
-      const hy = Math.min(m.cfg.home.y * this.vh, this.vh - H - 8);
+      const hx = Math.min(homeOf(m.cfg).x * this.vw, this.vw - W - 8);
+      const hy = Math.min(homeOf(m.cfg).y * this.vh, this.vh - H - 8);
       return this.clampTarget(hx + rand(-120, 120), hy + rand(-40, 60));
     }
     if (m.cfg.id === "red" && this.time > this.nextShove && Math.random() < 0.5) {

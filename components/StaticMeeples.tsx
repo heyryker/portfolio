@@ -17,12 +17,15 @@ export function StaticMeeples() {
         <Meeple
           key={m.id}
           color={m.color}
-          className="absolute"
-          style={{
-            // Keep the meeple fully on screen on narrow viewports.
-            left: `min(${m.home.x * 100}%, calc(100% - var(--meeple-px) * 3 - 8px))`,
-            top: `min(${m.home.y * 100}%, calc(100% - var(--meeple-px) * 4 - 8px))`,
-          }}
+          className="static-meeple absolute"
+          style={
+            {
+              "--home-x": `${m.home.x * 100}%`,
+              "--home-y": `${m.home.y * 100}%`,
+              "--phone-home-x": `${(m.phoneHome ?? m.home).x * 100}%`,
+              "--phone-home-y": `${(m.phoneHome ?? m.home).y * 100}%`,
+            } as React.CSSProperties
+          }
         />
       ))}
     </div>
