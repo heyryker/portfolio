@@ -84,9 +84,9 @@ const LASSO_PULL = 2.4; // how long a roped cursor can drag the Curious One arou
 const ROPE_SNAP = 160; // a cursor that jumps further than this in a frame slips the loop
 const LASSO_REEL = 0.3;
 
-// The garden, planted by all five (the Shy One adds a carrot every third go). Flowers are
-// drawn in half meeple pixels and planted on the meeple-pixel grid, so they
-// sit on the graph paper too.
+// The garden, planted by all five: flowers most, then grass, then the Shy One's
+// carrots. Plants are drawn in half meeple pixels and planted on the
+// meeple-pixel grid.
 const F = P / 2;
 const PLANT_TIME = 0.9;
 const PLANT_EVERY: [number, number] = [3, 6];
@@ -126,6 +126,18 @@ const FLOWER_FLAT = ["LSSPCP"];
 const CARROT_GROWN = ["L.L", ".L.", "OOO", "OOO", ".O."];
 const CARROT_FLAT = ["LLOOO."];
 const CARROT = "#E05A32"; // meeple-red, which reads as carrot orange
+// Tufts of grass, planted between the flowers.
+const GRASS_GROWN = ["..L..", "L.L.L", "LLLLL"];
+const GRASS_FLAT = ["LLLLL"];
+const SHAPES: Record<Plant, { grown: string[]; flat: string[] }> = {
+  flower: { grown: FLOWER_BLOOM, flat: FLOWER_FLAT },
+  grass: { grown: GRASS_GROWN, flat: GRASS_FLAT },
+  carrot: { grown: CARROT_GROWN, flat: CARROT_FLAT },
+};
+// What each gardener plants, in turn: mostly flowers, then grass, then (the
+// Shy One only) carrots.
+const PLANTS: Plant[] = ["flower", "grass", "flower"];
+const SHY_PLANTS: Plant[] = ["flower", "grass", "flower", "grass", "flower", "carrot"];
 
 // The Sleepy One's nightcap, in px from its head block's top-left. It droops
 // to the left so it stays clear of the z's.
@@ -199,7 +211,7 @@ type Meeple = {
   /** Gardeners only: seconds until it next plants, and digging progress (-1 when not). */
   plantIn: number;
   planting: number;
-  /** How many it has planted, so the Shy One can alternate flowers and carrots. */
+  /** How many it has planted, to take turns between flowers, grass and carrots. */
   planted: number;
   /** Seconds into a jump from the squash shockwave (negative while it travels; null when not). */
   hop: number | null;
@@ -246,6 +258,8 @@ type Lasso = {
   last: Vec;
 };
 
+type Plant = "flower" | "grass" | "carrot";
+
 type Flower = {
   /** Left edge and baseline. */
   x: number;
@@ -257,7 +271,7 @@ type Flower = {
   trampled: boolean;
   /** Seconds before it wilts. The period's wild flowers don't last as long. */
   life: number;
-  carrot: boolean;
+  kind: Plant;
 };
 
 type SquareDrag = {
@@ -1471,7 +1485,7 @@ export class MeepleEngine {
         fade: -1,
         trampled: false,
         life: rand(...WILD_LIFE),
-        carrot: false,
+        kind: "flower",
       });
     }
   }
@@ -1746,7 +1760,7 @@ export class MeepleEngine {
 
   /**
    * Every meeple, when left alone, now and then stops, digs, and plants a
-   * flower beside it (every third one the Shy One plants is a carrot). Returns true while digging.
+   * flower, tuft of grass or carrot beside it. Returns true while digging.
    */
   private garden(m: Meeple, dt: number) {
     if (m.planting >= 0) {
@@ -1786,8 +1800,9 @@ export class MeepleEngine {
     if (!spot) return;
     // The period's wild flowers don't count toward the garden's limit.
     const healthy = this.flowers.filter((f) => f.fade < 0 && f.life === FLOWER_LIFE);
-    // The Shy One plants two flowers for every carrot.
-    const carrot = m.cfg.id === "green" && m.planted % 3 === 2;
+    // Flowers come first, then grass; only the Shy One grows carrots.
+    const cycle = m.cfg.id === "green" ? SHY_PLANTS : PLANTS;
+    const kind = cycle[m.planted % cycle.length];
     m.planted++;
     if (healthy.length >= MAX_FLOWERS) healthy[0].fade = 0;
     this.flowers.push({
@@ -1797,7 +1812,7 @@ export class MeepleEngine {
       fade: -1,
       trampled: false,
       life: FLOWER_LIFE,
-      carrot,
+      kind,
     });
   }
 
@@ -1954,8 +1969,7 @@ export class MeepleEngine {
       if (f.age < 0) continue;
       const limit = f.trampled ? TRAMPLED_TIME : WILT_TIME;
       ctx.globalAlpha = f.fade < 0 ? 1 : Math.max(0, 1 - f.fade / limit);
-      const grown = f.carrot ? CARROT_GROWN : FLOWER_BLOOM;
-      const flat = f.carrot ? CARROT_FLAT : FLOWER_FLAT;
+      const { grown, flat } = SHAPES[f.kind];
       const rows = f.trampled ? flat : f.age < 0.5 ? FLOWER_SEED : f.age < 1.8 ? FLOWER_SPROUT : grown;
       const left = f.x - ((rows[0].length - 3) / 2) * F;
       const top = f.y - rows.length * F;

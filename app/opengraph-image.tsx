@@ -6,7 +6,7 @@ import { OG_IMAGE_ALT } from "@/lib/site";
 
 /*
  * The share card for every page that doesn't set its own (blog posts use
- * their cover): the HEY [I'M] RYKER headline on graph paper, with the five
+ * their cover): the HEY [I'M] RYKER headline on white, with the five
  * meeples (CLAUDE.md §10). A static take on the landing page, not a pixel
  * copy: the cut letters are left out and the squares sit beside the type.
  */
@@ -15,6 +15,7 @@ export const alt = OG_IMAGE_ALT;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+// Layout still snaps to a cell grid, like the site, with no lines drawn.
 const CELL = 42;
 const PX = 10.5; // one meeple pixel, a quarter cell, as on the site
 const ACCENT = "#58B9F8";
@@ -59,8 +60,6 @@ export default function OpengraphImage() {
           width: "100%",
           height: "100%",
           background: "#fff",
-          backgroundImage: "linear-gradient(#EEEFEF 1px, transparent 1px), linear-gradient(90deg, #EEEFEF 1px, transparent 1px)",
-          backgroundSize: `${CELL}px ${CELL}px`,
           fontFamily: "Inter",
           color: "#000",
         }}

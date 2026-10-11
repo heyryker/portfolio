@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CopyEmail } from "@/components/CopyEmail";
 import { JsonLd } from "@/components/JsonLd";
 import { Meeple } from "@/components/Meeple";
+import { PixelGarden } from "@/components/PixelGarden";
 import { PixelSquare } from "@/components/PixelSquare";
 import { SiteHeader } from "@/components/SiteHeader";
 import { EDUCATION, EMAIL, EXPERIENCE, PROFILES, RESUME, SITE_URL, WEBSITE_ID, absoluteUrl, pageMetadata, person } from "@/lib/site";
@@ -45,7 +46,6 @@ export default function AboutPage() {
           mainEntity: person,
         }}
       />
-      {/* The grid stays in the header only, so it never fights the text (§3). */}
       <div className="bg-graph relative h-[calc(var(--grid-cell)*4)] md:h-[calc(var(--grid-cell)*3)]">
         <SiteHeader />
         <Link
@@ -54,6 +54,7 @@ export default function AboutPage() {
         >
           [&larr; BACK]
         </Link>
+        <PixelGarden />
         {/* Two meeples peeking over the header's bottom edge. */}
         <div aria-hidden="true" className="absolute right-[88px] bottom-0 flex items-end gap-[11px] overflow-hidden max-md:right-[110px]">
           <Meeple color="var(--color-meeple-purple)" className="translate-y-[22px]" />

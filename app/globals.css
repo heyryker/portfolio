@@ -55,13 +55,13 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Subtle full-viewport graph paper: 1px lines, anchored to the top-left corner. */
+/*
+ * The graph paper is no longer drawn (Ryker: plain white feels more infinite),
+ * but --grid-cell still lays out the headline, links and meeples on an
+ * invisible grid.
+ */
 .bg-graph {
   background-color: var(--color-bg);
-  background-image:
-    linear-gradient(to right, var(--color-grid) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--color-grid) 1px, transparent 1px);
-  background-size: var(--grid-cell) var(--grid-cell);
 }
 
 /*
