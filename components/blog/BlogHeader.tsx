@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { Meeple } from "@/components/Meeple";
+import { PixelGarden } from "@/components/PixelGarden";
 import { SiteHeader } from "@/components/SiteHeader";
 
 /**
- * The graph-paper band at the top of the blog pages, matching About: the grid
- * stays in the header only, so it never fights the work (§3).
+ * The band at the top of the blog pages, matching About: a meeple peeking out
+ * of a strip of pixel grass and flowers.
  */
 export function BlogHeader({ back }: { back: { href: string; label: string } }) {
   return (
@@ -16,6 +17,7 @@ export function BlogHeader({ back }: { back: { href: string; label: string } }) 
       >
         [&larr; {back.label}]
       </Link>
+      <PixelGarden />
       {/* The yellow one reads everything first. */}
       <div aria-hidden="true" className="absolute right-[88px] bottom-0 flex items-end overflow-hidden max-md:right-[110px]">
         <Meeple color="var(--color-meeple-yellow)" className="translate-y-[11px]" />
