@@ -1,11 +1,17 @@
 import type { MDXContent } from "mdx/types";
 
-/** The five case studies, in landing-page order (CLAUDE.md §4). */
+/**
+ * The published case studies, in landing-page order (CLAUDE.md §4). Only
+ * these get a page, a landing card, a "Next" link and a sitemap entry.
+ *
+ * Hidden until it has real copy and images: EMAIL (content/work/email.mdx is
+ * still all TODO(ryker)). To bring it back, add
+ * `{ slug: "email", label: "EMAIL" }` between MOTION and EDITORIAL.
+ */
 export const CASE_STUDIES = [
   { slug: "hackathon", label: "HACKATHON" },
   { slug: "tron", label: "TRON" },
   { slug: "motion", label: "MOTION" },
-  { slug: "email", label: "EMAIL" },
   { slug: "editorial", label: "EDITORIAL" },
 ] as const;
 

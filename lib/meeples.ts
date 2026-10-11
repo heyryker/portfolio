@@ -76,7 +76,7 @@ export const MEEPLES: MeepleConfig[] = [
     personality: "Fast. Bumps into the others and rushes the cursor.",
     // Beside RYKER's period, the square it likes to shove (it stood left of
     // HEY at 0.11, 0.609 before the blurb moved in there).
-    home: { x: 0.9, y: 0.609 },
+    home: { x: 0.9, y: 0.53 },
     phoneHome: { x: 0.72, y: 0.24 },
   },
   {

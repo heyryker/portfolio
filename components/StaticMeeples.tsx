@@ -12,7 +12,8 @@ import { Meeple } from "./Meeple";
  */
 export function StaticMeeples() {
   return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[5]">
+    // On the landing screen, the top of the scrolling page.
+    <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 z-[5] h-svh min-h-[480px]">
       {MEEPLES.map((m) => (
         <Meeple
           key={m.id}

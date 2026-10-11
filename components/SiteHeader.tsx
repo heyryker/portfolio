@@ -4,7 +4,7 @@ import { SiteMenu } from "@/components/SiteMenu";
 /** Top bar: the pixel-square home mark (left) and the menu button (right). */
 export function SiteHeader() {
   return (
-    <header className="pointer-events-none absolute inset-x-0 top-0 z-20">
+    <header className="pointer-events-none absolute inset-x-0 top-0 z-30">
       {/* Home mark: one meeple pixel, centered on the first grid intersection. */}
       <Link
         href="/"

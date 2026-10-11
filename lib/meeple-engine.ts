@@ -333,9 +333,10 @@ export class MeepleEngine {
   /** When a meeple may next set off across the headline. */
   private nextCrossing = 2;
   /**
-   * Where meeples never go: the blurb and the case-study buttons, so they
-   * never sit on something a visitor wants to read or click. Walkers slide
-   * around them and thrown meeples bounce off.
+   * Where meeples never go: the blurb, so they never sit on something a
+   * visitor wants to read. Walkers slide around it and thrown meeples bounce
+   * off. Re-measured on scroll, along with the no-planting zones (the
+   * case-study cards move as the page scrolls).
    */
   private keepOut: DOMRect[] = [];
   private tagFont = "700 8px monospace";
@@ -402,6 +403,7 @@ export class MeepleEngine {
     this.listen(window, "pointercancel", this.onPointerUp);
     this.listen(document.documentElement, "pointerleave", this.onPointerLeave);
     this.listen(document, "visibilitychange", this.onVisibility);
+    this.listen(window, "scroll", () => this.measureKeepOut(), { passive: true });
     // A case study covering the landing page makes it inert; pause until it
     // closes so the meeples pick up exactly where they were.
     const page = root.closest("[data-page]");
@@ -460,7 +462,7 @@ export class MeepleEngine {
     // Start exactly where the static (server-rendered) meeples stand, so the
     // swap to the canvas is seamless.
     const x = Math.min(homeOf(cfg).x * this.vw, this.vw - W - 8);
-    const y = Math.min(homeOf(cfg).y * this.vh, this.vh - H - 8);
+    const y = Math.min(homeOf(cfg).y * this.screenH(), this.screenH() - H - 8);
     const traits = TRAITS[cfg.id];
     return {
       cfg,
@@ -525,13 +527,19 @@ export class MeepleEngine {
       const r = el.getBoundingClientRect();
       return new DOMRect(r.left - c.left, r.top - c.top, r.width, r.height);
     });
-    this.keepOut = Array.from(this.root.querySelectorAll(".landing-blurb, .case-nav a"), (el) => {
-      const r = el.getBoundingClientRect();
+    this.measureKeepOut();
+  }
+
+  private measureKeepOut() {
+    const c = this.canvas.getBoundingClientRect();
+    // The case-study cards aren't on the list: meeples walk right over them.
+    const blurb = Array.from(this.root.querySelectorAll(".landing-blurb"), (el) => el.getBoundingClientRect());
+    this.keepOut = blurb.map((r) => {
       // Wider at the sides and below, for the name tag (and z's) drawn above a meeple's head.
       const side = KEEP_OUT_PAD + TAG_OVERHANG;
       return new DOMRect(r.left - c.left - side, r.top - c.top - KEEP_OUT_PAD, r.width + side * 2, r.height + KEEP_OUT_PAD * 2 + TAG_HEIGHT);
     });
-    this.noPlant = Array.from(this.root.querySelectorAll<HTMLElement>(".headline-line, .landing-blurb, nav a, header a, header button")).map((el) => {
+    this.noPlant = Array.from(this.root.querySelectorAll<HTMLElement>(".headline-line, .landing-blurb, .case-card, footer, header a, header button")).map((el) => {
       const r = el.getBoundingClientRect();
       return new DOMRect(r.left - c.left - 12, r.top - c.top - 12, r.width + 24, r.height + 24);
     });
@@ -817,7 +825,7 @@ export class MeepleEngine {
     if (m.cfg.id === "purple") {
       // The Watcher stays perched near its spot by the headline.
       const hx = Math.min(homeOf(m.cfg).x * this.vw, this.vw - W - 8);
-      const hy = Math.min(homeOf(m.cfg).y * this.vh, this.vh - H - 8);
+      const hy = Math.min(homeOf(m.cfg).y * this.screenH(), this.screenH() - H - 8);
       return this.clampTarget(hx + rand(-120, 120), hy + rand(-40, 60));
     }
     if (m.cfg.id === "red" && this.time > this.nextShove && Math.random() < 0.5) {
@@ -854,15 +862,30 @@ export class MeepleEngine {
       if (o) return this.clampTarget(o.x, o.y);
     }
     if (m.cfg.id === "green" && Math.random() < 0.85) {
-      // The Shy One's hideout is the bottom-left quarter of the page. It
+      // The Shy One's hideout is the bottom-left quarter of the screen. It
       // mostly potters about (and gardens) there, and heads back after a
       // scare or the odd outing.
-      return this.clampTarget(rand(0, this.vw / 2 - W), rand(this.vh / 2, this.vh - H));
+      const v = this.view();
+      return this.clampTarget(rand(0, this.vw / 2 - W), rand((v.top + v.bottom) / 2, v.bottom - H));
     }
-    // Meander: a short leg in a random direction.
+    // Meander: a short leg in a random direction, kept to the part of the
+    // page on screen, so the meeples follow the visitor down to the cards
+    // and back up.
     const a = rand(0, Math.PI * 2);
     const r = rand(80, 320);
-    return this.clampTarget(m.x + Math.cos(a) * r, m.y + Math.sin(a) * r);
+    const v = this.view();
+    return this.clampTarget(m.x + Math.cos(a) * r, clamp(m.y + Math.sin(a) * r, v.top, v.bottom - H - MARGIN));
+  }
+
+  /** The first screen of the page, where the meeples live and the headline is. */
+  private screenH() {
+    return Math.min(this.vh, window.innerHeight);
+  }
+
+  /** The part of the canvas that's on screen right now, top to bottom. */
+  private view() {
+    const top = clamp(-this.canvas.getBoundingClientRect().top, 0, Math.max(0, this.vh - window.innerHeight));
+    return { top, bottom: Math.min(this.vh, top + window.innerHeight) };
   }
 
   private clampTarget(x: number, y: number): Vec {
@@ -1548,11 +1571,12 @@ export class MeepleEngine {
    */
   private scatterFlowers(t: TintTarget) {
     const c = squareCenter(t);
-    const n = clamp(Math.round((this.vw * this.vh) / 45000), 6, 20);
+    const v = this.view();
+    const n = clamp(Math.round((this.vw * (v.bottom - v.top)) / 45000), 6, 20);
     const made: Vec[] = [];
     for (let tries = 0; made.length < n && tries < n * 30; tries++) {
       const x = Math.round(rand(MARGIN, this.vw - MARGIN - 3 * F) / F) * F;
-      const y = Math.round(rand(64 + FLOWER_BLOOM.length * F, this.vh - MARGIN) / F) * F;
+      const y = Math.round(rand(v.top + 64 + FLOWER_BLOOM.length * F, v.bottom - MARGIN) / F) * F;
       const r = new DOMRect(x, y - FLOWER_BLOOM.length * F, 3 * F, FLOWER_BLOOM.length * F);
       if (this.noPlant.some((z) => overlaps(z, r))) continue;
       const near = (f: Vec) => Math.abs(f.x - x) < 6 * F && Math.abs(f.y - y) < 9 * F;

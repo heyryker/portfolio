@@ -72,7 +72,6 @@ body {
  * side bearing 0.057, and RYKER's ink is 3.23 wide with the -0.015em tracking.
  */
 .headline-grid,
-.case-nav,
 .landing-blurb {
   /* Phones, on the 22px grid. */
   --hl-cap-cells: 2;
@@ -85,6 +84,9 @@ body {
   /* Cells the blurb adds below the headline (phones only), so the two are
      centered as one block. */
   --hl-below-cells: 0;
+  /* The headline is centered in the space above the fanned case-study cards
+     (components/CaseDeck.tsx), not the whole screen. */
+  --deck-peek: calc(var(--card-h) * 0.4);
 }
 
 .headline-grid {
@@ -101,9 +103,9 @@ body {
   /* Centered, then snapped to the nearest grid line. The page's grid is
      anchored at its top-left corner, so whole cells from there land on lines. */
   left: calc((100% - var(--hl-width)) / 2);
-  top: calc((100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell)) / 2);
+  top: calc((100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell) - var(--deck-peek)) / 2);
   left: round(nearest, (100% - var(--hl-width)) / 2, var(--grid-cell));
-  top: round(nearest, (100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell)) / 2, var(--grid-cell));
+  top: round(nearest, (100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell) - var(--deck-peek)) / 2, var(--grid-cell));
 }
 
 .headline-line {
@@ -178,7 +180,6 @@ body {
 
 @media (min-width: 720px) and (min-height: 520px) {
   .headline-grid,
-  .case-nav,
   .landing-blurb {
     --hl-cap-cells: 2;
     --hl-indent-cells: 6;
@@ -188,7 +189,6 @@ body {
 /* The mockup's size (1486×935): a 3-cell cap height. */
 @media (min-width: 1100px) and (min-height: 640px) {
   .headline-grid,
-  .case-nav,
   .landing-blurb {
     --hl-cap-cells: 3;
     --hl-indent-cells: 8;
@@ -197,7 +197,6 @@ body {
 
 @media (min-width: 1680px) and (min-height: 880px) {
   .headline-grid,
-  .case-nav,
   .landing-blurb {
     --hl-cap-cells: 4;
     --hl-gap-cells: 2;
@@ -215,7 +214,7 @@ body {
 .landing-blurb {
   --hl-height: calc((var(--hl-cap-cells) * 2 + var(--hl-gap-cells)) * var(--grid-cell));
   --hl-box: calc(var(--hl-indent) + var(--hl-ryker-ink) + var(--hl-cap) / 0.7275 * 0.171);
-  --hl-top: round(nearest, (100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell)) / 2, var(--grid-cell));
+  --hl-top: round(nearest, (100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell) - var(--deck-peek)) / 2, var(--grid-cell));
   --blurb-gap-cells: 2;
   --blurb-line: 22px;
 
@@ -321,33 +320,6 @@ body {
 }
 
 /*
- * The case-study buttons (see components/CaseStudyNav.tsx): a compact row
- * centered on the screen, with a meeple pixel (11px) between buttons. Each
- * button is three meeple pixels tall, centered in a one-cell grid row.
- * Phones get three over two, centered.
- */
-.case-nav {
-  --nav-height: var(--grid-cell);
-  --button-height: calc(var(--meeple-px) * 3);
-
-  position: absolute;
-  z-index: 10;
-  font-size: 13px;
-  left: 0;
-  right: 0;
-  top: calc(100% - max(24px, 9.5vh) - var(--nav-height));
-  top: round(down, 100% - max(24px, 9.5vh) - var(--nav-height), var(--grid-cell));
-}
-
-.case-nav ul {
-  display: flex;
-  justify-content: center;
-  gap: var(--meeple-px);
-  align-items: center;
-  height: var(--grid-cell);
-}
-
-/*
  * A landing-page button: a thin outline in its own text color, so a meeple
  * walking over it tints the whole button. No fill, so meeples stay visible
  * behind it. Hover and focus fill it with the accent.
@@ -375,39 +347,209 @@ body {
   color: var(--color-bg) !important;
 }
 
-.case-nav .landing-button {
+/*
+ * The case-study cards (components/CaseDeck.tsx). Card size is shared with
+ * the meeples' keep-out zone in the landing page, so it lives on :root.
+ * One row of four from 860px up; two by two below.
+ */
+:root {
+  --card-w: min(180px, (100vw - 44px) / 2);
+  --card-h: calc(var(--card-w) * 1.5);
+  --card-image-h: calc(var(--card-w) * 0.7);
+}
+
+@media (min-width: 860px) {
+  :root {
+    --card-w: min(280px, (100vw - 168px) / 4);
+    --card-h: calc(var(--card-w) * 1.34);
+    --card-image-h: calc(var(--card-w) * 0.75);
+  }
+}
+
+/*
+ * Without the fan (no JavaScript, or reduced motion): the cards sit straight,
+ * side by side, with their top 40% peeking over the fold, and scroll with the
+ * page. This is also what the server renders.
+ */
+.case-deck {
+  position: relative;
+  z-index: 20;
+  margin-top: calc(var(--card-h) * -0.4);
+  padding: 0 16px 48px;
+}
+
+.case-deck-stage {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+@media (min-width: 860px) {
+  .case-deck-stage {
+    gap: 24px;
+  }
+}
+
+/*
+ * The fan. The deck starts at the top of the page, over the landing screen,
+ * and is taller than the screen by the scroll it takes to deal the cards out.
+ * Its stage sticks to the screen meanwhile; the script places each card.
+ */
+.case-deck[data-fan] {
+  margin-top: -100svh;
+  height: 190svh;
+  padding: 0;
+  pointer-events: none;
+}
+
+.case-deck[data-fan] .case-deck-stage {
+  display: block;
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: clip;
+}
+
+.case-deck[data-fan] .case-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: var(--z, 1);
+  pointer-events: auto;
+}
+
+/* Hidden until the script has fanned them, so they don't jump on load. */
+@media (prefers-reduced-motion: no-preference) {
+  .case-card {
+    transition: opacity 400ms;
+  }
+  .case-deck:not([data-ready]) .case-card {
+    opacity: 0;
+  }
+}
+
+.case-card {
+  width: var(--card-w);
+  height: var(--card-h);
+}
+
+.case-card:hover,
+.case-card:focus-within {
+  z-index: 50;
+}
+
+.case-card-link {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-bg);
+  border: 1px solid rgb(34 31 32 / 0.12);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.06),
+    0 10px 30px -8px rgb(0 0 0 / 0.18);
+  transition:
+    transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 200ms;
+}
+
+.case-card:hover .case-card-link,
+.case-card-link:focus-visible {
+  transform: translateY(calc(var(--lift, 6px) * -1));
+  border-color: var(--color-accent);
+}
+
+/* Full bleed: the image runs to the card's edges. */
+.case-card-image {
+  position: relative;
+  flex: none;
+  height: var(--card-image-h);
+  background: var(--color-grid);
+}
+
+.case-card-image img {
+  object-fit: cover;
+}
+
+.case-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px 16px;
+}
+
+.case-card-label {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--color-accent);
+}
+
+.case-card-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-ink);
+}
+
+.case-card-summary {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-ink-soft);
+}
+
+@media not all and (min-width: 860px) {
+  .case-card-text {
+    gap: 4px;
+    padding: 10px 10px 12px;
+  }
+  .case-card-title {
+    font-size: 13px;
+  }
+  .case-card-summary {
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+}
+
+
+/*
+ * The landing page footer (components/SiteFooter.tsx): pixel grass, then
+ * email and LinkedIn in small muted caps.
+ */
+/* No background, so meeples that wander down can walk on the grass. */
+.site-footer {
+  position: relative;
+}
+
+.site-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 32px;
+  padding: 20px 16px 28px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--color-muted);
 }
 
-@media not all and (min-width: 720px) and (min-height: 520px) {
-  /*
-   * Phones: three over two, each row centered, with a meeple pixel between
-   * buttons and between rows. The two rows sit in four 22px grid cells.
-   */
-  .case-nav {
-    --nav-height: calc(var(--grid-cell) * 4);
-    font-size: 12px;
-  }
+.site-footer-links a {
+  transition: color 200ms;
+}
 
-  .case-nav ul {
-    flex-wrap: wrap;
-    align-content: center;
-    gap: var(--meeple-px);
-    height: var(--nav-height);
-  }
-
-  /* A full-width spacer that breaks the list after the third button. It
-     takes back one row gap, so the rows are one gap apart. */
-  .case-nav ul::before {
-    content: "";
-    flex-basis: 100%;
-    margin-top: calc(var(--meeple-px) * -1);
-    order: 1;
-  }
-
-  .case-nav li:nth-child(n + 4) {
-    order: 2;
-  }
+.site-footer-links a:hover,
+.site-footer-links a:focus-visible {
+  color: var(--color-accent);
 }
 
 /*

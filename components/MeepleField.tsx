@@ -43,7 +43,8 @@ export function MeepleField() {
     <canvas
       ref={canvasRef}
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 z-[5] size-full"
+      // Above the case-study cards (z-20), so meeples walk over them; below the header.
+      className="pointer-events-none absolute inset-0 z-[25] size-full"
     />
   );
 }
