@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Silkscreen } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -14,6 +15,9 @@ const silkscreen = Silkscreen({
   subsets: ["latin"],
   weight: ["400", "700"],
 });
+
+// GA4 measurement ID (G-…), set in the Vercel project env. No ID, no tag.
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -58,6 +62,7 @@ export default function RootLayout({ children, work }: LayoutProps<"/">) {
         {work}
         <Analytics />
       </body>
+      {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
     </html>
   );
 }
