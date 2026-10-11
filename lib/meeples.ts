@@ -65,7 +65,7 @@ export const MEEPLES: MeepleConfig[] = [
     // Starts in its bottom-left hideout, left of the blurb and above the
     // case-study links (it was at 0.27, 0.67 before the blurb moved in).
     home: { x: 0.07, y: 0.72 },
-    phoneHome: { x: 0.27, y: 0.71 },
+    phoneHome: { x: 0.06, y: 0.9 },
   },
   {
     id: "red",
@@ -77,7 +77,7 @@ export const MEEPLES: MeepleConfig[] = [
     // Beside RYKER's period, the square it likes to shove (it stood left of
     // HEY at 0.11, 0.609 before the blurb moved in there).
     home: { x: 0.9, y: 0.609 },
-    phoneHome: { x: 0.72, y: 0.71 },
+    phoneHome: { x: 0.72, y: 0.24 },
   },
   {
     id: "blue",

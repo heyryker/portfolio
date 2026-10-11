@@ -231,30 +231,40 @@ body {
 }
 
 .landing-blurb-links {
+  --button-height: var(--grid-cell);
   display: flex;
-  gap: 1.25em;
+  gap: calc(var(--grid-cell) / 2);
+  margin-top: calc(var(--grid-cell) / 2);
   font-size: 0.875em;
-  letter-spacing: 0.08em;
 }
 
-/* A taller tap target without moving the line off its grid row. */
-.landing-blurb-link {
-  display: block;
-  margin-block: -11px;
-  padding-block: 11px;
+/* Resume is the primary action: filled. Email is outlined. */
+.landing-blurb-links .landing-button {
   color: var(--color-accent);
 }
 
-.landing-blurb-link:hover > span,
-.landing-blurb-link:focus-visible > span {
-  color: var(--color-ink);
+.landing-blurb-links .landing-button-primary {
+  border-color: var(--color-accent);
+  background-color: var(--color-accent);
+  color: var(--color-bg);
+}
+
+.landing-blurb-links .landing-button-primary:hover,
+.landing-blurb-links .landing-button-primary:focus-visible {
+  border-color: var(--color-ink);
+  background-color: var(--color-ink);
 }
 
 @media not all and (min-width: 720px) and (min-height: 520px) {
-  /* Two cells of gap and four lines of text (22px rows). */
+  /* Two cells of gap, three lines of text (22px rows), half a cell, then
+     two-cell buttons. */
   .headline-grid,
   .landing-blurb {
-    --hl-below-cells: 6;
+    --hl-below-cells: 8;
+  }
+
+  .landing-blurb-links {
+    --button-height: calc(var(--grid-cell) * 2);
   }
 }
 
@@ -262,17 +272,27 @@ body {
   .landing-blurb {
     top: var(--hl-top);
     width: calc(var(--hl-indent) - var(--grid-cell));
-    /* Bottom of the box on RYKER's baseline, then down by the gap between
-       the last line's baseline and its line box's bottom (Inter: ascender
-       0.96875em, content 1.2109em, so LH/2 - 0.3633em). */
-    transform: translateY(calc(var(--hl-height) - 100% + var(--blurb-line) / 2 - 0.3633em));
+    /* The buttons' bottom edge on RYKER's baseline. */
+    transform: translateY(calc(var(--hl-height) - 100%));
     font-size: 13px;
+  }
+
+  /* The corner is small here, so smaller buttons (three meeple pixels) and
+     a tighter gap keep the blurb clear of HEY. */
+  .landing-blurb-links {
+    --button-height: calc(var(--meeple-px) * 3);
+    margin-top: calc(var(--grid-cell) / 4);
   }
 }
 
 @media (min-width: 1100px) and (min-height: 640px) {
   .landing-blurb {
     font-size: 15px;
+  }
+
+  .landing-blurb-links {
+    --button-height: var(--grid-cell);
+    margin-top: calc(var(--grid-cell) / 2);
   }
 }
 
@@ -301,14 +321,13 @@ body {
 }
 
 /*
- * The case-study links, on the grid (see components/CaseStudyNav.tsx). On
- * desktop the row spans exactly the headline's width: [HACKATHON]'s bracket
- * starts on the same vertical grid line as H, [EDITORIAL]'s ends under
- * RYKER's period, and the four gaps between labels are equal. (Equal columns
- * put every label on a line but left the gaps uneven, since the labels differ
- * in width; Ryker asked for even spacing.) The row is centered in a one-cell
- * grid row (with line-height 1, Inter's caps are centered in the line box).
- * Phones get three over two, centered.
+ * The case-study buttons, on the grid (see components/CaseStudyNav.tsx). On
+ * desktop the row spans exactly the headline's width: HACKATHON's left edge
+ * is on the same vertical grid line as H, EDITORIAL's right edge sits under
+ * RYKER's period, and the four gaps between buttons are equal. (Equal
+ * columns put every button on a line but left the gaps uneven, since the
+ * labels differ in width; Ryker asked for even spacing.) Each button is one
+ * grid cell tall, filling one grid row. Phones get three over two, centered.
  */
 .case-nav {
   /* From H's left edge to the right edge of RYKER's period: the indent,
@@ -318,10 +337,11 @@ body {
     var(--hl-indent) + var(--hl-ryker-ink) + var(--hl-cap) / 0.7275 * 0.1097
   );
   --nav-height: var(--grid-cell);
+  --button-height: var(--grid-cell);
 
   position: absolute;
   z-index: 10;
-  font-size: clamp(13px, 1.5vw, 22px);
+  font-size: clamp(13px, 1.15vw, 18px);
   width: var(--nav-width);
   /* The headline's own box (.headline-grid's --hl-width), so both snap to
      the same grid line. */
@@ -339,42 +359,62 @@ body {
   height: var(--grid-cell);
 }
 
-/* Pull the brackets' ink, not their side bearings, onto the edges. */
-.case-nav li:first-child .case-nav-link {
-  margin-left: -0.075em;
+/*
+ * A landing-page button: a thin outline in its own text color, so a meeple
+ * walking over it tints the whole button. No fill, so meeples stay visible
+ * behind it. Hover and focus fill it with the accent.
+ */
+.landing-button {
+  display: flex;
+  align-items: center;
+  height: var(--button-height);
+  padding-inline: 1.1em;
+  border: 1px solid currentColor;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  text-transform: uppercase;
+  transition:
+    color 200ms,
+    background-color 200ms,
+    border-color 200ms;
 }
 
-.case-nav li:last-child .case-nav-link {
-  margin-right: -0.075em;
+.landing-button:hover,
+.landing-button:focus-visible {
+  border-color: var(--color-accent);
+  background-color: var(--color-accent);
+  color: var(--color-bg) !important;
+}
+
+.case-nav .landing-button {
+  color: var(--color-muted);
 }
 
 @media not all and (min-width: 720px) and (min-height: 520px) {
   /*
    * Phones: three over two, each row centered with equal gaps between the
-   * labels. Rows stay on the grid; with equal spacing, the labels' left edges
-   * can't all land on vertical lines, so centering wins here.
+   * buttons. Buttons are two cells tall (the phone grid is 22px), with one
+   * cell between the rows. With equal spacing, the buttons' left edges can't
+   * all land on vertical lines, so centering wins here.
    */
   .case-nav {
     --nav-width: 100%;
     --nav-box: 100%;
-    --nav-height: calc(var(--grid-cell) * 3);
+    --nav-height: calc(var(--grid-cell) * 5);
+    --button-height: calc(var(--grid-cell) * 2);
   }
 
   .case-nav ul {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    column-gap: calc(var(--grid-cell) * 2);
+    column-gap: var(--grid-cell);
     row-gap: 0;
+    height: auto;
   }
 
-  .case-nav li {
-    display: flex;
-    align-items: center;
-    height: var(--grid-cell);
-  }
-
-  /* A full-width, one-cell spacer that breaks the list after the third label. */
+  /* A full-width, one-cell spacer that breaks the list after the third button. */
   .case-nav ul::before {
     content: "";
     flex-basis: 100%;
@@ -384,14 +424,6 @@ body {
 
   .case-nav li:nth-child(n + 4) {
     order: 2;
-  }
-
-  .case-nav ul {
-    height: auto;
-  }
-
-  .case-nav li .case-nav-link {
-    margin: 0;
   }
 }
 

@@ -2,10 +2,10 @@ import Link from "next/link";
 import { CASE_STUDIES } from "@/lib/work";
 
 /**
- * The five bracketed case-study links along the bottom of the landing page.
- * Each label starts on a vertical grid line and is centered in a grid row;
- * the column widths and placement live in globals.css under `.case-nav`.
- * Like the headline's blue elements, each label is tinted by a meeple that
+ * The five case-study buttons along the bottom of the landing page, each one
+ * filling a grid row; the spacing and placement live in globals.css under
+ * `.case-nav`.
+ * Like the headline's blue elements, each button is tinted by a meeple that
  * crosses it.
  */
 export function CaseStudyNav() {
@@ -16,14 +16,12 @@ export function CaseStudyNav() {
           <li key={slug}>
             <Link
               href={`/work/${slug}`}
-              // The padding and matching negative margin keep a comfortable tap
-              // target without moving the label off the grid.
-              className="case-nav-link -my-3 block py-3 leading-none font-normal tracking-[0.02em] whitespace-nowrap text-muted uppercase transition-colors duration-200 hover:text-ink focus-visible:text-ink"
+              // Takes on a meeple's color, outline and all, while one walks
+              // over it (lib/meeple-engine.ts).
+              data-meeple-tint="text"
+              className="landing-button"
             >
-              {/* Takes on a meeple's color while one walks over it (lib/meeple-engine.ts). */}
-              <span data-meeple-tint="text" className="transition-colors duration-200">
-                [{label}]
-              </span>
+              {label}
             </Link>
           </li>
         ))}
