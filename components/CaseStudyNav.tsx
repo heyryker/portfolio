@@ -8,8 +8,8 @@ import { CASE_STUDIES } from "@/lib/work";
  * Like the headline's blue elements, each button is tinted by a meeple that
  * crosses it.
  *
- * Hovering or focusing a button shows a small hint above it: the client and
- * the kind of work. Screen readers get the same line as the link's
+ * Hovering or focusing a button shows a small hint above it: the kind of
+ * work. Screen readers get the same line as the link's
  * description.
  */
 export function CaseStudyNav() {

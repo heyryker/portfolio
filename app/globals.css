@@ -380,9 +380,9 @@ body {
 }
 
 /*
- * The hint over a case-study button: the client and the kind of work, in the
- * pixel font, one grid row above the button. It shows on hover (on devices
- * that can hover) and on keyboard focus, and never catches the pointer.
+ * The hint over a case-study button: the kind of work, in the pixel font,
+ * just above the button. It shows on hover (on devices that can hover) and
+ * on keyboard focus, and never catches the pointer.
  */
 .case-nav-item {
   position: relative;
