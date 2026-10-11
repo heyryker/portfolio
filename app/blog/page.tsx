@@ -2,18 +2,36 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { BlogHeader } from "@/components/blog/BlogHeader";
+import { JsonLd } from "@/components/JsonLd";
 import { formatDate, getPosts } from "@/lib/blog";
+import { SITE_URL, WEBSITE_ID, absoluteUrl, pageMetadata, person } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Blog",
   description:
     "Process notes from Ryker Marble: a TRON design challenge and a food truck that only exists on paper.",
-};
+  path: "/blog",
+});
 
 export default function BlogIndex() {
   const posts = getPosts();
   return (
     <div className="min-h-svh">
+      <JsonLd
+        data={{
+          "@type": "Blog",
+          url: absoluteUrl("/blog"),
+          name: "Ryker Marble's blog",
+          isPartOf: { "@type": "WebSite", "@id": WEBSITE_ID, url: SITE_URL },
+          author: person,
+          blogPost: posts.map((post) => ({
+            "@type": "BlogPosting",
+            headline: post.title,
+            url: absoluteUrl(`/blog/${post.slug}`),
+            datePublished: post.date,
+          })),
+        }}
+      />
       <BlogHeader back={{ href: "/", label: "BACK" }} />
 
       <main className="mx-auto max-w-[968px] px-[22px] pt-11 pb-22 md:px-11">
