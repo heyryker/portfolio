@@ -1,12 +1,16 @@
 import type { MDXContent } from "mdx/types";
 
-/** The five case studies, in landing-page order (CLAUDE.md §4). */
+/**
+ * The five case studies, in landing-page order (CLAUDE.md §4). `hint` is the
+ * client and kind of work, shown when someone hovers or focuses the landing
+ * button, so a stranger knows what's behind a one-word label.
+ */
 export const CASE_STUDIES = [
-  { slug: "hackathon", label: "HACKATHON" },
-  { slug: "tron", label: "TRON" },
-  { slug: "motion", label: "MOTION" },
-  { slug: "email", label: "EMAIL" },
-  { slug: "editorial", label: "EDITORIAL" },
+  { slug: "hackathon", label: "HACKATHON", hint: "Lucid Software · Event identity" },
+  { slug: "tron", label: "TRON", hint: "TRON DAO · Brand system" },
+  { slug: "motion", label: "MOTION", hint: "TRON DAO · Video art direction" },
+  { slug: "email", label: "EMAIL", hint: "Lucid Software · Email campaigns" },
+  { slug: "editorial", label: "EDITORIAL", hint: "SixFifty · Editorial report" },
 ] as const;
 
 export type CaseStudySlug = (typeof CASE_STUDIES)[number]["slug"];

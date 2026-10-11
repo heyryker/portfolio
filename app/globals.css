@@ -379,6 +379,53 @@ body {
   color: var(--color-muted);
 }
 
+/*
+ * The hint over a case-study button: the client and the kind of work, in the
+ * pixel font, one grid row above the button. It shows on hover (on devices
+ * that can hover) and on keyboard focus, and never catches the pointer.
+ */
+.case-nav-item {
+  position: relative;
+}
+
+.case-hint {
+  position: absolute;
+  bottom: calc(100% + var(--meeple-px));
+  left: 50%;
+  translate: -50% 4px;
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 160ms,
+    translate 160ms;
+}
+
+@media (hover: hover) {
+  .case-nav-item:hover .case-hint {
+    opacity: 1;
+    translate: -50% 0;
+  }
+}
+
+.case-nav-item:has(:focus-visible) .case-hint {
+  opacity: 1;
+  translate: -50% 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .case-hint {
+    translate: -50% 0;
+    transition: none;
+  }
+}
+
 @media not all and (min-width: 720px) and (min-height: 520px) {
   /*
    * Phones: three over two, each row centered, with a meeple pixel between
