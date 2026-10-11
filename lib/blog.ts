@@ -26,22 +26,37 @@ type PostMeta = {
   coverHeight: number;
   /** Shown as [BRACKET] tags. */
   tags: string[];
+  /** Points for the "AI summary" button (components/AiSummary.tsx). */
+  aiSummary: string[];
 };
 
 export type Post = PostMeta & { source: string };
 
 /**
  * Parses the frontmatter we use: one `key: value` per line, values optionally
- * quoted, and lists written as [a, b]. Deliberately tiny so there's no YAML
+ * quoted, and lists written as [a, b] or as `key:` followed by `  - item`
+ * lines (for items with commas in them). Deliberately tiny so there's no YAML
  * dependency; anything fancier belongs in the MDX body.
  */
 function parseFrontmatter(raw: string) {
   const match = /^---\n([\s\S]*?)\n---\n?/.exec(raw);
   if (!match) throw new Error("Blog post is missing its --- frontmatter --- block");
   const data: Record<string, string | string[]> = {};
+  let listKey: string | undefined;
   for (const line of match[1].split("\n")) {
+    const item = /^\s+-\s+(.*)$/.exec(line);
+    if (item && listKey) {
+      (data[listKey] as string[]).push(unquote(item[1]));
+      continue;
+    }
+    listKey = undefined;
     const m = /^(\w+):\s*(.*)$/.exec(line.trim());
     if (!m) continue;
+    if (!m[2].trim()) {
+      listKey = m[1];
+      data[listKey] = [];
+      continue;
+    }
     const value = m[2].trim();
     data[m[1]] = value.startsWith("[")
       ? value.slice(1, -1).split(",").map(unquote).filter(Boolean)
@@ -71,6 +86,7 @@ function readPost(slug: string): Post {
     coverWidth: Number(str("coverWidth")),
     coverHeight: Number(str("coverHeight")),
     tags: Array.isArray(data.tags) ? data.tags : [],
+    aiSummary: Array.isArray(data.aiSummary) ? data.aiSummary : [],
     source: body,
   };
 }
