@@ -15,7 +15,7 @@ const EASE = "cubic-bezier(0.76, 0, 0.24, 1)";
 let nextProject = false;
 
 /**
- * Called by "Next: [TRON]": the case study being left holds still under the
+ * Called by "Next: [BRAND GUIDES]": the case study being left holds still under the
  * next one as it wipes up, instead of wiping away.
  */
 export function markNextProject() {
