@@ -7,7 +7,7 @@ import { formatDate, getPosts } from "@/lib/blog";
 export const metadata: Metadata = {
   title: "Blog",
   description:
-    "Process notes from Ryker Marble: the Lucid Hackathon identity, a TRON design challenge and a food truck that only exists on paper.",
+    "Process notes from Ryker Marble: a TRON design challenge and a food truck that only exists on paper.",
 };
 
 export default function BlogIndex() {
