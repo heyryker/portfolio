@@ -84,6 +84,9 @@ body {
   /* Cells the blurb adds below the headline (phones only), so the two are
      centered as one block. */
   --hl-below-cells: 0;
+  /* The headline is centered in the space above the fanned case-study cards
+     (components/CaseDeck.tsx), not the whole screen. */
+  --deck-peek: calc(var(--card-h) * 0.4);
 }
 
 .headline-grid {
@@ -100,9 +103,9 @@ body {
   /* Centered, then snapped to the nearest grid line. The page's grid is
      anchored at its top-left corner, so whole cells from there land on lines. */
   left: calc((100% - var(--hl-width)) / 2);
-  top: calc((100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell)) / 2);
+  top: calc((100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell) - var(--deck-peek)) / 2);
   left: round(nearest, (100% - var(--hl-width)) / 2, var(--grid-cell));
-  top: round(nearest, (100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell)) / 2, var(--grid-cell));
+  top: round(nearest, (100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell) - var(--deck-peek)) / 2, var(--grid-cell));
 }
 
 .headline-line {
@@ -211,7 +214,7 @@ body {
 .landing-blurb {
   --hl-height: calc((var(--hl-cap-cells) * 2 + var(--hl-gap-cells)) * var(--grid-cell));
   --hl-box: calc(var(--hl-indent) + var(--hl-ryker-ink) + var(--hl-cap) / 0.7275 * 0.171);
-  --hl-top: round(nearest, (100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell)) / 2, var(--grid-cell));
+  --hl-top: round(nearest, (100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell) - var(--deck-peek)) / 2, var(--grid-cell));
   --blurb-gap-cells: 2;
   --blurb-line: 22px;
 
@@ -518,18 +521,35 @@ body {
   }
 }
 
+
 /*
- * Where the fanned cards poke up over the fold, so meeples walk around them
- * instead of behind them (lib/meeple-engine.ts reads it as a keep-out zone).
+ * The landing page footer (components/SiteFooter.tsx): pixel grass, then
+ * email and LinkedIn in small muted caps.
  */
-.case-deck-keepout {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: calc(var(--card-w) * 2.3);
-  height: calc(var(--card-h) * 0.4);
-  translate: -50% 0;
-  pointer-events: none;
+/* No background, so meeples that wander down can walk on the grass. */
+.site-footer {
+  position: relative;
+}
+
+.site-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 32px;
+  padding: 20px 16px 28px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.site-footer-links a {
+  transition: color 200ms;
+}
+
+.site-footer-links a:hover,
+.site-footer-links a:focus-visible {
+  color: var(--color-accent);
 }
 
 /*

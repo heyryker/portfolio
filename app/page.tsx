@@ -5,6 +5,7 @@ import { CaseDeck, type CaseCard } from "@/components/CaseDeck";
 import { Headline } from "@/components/Headline";
 import { LandingBlurb } from "@/components/LandingBlurb";
 import { MeepleField } from "@/components/MeepleField";
+import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { LandingMarker } from "@/components/work/LandingMarker";
 import { CASE_STUDIES, loadCaseStudy } from "@/lib/work";
@@ -22,8 +23,10 @@ export default async function Home() {
   );
 
   return (
-    <>
-      <div data-meeple-root="" className="bg-graph relative h-svh min-h-[480px] overflow-hidden select-none">
+    // The meeples roam the whole page, so they can follow a visitor down to
+    // the case-study cards.
+    <div data-meeple-root="" className="relative overflow-x-clip">
+      <div className="bg-graph relative h-svh min-h-[480px] select-none">
         {/* Who this site is about, for search and answer engines. */}
         <JsonLd
           data={{
@@ -46,11 +49,11 @@ export default async function Home() {
           <Headline />
           <LandingBlurb />
         </main>
-        <MeepleField />
-        <div aria-hidden="true" className="case-deck-keepout" />
         <LandingMarker />
       </div>
       <CaseDeck cards={cards} />
-    </>
+      <SiteFooter />
+      <MeepleField />
+    </div>
   );
 }
