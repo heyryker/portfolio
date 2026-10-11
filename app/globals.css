@@ -273,10 +273,10 @@ body {
 }
 
 /*
- * The site menu (components/SiteMenu.tsx): a full-screen modal <dialog> on the
- * same graph paper as the page. Like the headline, each big item has a
- * one-cell cap height with its cap top on a grid line, and there's one empty
- * cell between rows. Phones get the 22px grid, so everything halves there.
+ * The site menu (components/SiteMenu.tsx): a full-screen modal <dialog> on
+ * plain white. The grid lines are hidden here, but the rows still follow them:
+ * like the headline, each item has a one-cell cap height with its cap top on
+ * a grid line, and one empty cell between rows. Phones use the 22px grid.
  */
 .site-menu {
   --menu-cap: var(--grid-cell);
@@ -294,9 +294,9 @@ body {
   border: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  background: var(--color-bg);
   color: var(--color-ink);
-  /* Wipes down from the top. A wipe, rather than a slide, keeps the paper's
-     grid lines still and in register with the page underneath. */
+  /* Wipes down from the top, like a blind. */
   clip-path: inset(0);
   transition:
     clip-path 0.36s cubic-bezier(0.2, 0.8, 0.2, 1),
@@ -347,23 +347,6 @@ html:has(.site-menu[open]) {
 
 .menu-body {
   padding: var(--menu-top) var(--menu-left) calc(var(--grid-cell) * 4);
-}
-
-.menu-columns {
-  display: grid;
-  row-gap: calc(var(--grid-cell) * 2);
-}
-
-/* [WORK] and [MORE]: centered in a one-cell row, one empty cell above the list. */
-.menu-label {
-  display: flex;
-  align-items: center;
-  height: var(--grid-cell);
-  margin-bottom: var(--grid-cell);
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  color: var(--color-muted);
-  text-transform: uppercase;
 }
 
 .menu-list {
@@ -461,62 +444,9 @@ html:has(.site-menu[open]) {
   color: var(--color-accent);
 }
 
-.menu-contact {
-  display: flex;
-  flex-wrap: wrap;
-  column-gap: calc(var(--grid-cell) * 2);
-  margin-top: calc(var(--grid-cell) * 3);
-}
-
-.menu-contact li {
-  display: flex;
-  align-items: center;
-  height: var(--grid-cell);
-}
-
-.menu-contact-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4em;
-  padding-block: 12px;
-  margin-block: -12px;
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  color: var(--color-muted);
-  transition: color 0.2s;
-}
-
-.menu-contact-link:hover,
-.menu-contact-link:focus-visible {
-  color: var(--color-accent);
-}
-
-/* The Curious One peeks up from the bottom edge, head and shoulders only. */
-.menu-meeple {
-  position: fixed;
-  right: calc(var(--grid-cell) * 3);
-  bottom: 0;
-  translate: 0 calc(var(--meeple-px) * 2);
-}
-
 @media (min-width: 720px) and (min-height: 520px) {
   .site-menu {
     --menu-top: calc(var(--grid-cell) * 3);
-  }
-}
-
-/* Room for two columns: [WORK] on the left, [MORE] starting on a grid line
-   to its right (HACKATHON is about 8.8 cells wide). Tablets get a tighter
-   gap so [MORE] stays above the fold. */
-@media (min-width: 920px) and (min-height: 520px) {
-  .menu-columns {
-    grid-template-columns: calc(var(--grid-cell) * 10) auto;
-  }
-}
-
-@media (min-width: 1100px) and (min-height: 640px) {
-  .menu-columns {
-    grid-template-columns: calc(var(--grid-cell) * 11) auto;
   }
 }
 
