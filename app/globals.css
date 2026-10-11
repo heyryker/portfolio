@@ -272,6 +272,184 @@ body {
   }
 }
 
+/*
+ * The site menu (components/SiteMenu.tsx): a full-screen modal <dialog> on
+ * plain white. The grid lines are hidden here, but the rows still follow them:
+ * like the headline, each item has a one-cell cap height with its cap top on
+ * a grid line, and one empty cell between rows. Phones use the 22px grid.
+ */
+.site-menu {
+  --menu-cap: var(--grid-cell);
+  --menu-left: calc(var(--grid-cell) * 2);
+  --menu-top: calc(var(--grid-cell) * 5);
+
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  /* Wipes down from the top, like a blind. */
+  clip-path: inset(0);
+  transition:
+    clip-path 0.36s cubic-bezier(0.2, 0.8, 0.2, 1),
+    overlay 0.36s allow-discrete,
+    display 0.36s allow-discrete;
+}
+
+.site-menu:not([open]) {
+  clip-path: inset(0 0 100% 0);
+}
+
+@starting-style {
+  .site-menu[open] {
+    clip-path: inset(0 0 100% 0);
+  }
+}
+
+.site-menu::backdrop {
+  background: transparent;
+}
+
+/* The about page scrolls; the page behind an open menu shouldn't. */
+html:has(.site-menu[open]) {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-menu {
+    clip-path: none;
+    transition:
+      opacity 0.2s ease,
+      overlay 0.2s allow-discrete,
+      display 0.2s allow-discrete;
+  }
+
+  .site-menu:not([open]) {
+    clip-path: none;
+    opacity: 0;
+  }
+
+  @starting-style {
+    .site-menu[open] {
+      clip-path: none;
+      opacity: 0;
+    }
+  }
+}
+
+.menu-body {
+  padding: var(--menu-top) var(--menu-left) calc(var(--grid-cell) * 4);
+}
+
+.menu-list {
+  display: grid;
+  row-gap: var(--grid-cell);
+}
+
+.menu-list li {
+  height: var(--menu-cap);
+}
+
+/* The padding and matching negative margin give a full-row tap target
+   without moving the type off the grid. */
+.menu-link {
+  position: relative;
+  display: inline-block;
+  padding-block: calc(var(--grid-cell) / 2);
+  margin-block: calc(var(--grid-cell) / -2);
+  font-size: calc(var(--menu-cap) / 0.7275);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+/* Pull the ink, not the line box, onto the grid lines (Inter's metrics, as
+   in .headline-line). */
+.menu-text {
+  display: block;
+  margin-top: -0.1365em;
+  margin-left: -0.057em;
+}
+
+/* A blue pixel square marks the hovered, focused or current item. It's one
+   meeple pixel, centered on the grid line a cell to the item's left. */
+.menu-link::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--grid-cell) / 2 + (var(--menu-cap) - var(--meeple-px)) / 2);
+  left: calc(var(--grid-cell) * -1 - var(--meeple-px) / 2);
+  width: var(--meeple-px);
+  height: var(--meeple-px);
+  background: var(--color-accent);
+  scale: 0;
+  transition: scale 0.16s steps(2, end);
+}
+
+.menu-link:hover,
+.menu-link:focus-visible {
+  color: var(--color-accent);
+}
+
+.menu-link:hover::before,
+.menu-link:focus-visible::before,
+.menu-link[aria-current="page"]::before {
+  scale: 1;
+}
+
+/* The arrow's top sits on the cap height, its bottom above the baseline. */
+.menu-icon {
+  width: 0.42em;
+  height: 0.42em;
+  margin-left: 0.1em;
+  vertical-align: calc(0.7275em - 0.42em);
+  color: var(--color-muted);
+  transition: color 0.2s;
+}
+
+.menu-link:hover .menu-icon,
+.menu-link:focus-visible .menu-icon {
+  color: var(--color-accent);
+}
+
+.menu-download {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--menu-cap);
+  height: var(--menu-cap);
+  font-size: calc(var(--menu-cap) * 0.8);
+  color: var(--color-muted);
+  transition: color 0.2s;
+}
+
+/* At least a 44px tap target on phones. */
+.menu-download::after {
+  content: "";
+  position: absolute;
+  inset: min(0px, (var(--menu-cap) - 44px) / 2);
+}
+
+.menu-download:hover,
+.menu-download:focus-visible {
+  color: var(--color-accent);
+}
+
+@media (min-width: 720px) and (min-height: 520px) {
+  .site-menu {
+    --menu-top: calc(var(--grid-cell) * 3);
+  }
+}
+
 /* Visible focus states in the accent blue (§10). */
 :focus-visible {
   outline: 2px solid var(--color-accent);
