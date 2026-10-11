@@ -2,6 +2,7 @@ import { CaseStudyNav } from "@/components/CaseStudyNav";
 import { Headline } from "@/components/Headline";
 import { MeepleField } from "@/components/MeepleField";
 import { SiteHeader } from "@/components/SiteHeader";
+import { LandingMarker } from "@/components/work/LandingMarker";
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
       </main>
       <MeepleField />
       <CaseStudyNav />
+      <LandingMarker />
     </div>
   );
 }

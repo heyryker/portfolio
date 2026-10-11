@@ -17,3 +17,5 @@ npm run build
 - `components/`: headline, header, case-study nav and the meeple SVG.
 - `lib/meeples.ts`: the five meeples (names, colors, personalities, mockup positions) and the pixel shape.
 - `lib/work.ts`: the case-study list and order.
+- `content/work/*.mdx`: case-study copy. Each file exports `meta` (title, summary, role, client, year, hero) and can use `<Figure>`, `<Video>`, `<Pair>`, `<Results>` and `<Todo>` (see `components/work/blocks.tsx`). Leave out `src` to show a placeholder.
+- `app/work/[slug]`: a case study on its own URL. `app/@work/(.)work/[slug]`: the same case study wiping up over the current page when opened from inside the site.

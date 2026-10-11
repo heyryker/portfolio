@@ -71,17 +71,21 @@ body {
  * 0.7275, cap top 0.1365 below the line box (at line-height 1), H and R left
  * side bearing 0.057, and RYKER's ink is 3.23 wide with the -0.015em tracking.
  */
-.headline-grid {
+.headline-grid,
+.case-nav {
   /* Phones, on the 22px grid. */
   --hl-cap-cells: 2;
   --hl-gap-cells: 1;
   --hl-indent-cells: 5;
 
   --hl-cap: calc(var(--hl-cap-cells) * var(--grid-cell));
-  --hl-line2-top: calc((var(--hl-cap-cells) + var(--hl-gap-cells)) * var(--grid-cell));
-  --hl-height: calc((var(--hl-cap-cells) * 2 + var(--hl-gap-cells)) * var(--grid-cell));
   --hl-indent: calc(var(--hl-indent-cells) * var(--grid-cell));
   --hl-ryker-ink: calc(var(--hl-cap) * 3.23 / 0.7275);
+}
+
+.headline-grid {
+  --hl-line2-top: calc((var(--hl-cap-cells) + var(--hl-gap-cells)) * var(--grid-cell));
+  --hl-height: calc((var(--hl-cap-cells) * 2 + var(--hl-gap-cells)) * var(--grid-cell));
   /* The pixel squares are the size of H's stem, since they're cut from it. */
   --hl-square: 0.171em;
   --hl-width: calc(var(--hl-indent) + var(--hl-ryker-ink) + var(--hl-square));
@@ -169,7 +173,8 @@ body {
 }
 
 @media (min-width: 720px) and (min-height: 520px) {
-  .headline-grid {
+  .headline-grid,
+  .case-nav {
     --hl-cap-cells: 2;
     --hl-indent-cells: 6;
   }
@@ -177,14 +182,16 @@ body {
 
 /* The mockup's size (1486×935): a 3-cell cap height. */
 @media (min-width: 1100px) and (min-height: 640px) {
-  .headline-grid {
+  .headline-grid,
+  .case-nav {
     --hl-cap-cells: 3;
     --hl-indent-cells: 8;
   }
 }
 
 @media (min-width: 1680px) and (min-height: 880px) {
-  .headline-grid {
+  .headline-grid,
+  .case-nav {
     --hl-cap-cells: 4;
     --hl-gap-cells: 2;
     --hl-indent-cells: 11;
@@ -192,42 +199,51 @@ body {
 }
 
 /*
- * The case-study links, on the grid (see components/CaseStudyNav.tsx). Labels
- * sit in equal columns a whole number of cells wide, each starting on a
- * vertical line, and are centered in a one-cell row (with line-height 1,
- * Inter's caps are centered in the line box). Desktop is one row of five;
- * phones get three over two, centered.
+ * The case-study links, on the grid (see components/CaseStudyNav.tsx). On
+ * desktop the row spans exactly the headline's width: [HACKATHON]'s bracket
+ * starts on the same vertical grid line as H, [EDITORIAL]'s ends under
+ * RYKER's period, and the four gaps between labels are equal. (Equal columns
+ * put every label on a line but left the gaps uneven, since the labels differ
+ * in width; Ryker asked for even spacing.) The row is centered in a one-cell
+ * grid row (with line-height 1, Inter's caps are centered in the line box).
+ * Phones get three over two, centered.
  */
 .case-nav {
-  /* The widest label, [EDITORIAL], is about 6.2em. */
-  --nav-last: 6.2em;
-  --nav-slot: max(
-    var(--grid-cell) * 3,
-    round(down, (82vw - var(--nav-last)) / 4, var(--grid-cell))
+  /* From H's left edge to the right edge of RYKER's period: the indent,
+     RYKER's ink, and the period's overhang past it (0.1097em of the
+     headline's type, measured), in px since the nav's em is smaller. */
+  --nav-width: calc(
+    var(--hl-indent) + var(--hl-ryker-ink) + var(--hl-cap) / 0.7275 * 0.1097
   );
-  --nav-width: calc(var(--nav-slot) * 4 + var(--nav-last));
   --nav-height: var(--grid-cell);
 
   position: absolute;
   z-index: 10;
   font-size: clamp(13px, 1.5vw, 22px);
-  left: calc((100% - var(--nav-width)) / 2);
-  left: round(nearest, (100% - var(--nav-width)) / 2, var(--grid-cell));
+  width: var(--nav-width);
+  /* The headline's own box (.headline-grid's --hl-width), so both snap to
+     the same grid line. */
+  --nav-box: calc(var(--hl-indent) + var(--hl-ryker-ink) + var(--hl-cap) / 0.7275 * 0.171);
+  left: calc((100% - var(--nav-box)) / 2);
+  left: round(nearest, (100% - var(--nav-box)) / 2, var(--grid-cell));
   top: calc(100% - max(24px, 9.5vh) - var(--nav-height));
   top: round(down, 100% - max(24px, 9.5vh) - var(--nav-height), var(--grid-cell));
 }
 
 .case-nav ul {
-  display: grid;
-  grid-template-columns: repeat(4, var(--nav-slot)) auto;
-  grid-auto-rows: var(--grid-cell);
-  row-gap: var(--grid-cell);
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  height: var(--grid-cell);
 }
 
-/* Pull the bracket's ink, not its side bearing, onto the grid line. */
-.case-nav-link {
+/* Pull the brackets' ink, not their side bearings, onto the edges. */
+.case-nav li:first-child .case-nav-link {
   margin-left: -0.075em;
+}
+
+.case-nav li:last-child .case-nav-link {
+  margin-right: -0.075em;
 }
 
 @media not all and (min-width: 720px) and (min-height: 520px) {
@@ -238,6 +254,7 @@ body {
    */
   .case-nav {
     --nav-width: 100%;
+    --nav-box: 100%;
     --nav-height: calc(var(--grid-cell) * 3);
   }
 
@@ -267,8 +284,12 @@ body {
     order: 2;
   }
 
-  .case-nav-link {
-    margin-left: 0;
+  .case-nav ul {
+    height: auto;
+  }
+
+  .case-nav li .case-nav-link {
+    margin: 0;
   }
 }
 
@@ -282,4 +303,62 @@ body {
 .pixelated {
   image-rendering: pixelated;
   shape-rendering: crispEdges;
+}
+
+/*
+ * Case studies (components/work). Text sits in one column that starts on a
+ * vertical grid line: centered for a 20-cell measure, then snapped down to the
+ * nearest line, with at least one cell of margin on small screens. It's in the
+ * components layer so utilities like max-w-[660px] can narrow it.
+ */
+@layer components {
+  .case-col {
+    --col-left: max(
+      var(--grid-cell),
+      round(down, (100% - var(--grid-cell) * 20) / 2, var(--grid-cell))
+    );
+    max-width: calc(var(--grid-cell) * 20);
+    margin-left: var(--col-left);
+    margin-right: var(--grid-cell);
+  }
+
+  /* A column inside a column (e.g. a paragraph in a quote) adds no margin. */
+  .case-col .case-col {
+    margin-inline: 0;
+  }
+}
+
+/*
+ * Case study wipe (components/work/wipe.ts). Opening reveals the case study
+ * from the bottom edge up over the page, which holds still underneath. The
+ * animation replays if the browser's forward button brings it back. Closing
+ * is the same wipe in reverse, run from wipe.ts.
+ */
+.case-wipe-in {
+  animation: case-wipe-up 700ms cubic-bezier(0.76, 0, 0.24, 1) both;
+}
+
+@keyframes case-wipe-up {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* Reduced motion: the wipe becomes a quick fade (§5). */
+@media (prefers-reduced-motion: reduce) {
+  .case-wipe-in {
+    animation: case-fade-in 200ms ease-out both;
+  }
+}
+
+@keyframes case-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

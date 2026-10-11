@@ -28,13 +28,21 @@ export const viewport: Viewport = {
   colorScheme: "light",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children, work }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
       className={`${inter.variable} ${silkscreen.variable} h-full antialiased`}
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        {/* The page. Made inert while a case study covers it. */}
+        <div data-page="" className="contents">
+          {children}
+        </div>
+        {/* A case study opened from inside the site wipes up over the page
+            (app/@work). Empty otherwise. */}
+        {work}
+      </body>
     </html>
   );
 }
