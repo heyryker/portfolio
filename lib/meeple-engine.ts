@@ -34,6 +34,11 @@ const H = 4 * P;
 
 /** Keep wander targets this far from the edges. */
 const MARGIN = 16;
+/** How far meeples keep from the blurb and the case-study buttons. */
+const KEEP_OUT_PAD = 8;
+/** Room for the name tag above a meeple: how far it rises over the head, and past each side. */
+const TAG_HEIGHT = 24;
+const TAG_OVERHANG = 18;
 
 const FRICTION = 1.8; // per second, for thrown and knocked meeples
 const BOUNCE = 0.7; // restitution off the viewport edges
@@ -220,8 +225,6 @@ type Meeple = {
 type TintTarget = {
   el: HTMLElement;
   prop: "color" | "backgroundColor";
-  /** A filled button (the blurb's Resume): its border and label follow the fill. */
-  button: boolean;
   /** Where the element sits at rest, ignoring any shove. */
   rect: DOMRect | null;
   color: string | null;
@@ -325,15 +328,16 @@ export class MeepleEngine {
   private noPlant: DOMRect[] = [];
   /** When the Chaotic One may next shove a square on purpose. */
   private nextShove = 6;
-  /**
-   * What the meeples walk across on purpose: the headline's two lines and the
-   * blurb's buttons. They're drawn over both, so the type and buttons get
-   * walked on (and the blue bits take the walker's color).
-   */
+  /** The headline's two lines, which the meeples make a point of walking across. */
   private crossHeadline: DOMRect[] = [];
-  private crossButtons: DOMRect[] = [];
-  /** When a meeple may next set off across one of them. */
+  /** When a meeple may next set off across the headline. */
   private nextCrossing = 2;
+  /**
+   * Where meeples never go: the blurb and the case-study buttons, so they
+   * never sit on something a visitor wants to read or click. Walkers slide
+   * around them and thrown meeples bounce off.
+   */
+  private keepOut: DOMRect[] = [];
   private tagFont = "700 8px monospace";
   private resizeObserver: ResizeObserver;
   private cleanups: (() => void)[] = [];
@@ -352,11 +356,10 @@ export class MeepleEngine {
     this.tints = Array.from(root.querySelectorAll<HTMLElement>("[data-meeple-tint]")).map((el) => ({
       el,
       prop: el.dataset.meepleTint === "text" ? "color" : "backgroundColor",
-      button: el.dataset.meepleTint === "button",
       rect: null,
       color: null,
       holdUntil: 0,
-      pushable: el.dataset.meepleTint === "fill",
+      pushable: el.dataset.meepleTint !== "text",
       state: "home",
       click: el.dataset.meepleClick === "burst" || el.dataset.meepleClick === "squash" ? el.dataset.meepleClick : null,
       clickT: -1,
@@ -433,8 +436,6 @@ export class MeepleEngine {
     for (const off of this.cleanups) off();
     for (const t of this.tints) {
       t.el.style[t.prop] = "";
-      t.el.style.borderColor = "";
-      if (t.button) t.el.style.color = "";
       t.el.style.transitionDuration = "";
       t.el.style.transform = "";
       t.el.style.visibility = "";
@@ -520,12 +521,16 @@ export class MeepleEngine {
       const bottom = r.bottom - fs * 0.12;
       t.rect = new DOMRect(r.left - c.left, top - c.top, r.width, bottom - top);
     }
-    const local = (el: Element) => {
+    this.crossHeadline = Array.from(this.root.querySelectorAll(".headline-line"), (el) => {
       const r = el.getBoundingClientRect();
       return new DOMRect(r.left - c.left, r.top - c.top, r.width, r.height);
-    };
-    this.crossHeadline = Array.from(this.root.querySelectorAll(".headline-line"), local);
-    this.crossButtons = Array.from(this.root.querySelectorAll(".landing-blurb .landing-button"), local);
+    });
+    this.keepOut = Array.from(this.root.querySelectorAll(".landing-blurb, .case-nav a"), (el) => {
+      const r = el.getBoundingClientRect();
+      // Wider at the sides and below, for the name tag (and z's) drawn above a meeple's head.
+      const side = KEEP_OUT_PAD + TAG_OVERHANG;
+      return new DOMRect(r.left - c.left - side, r.top - c.top - KEEP_OUT_PAD, r.width + side * 2, r.height + KEEP_OUT_PAD * 2 + TAG_HEIGHT);
+    });
     this.noPlant = Array.from(this.root.querySelectorAll<HTMLElement>(".headline-line, .landing-blurb, nav a, header a, header button")).map((el) => {
       const r = el.getBoundingClientRect();
       return new DOMRect(r.left - c.left - 12, r.top - c.top - 12, r.width + 24, r.height + 24);
@@ -829,13 +834,17 @@ export class MeepleEngine {
         }
       }
     }
-    if (this.time > this.nextCrossing) {
-      // Every few seconds someone takes the scenic route: straight across
-      // the headline's type, or (more often) over the blurb's buttons.
-      const crossing = this.pickCrossing(m);
-      if (crossing) {
-        this.nextCrossing = this.time + rand(2.5, 5);
-        return crossing;
+    if (this.time > this.nextCrossing && this.crossHeadline.length) {
+      // Every few seconds someone takes the scenic route, straight across
+      // HEY or RYKER, aiming at a spot on the line and walking on past it.
+      const r = this.crossHeadline[Math.floor(Math.random() * this.crossHeadline.length)];
+      const p = { x: rand(r.left + r.width * 0.15, r.right - r.width * 0.15), y: rand(r.top + r.height * 0.3, r.bottom - r.height * 0.3) };
+      const c = center(m);
+      const d = Math.hypot(p.x - c.x, p.y - c.y);
+      if (d > 20) {
+        this.nextCrossing = this.time + rand(3, 6);
+        const past = rand(70, 150);
+        return this.clampTarget(p.x + ((p.x - c.x) / d) * past - W / 2, p.y + ((p.y - c.y) / d) * past - H / 2);
       }
     }
     if (m.cfg.id === "red" && Math.random() < 0.35) {
@@ -856,35 +865,53 @@ export class MeepleEngine {
     return this.clampTarget(m.x + Math.cos(a) * r, m.y + Math.sin(a) * r);
   }
 
-  /**
-   * A walk that passes over one of the blurb's buttons or the headline's
-   * lines: aim at a random spot on it and keep going past it.
-   */
-  private pickCrossing(m: Meeple): Vec | null {
-    const pool = this.crossButtons.length && (Math.random() < 0.6 || !this.crossHeadline.length) ? this.crossButtons : this.crossHeadline;
-    const r = pool[Math.floor(Math.random() * pool.length)];
-    if (!r || r.width <= 0) return null;
-    // Through the middle band, so the whole meeple goes over it.
-    const p = { x: rand(r.left + r.width * 0.15, r.right - r.width * 0.15), y: rand(r.top + r.height * 0.3, r.bottom - r.height * 0.3) };
-    const c = center(m);
-    let dx = p.x - c.x;
-    let dy = p.y - c.y;
-    let d = Math.hypot(dx, dy);
-    if (d < 20) {
-      const a = rand(0, Math.PI * 2);
-      dx = Math.cos(a);
-      dy = Math.sin(a);
-      d = 1;
-    }
-    const past = rand(70, 150);
-    return this.clampTarget(p.x + (dx / d) * past - W / 2, p.y + (dy / d) * past - H / 2);
-  }
-
   private clampTarget(x: number, y: number): Vec {
-    return {
+    const t = {
       x: clamp(x, MARGIN, Math.max(MARGIN, this.vw - W - MARGIN)),
       y: clamp(y, MARGIN, Math.max(MARGIN, this.vh - H - MARGIN)),
     };
+    // Never aim at a spot on the blurb or the case-study buttons.
+    for (const r of this.keepOut) this.pushOut(t, r);
+    return t;
+  }
+
+  /**
+   * Moves a meeple-sized box at p out of r by the shortest way. Returns the
+   * side it was pushed out of ("x" or "y"), or null if it wasn't inside.
+   */
+  private pushOut(p: Vec, r: DOMRect): "x" | "y" | null {
+    const left = r.left - W - p.x; // negative: move left by this much
+    const right = r.right - p.x;
+    const up = r.top - H - p.y;
+    const down = r.bottom - p.y;
+    if (left >= 0 || right <= 0 || up >= 0 || down <= 0) return null;
+    const dx = -left < right ? left : right;
+    const dy = -up < down ? up : down;
+    // Off the page that way: go the other way.
+    const fitsX = p.x + dx >= 0 && p.x + dx <= this.vw - W;
+    const fitsY = p.y + dy >= 0 && p.y + dy <= this.vh - H;
+    if ((Math.abs(dx) < Math.abs(dy) && fitsX) || !fitsY) {
+      p.x += dx;
+      return "x";
+    }
+    p.y += dy;
+    return "y";
+  }
+
+  /**
+   * Keeps a loose meeple off the blurb and the case-study buttons. A thrown
+   * one bounces off them like a wall. A walker that runs into one slides
+   * along it, and if its way is blocked straight on, it picks a new path.
+   */
+  private keepClear(m: Meeple) {
+    for (const r of this.keepOut) {
+      const side = this.pushOut(m, r);
+      if (!side) continue;
+      if (side === "x") m.vx = -m.vx * BOUNCE;
+      else m.vy = -m.vy * BOUNCE;
+      const along = side === "x" ? Math.abs(m.wy) : Math.abs(m.wx);
+      if (m.target && along < Math.hypot(m.wx, m.wy) * 0.35) m.target = null;
+    }
   }
 
   /**
@@ -965,6 +992,7 @@ export class MeepleEngine {
   private integrate(m: Meeple, dt: number) {
     m.x += (m.wx + m.vx) * dt;
     m.y += (m.wy + m.vy) * dt;
+    this.keepClear(m);
     const f = Math.exp(-FRICTION * dt);
     m.vx *= f;
     m.vy *= f;
@@ -2126,11 +2154,6 @@ export class MeepleEngine {
       // Snap on quickly, fade back slowly.
       t.el.style.transitionDuration = color ? "120ms" : "";
       t.el.style[t.prop] = color ?? "";
-      if (t.button) {
-        t.el.style.borderColor = color ?? "";
-        // Ink on the light meeples (yellow, green), so the label stays legible.
-        t.el.style.color = color === "#FBEC5A" || color === "#5FCC8A" ? "#000000" : "";
-      }
     }
   }
 }

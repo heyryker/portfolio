@@ -219,10 +219,8 @@ body {
   --blurb-gap-cells: 2;
   --blurb-line: 22px;
 
-  /* No z-index: like the headline, the blurb sits under the meeple canvas
-     (z 5) so meeples walk over its buttons. The canvas ignores pointer
-     events, so the buttons stay clickable. */
   position: absolute;
+  z-index: 10;
   left: round(nearest, (100% - var(--hl-box)) / 2, var(--grid-cell));
   top: calc(var(--hl-top) + var(--hl-height) + var(--blurb-gap-cells) * var(--grid-cell));
   width: var(--hl-box);
