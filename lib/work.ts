@@ -9,8 +9,8 @@ import type { MDXContent } from "mdx/types";
  * `{ slug: "email", label: "EMAIL" }` between MOTION and EDITORIAL.
  */
 export const CASE_STUDIES = [
-  { slug: "hackathon", label: "HACKATHON" },
-  { slug: "tron", label: "TRON" },
+  { slug: "hackathon", label: "EVENT BRANDING" },
+  { slug: "tron", label: "BRAND GUIDES" },
   { slug: "motion", label: "MOTION" },
   { slug: "editorial", label: "EDITORIAL" },
 ] as const;

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { markNextProject } from "./wipe";
 
-/** "Next: [TRON]": wipes the next case study up over this one (§7). */
+/** "Next: [BRAND GUIDES]": wipes the next case study up over this one (§7). */
 export function NextProjectLink({ slug, label }: { slug: string; label: string }) {
   return (
     <Link
