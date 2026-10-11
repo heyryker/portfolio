@@ -220,6 +220,8 @@ type Meeple = {
 type TintTarget = {
   el: HTMLElement;
   prop: "color" | "backgroundColor";
+  /** A filled button (the blurb's Resume): its border and label follow the fill. */
+  button: boolean;
   /** Where the element sits at rest, ignoring any shove. */
   rect: DOMRect | null;
   color: string | null;
@@ -323,6 +325,15 @@ export class MeepleEngine {
   private noPlant: DOMRect[] = [];
   /** When the Chaotic One may next shove a square on purpose. */
   private nextShove = 6;
+  /**
+   * What the meeples walk across on purpose: the headline's two lines and the
+   * blurb's buttons. They're drawn over both, so the type and buttons get
+   * walked on (and the blue bits take the walker's color).
+   */
+  private crossHeadline: DOMRect[] = [];
+  private crossButtons: DOMRect[] = [];
+  /** When a meeple may next set off across one of them. */
+  private nextCrossing = 2;
   private tagFont = "700 8px monospace";
   private resizeObserver: ResizeObserver;
   private cleanups: (() => void)[] = [];
@@ -341,10 +352,11 @@ export class MeepleEngine {
     this.tints = Array.from(root.querySelectorAll<HTMLElement>("[data-meeple-tint]")).map((el) => ({
       el,
       prop: el.dataset.meepleTint === "text" ? "color" : "backgroundColor",
+      button: el.dataset.meepleTint === "button",
       rect: null,
       color: null,
       holdUntil: 0,
-      pushable: el.dataset.meepleTint !== "text",
+      pushable: el.dataset.meepleTint === "fill",
       state: "home",
       click: el.dataset.meepleClick === "burst" || el.dataset.meepleClick === "squash" ? el.dataset.meepleClick : null,
       clickT: -1,
@@ -421,6 +433,8 @@ export class MeepleEngine {
     for (const off of this.cleanups) off();
     for (const t of this.tints) {
       t.el.style[t.prop] = "";
+      t.el.style.borderColor = "";
+      if (t.button) t.el.style.color = "";
       t.el.style.transitionDuration = "";
       t.el.style.transform = "";
       t.el.style.visibility = "";
@@ -506,6 +520,12 @@ export class MeepleEngine {
       const bottom = r.bottom - fs * 0.12;
       t.rect = new DOMRect(r.left - c.left, top - c.top, r.width, bottom - top);
     }
+    const local = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return new DOMRect(r.left - c.left, r.top - c.top, r.width, r.height);
+    };
+    this.crossHeadline = Array.from(this.root.querySelectorAll(".headline-line"), local);
+    this.crossButtons = Array.from(this.root.querySelectorAll(".landing-blurb .landing-button"), local);
     this.noPlant = Array.from(this.root.querySelectorAll<HTMLElement>(".headline-line, .landing-blurb, nav a, header a, header button")).map((el) => {
       const r = el.getBoundingClientRect();
       return new DOMRect(r.left - c.left - 12, r.top - c.top - 12, r.width + 24, r.height + 24);
@@ -809,6 +829,15 @@ export class MeepleEngine {
         }
       }
     }
+    if (this.time > this.nextCrossing) {
+      // Every few seconds someone takes the scenic route: straight across
+      // the headline's type, or (more often) over the blurb's buttons.
+      const crossing = this.pickCrossing(m);
+      if (crossing) {
+        this.nextCrossing = this.time + rand(2.5, 5);
+        return crossing;
+      }
+    }
     if (m.cfg.id === "red" && Math.random() < 0.35) {
       // Head straight for another meeple. Bumps are the point.
       const others = this.meeples.filter((o) => o !== m && o.mode !== "exploded" && o.mode !== "reassemble");
@@ -825,6 +854,30 @@ export class MeepleEngine {
     const a = rand(0, Math.PI * 2);
     const r = rand(80, 320);
     return this.clampTarget(m.x + Math.cos(a) * r, m.y + Math.sin(a) * r);
+  }
+
+  /**
+   * A walk that passes over one of the blurb's buttons or the headline's
+   * lines: aim at a random spot on it and keep going past it.
+   */
+  private pickCrossing(m: Meeple): Vec | null {
+    const pool = this.crossButtons.length && (Math.random() < 0.6 || !this.crossHeadline.length) ? this.crossButtons : this.crossHeadline;
+    const r = pool[Math.floor(Math.random() * pool.length)];
+    if (!r || r.width <= 0) return null;
+    // Through the middle band, so the whole meeple goes over it.
+    const p = { x: rand(r.left + r.width * 0.15, r.right - r.width * 0.15), y: rand(r.top + r.height * 0.3, r.bottom - r.height * 0.3) };
+    const c = center(m);
+    let dx = p.x - c.x;
+    let dy = p.y - c.y;
+    let d = Math.hypot(dx, dy);
+    if (d < 20) {
+      const a = rand(0, Math.PI * 2);
+      dx = Math.cos(a);
+      dy = Math.sin(a);
+      d = 1;
+    }
+    const past = rand(70, 150);
+    return this.clampTarget(p.x + (dx / d) * past - W / 2, p.y + (dy / d) * past - H / 2);
   }
 
   private clampTarget(x: number, y: number): Vec {
@@ -2073,6 +2126,11 @@ export class MeepleEngine {
       // Snap on quickly, fade back slowly.
       t.el.style.transitionDuration = color ? "120ms" : "";
       t.el.style[t.prop] = color ?? "";
+      if (t.button) {
+        t.el.style.borderColor = color ?? "";
+        // Ink on the light meeples (yellow, green), so the label stays legible.
+        t.el.style.color = color === "#FBEC5A" || color === "#5FCC8A" ? "#000000" : "";
+      }
     }
   }
 }

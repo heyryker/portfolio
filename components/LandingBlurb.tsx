@@ -9,6 +9,11 @@ import { EMAIL, RESUME } from "@/lib/site";
  *
  * The email button says "Email me" so it doesn't read as the Email case
  * study in the row below.
+ *
+ * The meeples walk over the blurb (it sits under their canvas) and cross the
+ * buttons on purpose every so often, and both buttons take the color of a
+ * meeple on them, like the headline's blue bits. Clicks still reach the
+ * buttons: the canvas ignores pointer events.
  */
 export function LandingBlurb() {
   return (
@@ -16,7 +21,8 @@ export function LandingBlurb() {
       {/* TODO(ryker): approve line */}
       <p>Brand designer and art director. I build brand systems that stay clear as they scale. Based in Utah.</p>
       <p className="landing-blurb-links">
-        <a href={RESUME} target="_blank" rel="noopener" data-meeple-glance="" className="landing-button landing-button-primary">
+        {/* Filled in the accent, so a meeple on it recolors the fill, border and all. */}
+        <a href={RESUME} target="_blank" rel="noopener" data-meeple-glance="" data-meeple-tint="button" className="landing-button landing-button-primary">
           Resume
         </a>
         {/* Outlined in its text color, so a meeple walking over tints it like [I'M]. */}
