@@ -525,13 +525,13 @@ export class MeepleEngine {
       const r = el.getBoundingClientRect();
       return new DOMRect(r.left - c.left, r.top - c.top, r.width, r.height);
     });
-    this.keepOut = Array.from(this.root.querySelectorAll(".landing-blurb, .case-nav a"), (el) => {
+    this.keepOut = Array.from(this.root.querySelectorAll(".landing-blurb, .case-deck-keepout"), (el) => {
       const r = el.getBoundingClientRect();
       // Wider at the sides and below, for the name tag (and z's) drawn above a meeple's head.
       const side = KEEP_OUT_PAD + TAG_OVERHANG;
       return new DOMRect(r.left - c.left - side, r.top - c.top - KEEP_OUT_PAD, r.width + side * 2, r.height + KEEP_OUT_PAD * 2 + TAG_HEIGHT);
     });
-    this.noPlant = Array.from(this.root.querySelectorAll<HTMLElement>(".headline-line, .landing-blurb, nav a, header a, header button")).map((el) => {
+    this.noPlant = Array.from(this.root.querySelectorAll<HTMLElement>(".headline-line, .landing-blurb, .case-deck-keepout, header a, header button")).map((el) => {
       const r = el.getBoundingClientRect();
       return new DOMRect(r.left - c.left - 12, r.top - c.top - 12, r.width + 24, r.height + 24);
     });

@@ -6,9 +6,6 @@ import { EMAIL, RESUME } from "@/lib/site";
  * and an email address. On desktop it sits in the empty corner left of RYKER,
  * with the buttons' bottom edge on RYKER's baseline; on phones it drops below
  * the headline. Placement lives in globals.css under `.landing-blurb`.
- *
- * The email button says "Email me" so it doesn't read as the Email case
- * study in the row below.
  */
 export function LandingBlurb() {
   return (
