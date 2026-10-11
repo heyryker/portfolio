@@ -50,7 +50,7 @@ export default function AboutPage() {
         <SiteHeader />
         <Link
           href="/"
-          className="absolute -mx-2 -my-1 bg-bg px-2 py-1 top-[calc(var(--grid-cell)*2.5)] left-[22px] text-sm tracking-[0.08em] text-muted uppercase transition-colors hover:text-ink focus-visible:text-ink md:top-[33px] md:left-[88px]"
+          className="absolute -mx-2 -my-1 bg-bg px-2 py-1 top-[calc(var(--grid-cell)*2.5)] left-[38px] text-sm tracking-[0.08em] text-muted uppercase transition-colors hover:text-ink focus-visible:text-ink md:top-[33px] md:left-[88px]"
         >
           [&larr; BACK]
         </Link>
