@@ -23,5 +23,6 @@ npm run build
 - `app/globals.css`: color and type tokens (`bg-accent`, `text-muted`, `font-pixel`, …), the graph-paper background and focus rings.
 - `app/page.tsx`: the landing page.
 - `components/`: headline, header, case-study nav and the meeple SVG.
+- `app/village/page.tsx`, `components/VillageField.tsx` and `lib/village-engine.ts`: the meeples' town at `/village` (random layout per visit, gardening, visits, town meetings and court).
 - `lib/meeples.ts`: the five meeples (names, colors, personalities, mockup positions) and the pixel shape.
 - `lib/work.ts`: the case-study list and order.

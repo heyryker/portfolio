@@ -10,6 +10,7 @@ const RESUME = "/resume/ryker-marble-resume.pdf";
 const LINKS = [
   { href: "/about", label: "ABOUT" },
   { href: "/blog", label: "BLOG" },
+  { href: "/village", label: "VILLAGE" },
 ] as const;
 
 /**

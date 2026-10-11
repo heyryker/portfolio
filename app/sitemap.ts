@@ -20,6 +20,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly" as const,
       priority: 0.5,
     })),
+    { url: absoluteUrl("/village"), changeFrequency: "yearly", priority: 0.3 },
     { url: absoluteUrl(RESUME), changeFrequency: "yearly", priority: 0.7 },
   ];
 }
