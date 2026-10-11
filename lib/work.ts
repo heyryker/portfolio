@@ -19,6 +19,12 @@ export type CaseStudyMeta = {
   title: string;
   /** One line under the title. Also the page's meta description. */
   summary: string;
+  /**
+   * Three or four plain points for the "AI summary" button
+   * (components/AiSummary.tsx). Written ahead of time from this page's copy;
+   * edit freely, but keep them to what the page actually says.
+   */
+  aiSummary?: string[];
   role: string;
   client: string;
   year: string;

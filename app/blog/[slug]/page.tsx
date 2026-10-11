@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AiSummary } from "@/components/AiSummary";
 import { BlogHeader } from "@/components/blog/BlogHeader";
 import { PostBody } from "@/components/blog/PostBody";
 import { CopyEmail } from "@/components/CopyEmail";
@@ -84,6 +85,11 @@ export default async function BlogPost({ params }: PageProps<"/blog/[slug]">) {
               {post.title}
             </h1>
             <p className="mt-5 max-w-[660px] text-xl leading-relaxed text-ink-soft">{post.summary}</p>
+            {post.aiSummary.length > 0 && (
+              <div className="mt-6">
+                <AiSummary points={post.aiSummary} />
+              </div>
+            )}
             <Image
               src={post.cover}
               alt={post.coverAlt}

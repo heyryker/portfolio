@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { AiSummary } from "@/components/AiSummary";
 import { CopyEmail } from "@/components/CopyEmail";
 import { Meeple } from "@/components/Meeple";
 import { PixelSquare } from "@/components/PixelSquare";
@@ -73,6 +74,11 @@ export async function CaseStudy({ slug }: { slug: CaseStudySlug }) {
           {meta.title}
         </h1>
         <p className="case-col mt-5 max-w-[660px] text-xl leading-snug text-balance">{meta.summary}</p>
+        {meta.aiSummary && (
+          <div className="case-col mt-6">
+            <AiSummary points={meta.aiSummary} />
+          </div>
+        )}
         <dl className="case-col mt-11 flex flex-wrap gap-x-11 gap-y-3 border-y border-grid py-3">
           {(
             [

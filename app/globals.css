@@ -657,3 +657,61 @@ html:has(.site-menu[open]) {
     opacity: 1;
   }
 }
+
+/*
+ * The AI summary at the top of case studies and blog posts
+ * (components/AiSummary.tsx). The button is a landing-page button; the points
+ * are bulleted with pixel squares and fade in one after another.
+ */
+.ai-summary {
+  --button-height: calc(var(--meeple-px) * 3);
+  font-size: 13px;
+}
+
+.ai-summary .landing-button {
+  display: inline-flex;
+}
+
+.ai-summary-panel {
+  margin-top: calc(var(--grid-cell) / 4);
+  max-width: 660px;
+  border-left: 2px solid var(--color-accent);
+  padding: 4px 0 4px 20px;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.ai-summary-panel ul {
+  display: grid;
+  gap: 8px;
+}
+
+.ai-summary-panel li {
+  position: relative;
+  padding-left: 18px;
+  animation: ai-summary-in 320ms ease-out both;
+  animation-delay: calc(var(--i, 0) * 120ms);
+}
+
+.ai-summary-panel li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 6px;
+  height: 6px;
+  background: var(--color-accent);
+}
+
+@keyframes ai-summary-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-summary-panel li {
+    animation: none;
+  }
+}
