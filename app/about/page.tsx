@@ -2,37 +2,27 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { CopyEmail } from "@/components/CopyEmail";
+import { JsonLd } from "@/components/JsonLd";
 import { Meeple } from "@/components/Meeple";
 import { PixelGarden } from "@/components/PixelGarden";
 import { PixelSquare } from "@/components/PixelSquare";
 import { SiteHeader } from "@/components/SiteHeader";
+import { EDUCATION, EMAIL, EXPERIENCE, PROFILES, RESUME, SITE_URL, WEBSITE_ID, absoluteUrl, pageMetadata, person } from "@/lib/site";
 import portrait from "@/public/ryker-marble.jpg";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "About",
   description:
     "Ryker Marble is a senior brand designer and art director in Utah. Experience at Lucid Software and TRON DAO, plus how to get in touch.",
-};
-
-const EMAIL = "rykermarble@gmail.com";
-const RESUME = "/resume/ryker-marble-resume.pdf";
-
-// From Ryker's resume (public/resume/ryker-marble-resume.pdf).
-const EXPERIENCE = [
-  { role: "Senior Brand Designer", org: "Lucid Software", years: "2022–present" },
-  { role: "Contract Brand Designer", org: "TRON DAO", years: "2025–2026" },
-  { role: "Brand Designer", org: "Impact Suite", years: "2021–2022" },
-  { role: "Visual Designer", org: "USU STARS! GEAR UP", years: "2018–2021" },
-  // The brief lists 2017–present; the resume gives no dates.
-  { role: "Freelance Designer", org: "TruFru, GSBS Architects, SixFifty", years: "2017–present" },
-  { role: "Co-Director of Programming", org: "AIGA Salt Lake City (volunteer)", years: "2021–2023" },
-];
+  path: "/about",
+  openGraph: { type: "profile", firstName: "Ryker", lastName: "Marble" },
+});
 
 const CONTACT = [
   { label: "EMAIL", value: EMAIL, href: `mailto:${EMAIL}` },
   { label: "PHONE", value: "(435) 257-6458", href: "tel:+14352576458" },
-  { label: "LINKEDIN", value: "linkedin.com/in/ryker-marble", href: "https://www.linkedin.com/in/ryker-marble/" },
-  { label: "GITHUB", value: "github.com/heyryker", href: "https://github.com/heyryker" },
+  { label: "LINKEDIN", value: "linkedin.com/in/ryker-marble", href: PROFILES.linkedin },
+  { label: "GITHUB", value: "github.com/heyryker", href: PROFILES.github },
 ];
 
 /** A bracketed section label with a pixel-square marker, on the 44px rhythm. */
@@ -47,6 +37,15 @@ function SectionLabel({ children, id }: { children: React.ReactNode; id?: string
 export default function AboutPage() {
   return (
     <div className="min-h-svh">
+      <JsonLd
+        data={{
+          "@type": "ProfilePage",
+          url: absoluteUrl("/about"),
+          name: "About Ryker Marble",
+          isPartOf: { "@type": "WebSite", "@id": WEBSITE_ID, url: SITE_URL },
+          mainEntity: person,
+        }}
+      />
       <div className="bg-graph relative h-[calc(var(--grid-cell)*4)] md:h-[calc(var(--grid-cell)*3)]">
         <SiteHeader />
         <Link
@@ -160,8 +159,7 @@ export default function AboutPage() {
           <SectionLabel id="education">EDUCATION</SectionLabel>
           <ul className="mt-2 divide-y divide-grid border-y border-grid">
             <li className="py-3">
-              <span className="font-semibold">Utah State University</span>, BFA, Graphic Design; BS, Political
-              Science and Government; minor in Art History
+              <span className="font-semibold">{EDUCATION.school}</span>, {EDUCATION.degrees}
             </li>
           </ul>
         </section>
