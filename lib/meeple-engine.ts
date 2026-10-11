@@ -387,6 +387,14 @@ export class MeepleEngine {
     this.listen(window, "pointercancel", this.onPointerUp);
     this.listen(document.documentElement, "pointerleave", this.onPointerLeave);
     this.listen(document, "visibilitychange", this.onVisibility);
+    // A case study covering the landing page makes it inert; pause until it
+    // closes so the meeples pick up exactly where they were.
+    const page = root.closest("[data-page]");
+    if (page) {
+      const covered = new MutationObserver(this.onVisibility);
+      covered.observe(page, { attributes: true, attributeFilter: ["inert"] });
+      this.cleanups.push(() => covered.disconnect());
+    }
 
     // A meeple may glance at a case-study label (or the headline's [I'M] link)
     // when it's hovered or focused.
@@ -403,7 +411,7 @@ export class MeepleEngine {
 
   start() {
     this.render();
-    if (document.visibilityState === "visible") this.resume();
+    if (this.onScreen()) this.resume();
   }
 
   destroy() {
@@ -527,8 +535,13 @@ export class MeepleEngine {
     this.raf = 0;
   }
 
+  /** The tab is visible and no case study is covering the landing page. */
+  private onScreen() {
+    return document.visibilityState === "visible" && !this.root.closest("[inert]");
+  }
+
   private onVisibility = () => {
-    if (document.visibilityState === "visible") this.resume();
+    if (this.onScreen()) this.resume();
     else {
       this.pause();
       if (this.drag) this.release(this.drag, performance.now(), false);
