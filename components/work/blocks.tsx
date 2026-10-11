@@ -74,6 +74,27 @@ export function Video({ src, poster, alt, caption }: Media & { poster?: string }
   );
 }
 
+/**
+ * A YouTube video for work with sound worth hearing, so it doesn't autoplay.
+ * Uses the no-cookie player and only loads the iframe when it scrolls near.
+ */
+export function YouTube({ id, title, caption }: { id: string; title: string; caption?: string }) {
+  return (
+    <figure className="my-11">
+      <iframe
+        src={`https://www.youtube-nocookie.com/embed/${id}?rel=0`}
+        title={title}
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerPolicy="strict-origin-when-cross-origin"
+        allowFullScreen
+        className="block aspect-video h-auto w-full border-0 bg-ink"
+      />
+      <Caption>{caption}</Caption>
+    </figure>
+  );
+}
+
 /** Two visuals side by side (stacked on phones), e.g. a before and after. */
 export function Pair({ children, caption }: { children: React.ReactNode; caption?: string }) {
   return (

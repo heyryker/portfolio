@@ -1,5 +1,5 @@
 import type { MDXComponents } from "mdx/types";
-import { Figure, Pair, Results, SectionLabel, Todo, Video } from "@/components/work/blocks";
+import { Figure, Pair, Results, SectionLabel, Todo, Video, YouTube } from "@/components/work/blocks";
 
 /*
  * How MDX renders across the site (required by @next/mdx). Text elements sit
@@ -31,6 +31,7 @@ const components: MDXComponents = {
   strong: (props) => <strong className="font-semibold" {...props} />,
   Figure,
   Video,
+  YouTube,
   Pair,
   Results,
   Todo,
