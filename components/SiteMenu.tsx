@@ -42,13 +42,9 @@ export function SiteMenu() {
         aria-haspopup="dialog"
         aria-controls="site-menu"
         onClick={() => dialog.current?.showModal()}
-        className="pointer-events-auto absolute top-[22px] right-[22px] grid size-11 cursor-pointer place-items-center md:right-[53px]"
+        className="pointer-events-auto absolute top-[22px] right-[22px] grid size-11 cursor-pointer place-items-center text-ink-soft transition-colors hover:text-accent focus-visible:text-accent md:right-[53px]"
       >
-        <span aria-hidden="true" className="flex w-[46px] flex-col gap-[5px] max-md:w-8">
-          <span className="block h-1 bg-ink-soft max-md:h-[3px]" />
-          <span className="block h-1 bg-ink-soft max-md:h-[3px]" />
-          <span className="block h-1 bg-ink-soft max-md:h-[3px]" />
-        </span>
+        <Icon name="menu" className="size-6" />
       </button>
 
       <dialog
@@ -77,7 +73,7 @@ export function SiteMenu() {
           onClick={close}
           className="absolute top-[22px] right-[22px] grid size-11 cursor-pointer place-items-center text-ink-soft transition-colors hover:text-accent focus-visible:text-accent md:right-[53px]"
         >
-          <Icon name="close" className="size-10 max-md:size-8" />
+          <Icon name="close" className="size-6" />
         </button>
 
         <nav aria-label="Site" className="menu-body">

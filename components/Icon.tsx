@@ -1,12 +1,12 @@
 /*
  * Icons from Google's Material Symbols (Sharp, weight 700), Apache-2.0:
- * https://fonts.google.com/icons. Sharp corners suit the pixel squares, and
- * weight 700 matches the hamburger's heavy bars. The paths are inlined, rather
- * than loading the icon font, so the menu costs no extra request and only
- * ships the icons it uses. To add one, copy its path from
+ * https://fonts.google.com/icons. Sharp corners suit the pixel squares. The
+ * paths are inlined, rather than loading the icon font, so the menu costs no
+ * extra request and only ships the icons it uses. To add one, copy its path from
  * @material-symbols/svg-700/sharp/<name>.svg.
  */
 const PATHS = {
+  menu: "M95-203v-95h771v95H95Zm0-230v-94h771v94H95Zm0-229v-95h771v95H95Z",
   close:
     "m249-183-66-66 231-231-231-231 66-66 231 231 231-231 66 66-231 231 231 231-66 66-231-231-231 231Z",
   arrow_outward: "m250-221-67-67 395-395H224v-94h515v514h-95v-353L250-221Z",
