@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteMenu } from "@/components/SiteMenu";
 
 /** Top bar: the pixel-square home mark (left) and the menu button (right). */
 export function SiteHeader() {
@@ -13,20 +14,7 @@ export function SiteHeader() {
         <span aria-hidden="true" className="block size-3 bg-accent" />
       </Link>
 
-      {/* TODO: wire up the full-screen menu in build step 5 (CLAUDE.md §6). */}
-      <button
-        type="button"
-        aria-label="Open menu"
-        aria-haspopup="dialog"
-        aria-expanded="false"
-        className="pointer-events-auto absolute top-[22px] right-[22px] grid size-11 cursor-pointer place-items-center md:right-[53px]"
-      >
-        <span aria-hidden="true" className="flex w-[46px] flex-col gap-[5px] max-md:w-8">
-          <span className="block h-1 bg-ink-soft max-md:h-[3px]" />
-          <span className="block h-1 bg-ink-soft max-md:h-[3px]" />
-          <span className="block h-1 bg-ink-soft max-md:h-[3px]" />
-        </span>
-      </button>
+      <SiteMenu />
     </header>
   );
 }
