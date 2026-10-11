@@ -10,6 +10,14 @@ npm run lint
 npm run build
 ```
 
+## SEO and answer engines
+
+- `lib/site.ts`: site facts (URL, bio, experience, contact) and `pageMetadata()`, shared by page metadata, JSON-LD, the sitemap and `/llms.txt`.
+- Every page sets a canonical URL, Open Graph and Twitter fields with `pageMetadata()` from `lib/site.ts`.
+- Structured data (schema.org JSON-LD via `components/JsonLd.tsx`): Person and WebSite on the home page, ProfilePage on About, Blog on the index, BlogPosting and BreadcrumbList on each post.
+- `app/sitemap.ts`, `app/robots.ts` (AI crawlers are allowed on purpose) and `app/llms.txt/route.ts`.
+- `app/opengraph-image.tsx` draws the share card with the fonts in `assets/fonts` (Inter and Silkscreen, both OFL). `app/icon.svg` is the favicon.
+
 ## Where things live
 
 - `app/globals.css`: color and type tokens (`bg-accent`, `text-muted`, `font-pixel`, …), the graph-paper background and focus rings.
