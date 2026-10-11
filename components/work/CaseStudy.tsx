@@ -2,6 +2,7 @@ import Image from "next/image";
 import { CopyEmail } from "@/components/CopyEmail";
 import { Meeple } from "@/components/Meeple";
 import { PixelSquare } from "@/components/PixelSquare";
+import { PixelGarden } from "@/components/PixelGarden";
 import { SiteHeader } from "@/components/SiteHeader";
 import { caseStudyLabel, loadCaseStudy, nextCaseStudy, type CaseStudySlug } from "@/lib/work";
 import { CloseCaseStudy } from "./CloseCaseStudy";
@@ -23,13 +24,15 @@ export async function CaseStudy({ slug }: { slug: CaseStudySlug }) {
 
   return (
     <article className="min-h-svh bg-bg">
-      {/* Graph paper in the header only, so it never fights the work (§3). */}
+      {/* The header band, matching About and the blog: a strip of pixel grass. */}
       <div className="bg-graph relative h-[calc(var(--grid-cell)*4)] md:h-[calc(var(--grid-cell)*3)]">
+        <PixelGarden />
         <SiteHeader />
         <div className="absolute top-[calc(var(--grid-cell)*2.5)] left-[22px] md:top-[33px] md:left-[88px]">
           <CloseCaseStudy />
         </div>
-        <p className="absolute right-[22px] bottom-0 flex h-11 items-center gap-3 text-sm tracking-[0.08em] text-accent uppercase max-md:hidden md:right-[88px]">
+        {/* Sits just above the grass. */}
+        <p className="absolute right-[22px] bottom-[17px] flex h-11 items-center gap-3 text-sm tracking-[0.08em] text-accent uppercase max-md:hidden md:right-[88px]">
           <PixelSquare className="size-[7px]" />[{caseStudyLabel(slug)}]
         </p>
       </div>

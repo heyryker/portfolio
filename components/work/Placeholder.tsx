@@ -1,7 +1,7 @@
 import { Meeple } from "@/components/Meeple";
 
 /**
- * Stand-in for a missing image or video: a patch of graph paper with a note
+ * Stand-in for a missing image or video: a light gray patch with a note
  * for Ryker and a meeple keeping it warm. Same size as the asset it replaces.
  */
 export function Placeholder({ label, className }: { label: string; className?: string }) {
@@ -9,7 +9,7 @@ export function Placeholder({ label, className }: { label: string; className?: s
     <div
       role="img"
       aria-label={`Placeholder: ${label}`}
-      className={`bg-graph relative flex items-center justify-center overflow-hidden border-y border-grid ${className ?? ""}`}
+      className={`relative flex bg-grid/50 items-center justify-center overflow-hidden border-y border-grid ${className ?? ""}`}
     >
       <span className="bg-bg px-2 py-1 text-center font-pixel text-xs text-muted uppercase">
         TODO(ryker): {label}
