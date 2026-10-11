@@ -20,6 +20,10 @@
  * - Helping out: when a meeple explodes, the neighbors run over and wait
  *   while it pulls itself back together.
  *
+ * Cows, sheep and bunnies roam the open grass. Tap one and it reacts: the
+ * cows moo in a chorus, a sheep loses its wool (it grows back) and a bunny
+ * has a baby bunny.
+ *
  * As on the landing page (lib/meeple-engine.ts, whose look and physics this
  * shares), meeples can be dragged, thrown and clicked to explode, and it's one
  * small requestAnimationFrame loop on one canvas. The world is seen from a
@@ -127,6 +131,31 @@ const TREE_COLORS: Record<string, string> = {
   A: C.apple,
 };
 
+// Farm animals, in half pixels, facing right. W coat, K ink (eyes, spots,
+// legs), S coat shade, N nose, E horn, B fur, I ear, T tail. Each has two
+// leg frames.
+type AnimalKind = "cow" | "sheep" | "bunny";
+const COW_BODY = [
+  "........E..E",
+  "........WWWW",
+  ".WWWKKWWWWKW",
+  "KWKKKWWWWWNN",
+  ".WKKWWWKKWNN",
+  ".WWWWWWKKW..",
+];
+const SHEEP_BODY = ["..WWWW...", ".WWWWWWKK", "WWWWWWKKK", "SWWWWWSKK", ".SSSSSS.."];
+const SHORN_BODY = [".........", "..WWWWWKK", ".WWWWWKKK", ".SWWWWSKK", "..SSSS..."];
+const BUNNY_BODY = ["....I.", "....IB", ".BBBKB", "TBBBBB"];
+const ANIMALS: Record<AnimalKind, { legs: [string[], string[]]; speed: number }> = {
+  cow: { legs: [[".K.K...K.K..", ".K.K...K.K.."], [".K..K..K..K.", ".K..K..K..K."]], speed: 11 },
+  sheep: { legs: [[".K.K.K.K.", ".K.K.K.K."], ["..KK..KK.", "..KK..KK."]], speed: 15 },
+  bunny: { legs: [[".BB.BB"], ["BB..BB"]], speed: 120 },
+};
+const COAT = { white: "#FFFFFF", brown: "#B08660", cream: "#F1E3C8", gray: "#C4C6C9", tan: "#D9B48F", pink: "#F4B6C2", skin: "#F6D9D3", skinShade: "#EDC3BA" };
+const HOP = 0.32; // one bunny hop, in seconds
+const BABY_TIME = 30; // seconds for a baby bunny to grow up
+const MAX_BUNNIES = 12;
+
 // The pixel z drifting up from a napping meeple (and the Sleepy One's chimney).
 const Z_GLYPH = ["XXX", "..X", ".X.", "X..", "XXX"];
 
@@ -227,6 +256,31 @@ type Building = {
 };
 
 type Tree = { x: number; y: number; rows: string[]; shake: number };
+
+type Animal = {
+  kind: AnimalKind;
+  /** Feet, centered. */
+  x: number;
+  y: number;
+  dir: 1 | -1;
+  goal: Vec | null;
+  pause: number;
+  stepT: number;
+  frame: 0 | 1;
+  /** Time into the current bunny hop, or -1. */
+  hop: number;
+  /** Time left on a startled jump. */
+  jump: number;
+  /** Seconds until a sheep's wool grows back. */
+  shorn: number;
+  /** Seconds until a baby bunny is grown. */
+  baby: number;
+  mom: Animal | null;
+  /** Running from the cursor or a flying meeple. */
+  flee: number;
+  calm: number;
+  coat: string;
+};
 
 type Particle = {
   x: number;
@@ -395,6 +449,7 @@ export class VillageEngine {
   private gardenNodes: number[] = [];
   private slots: Slot[] = [];
   private trees: Tree[] = [];
+  private animals: Animal[] = [];
   private pond: Box | null = null;
   private restSpots: Vec[] = [];
   private meetSpots: { lead: Vec; crowd: Vec[] } = { lead: { x: 0, y: 0 }, crowd: [] };
@@ -839,7 +894,9 @@ export class VillageEngine {
     this.trees = [];
     this.restSpots = [];
     const treeCount = clamp(Math.round(area / (phone ? 24000 : 30000)), 6, 44);
-    for (let i = 0; i < treeCount; i++) {
+    // About half as many trees as there's room for, so the animals have
+    // open pasture.
+    for (let i = 0; i < Math.round(treeCount * 0.45); i++) {
       const rows = pick([TREE_BIG, TREE_BIG, TREE_SMALL, TREE_PINE]);
       const b = place(rows[0].length * U, rows.length * U, 40, P);
       if (!b) continue;
@@ -876,6 +933,354 @@ export class VillageEngine {
       const b = place(3 * U, BLOOM.length * U, 20);
       if (b) this.wildflowers.push({ x: b.x, y: b.y + b.h, petal: pick(PETALS) });
     }
+    this.spawnAnimals(phone, bar);
+  }
+
+  // -------------------------------------------------------------- animals
+
+  private pasture = { x0: 0, x1: 0, y0: 0, y1: 0 };
+
+  /** A few cows, sheep and bunnies, wherever there's open grass. */
+  private spawnAnimals(phone: boolean, bar: number) {
+    this.pasture = { x0: 3 * P, x1: this.vw - 3 * P, y0: 100, y1: this.worldH - bar - 4 };
+    const area = this.vw * this.worldH;
+    const counts: Record<AnimalKind, number> = {
+      cow: clamp(Math.round(area / 500000), 1, 3),
+      sheep: clamp(Math.round(area / 300000), 2, 5),
+      bunny: clamp(Math.round(area / 250000), 3, 6),
+    };
+    this.animals = [];
+    for (const kind of ["cow", "sheep", "bunny"] as AnimalKind[]) {
+      // Sheep stick together, so the rest of the flock starts near the first.
+      let flock: Vec | null = null;
+      for (let i = 0; i < counts[kind]; i++) {
+        const at = this.freeGrass(kind === "sheep" ? flock : null, kind === "sheep" ? 90 : 0);
+        if (!at) continue;
+        if (kind === "sheep") flock ??= at;
+        this.animals.push(this.makeAnimal(kind, at));
+      }
+    }
+    if (phone) for (const a of this.animals) a.pause = rand(0, 3);
+  }
+
+  private makeAnimal(kind: AnimalKind, at: Vec, mom: Animal | null = null): Animal {
+    const coat =
+      kind === "cow"
+        ? pick([COAT.white, COAT.white, COAT.cream])
+        : kind === "bunny"
+          ? (mom?.coat ?? pick([COAT.tan, COAT.tan, COAT.gray]))
+          : COAT.white;
+    return {
+      kind,
+      x: at.x,
+      y: at.y,
+      dir: Math.random() < 0.5 ? 1 : -1,
+      goal: null,
+      pause: this.still ? 0 : rand(0, 4),
+      stepT: 0,
+      frame: 0,
+      hop: -1,
+      jump: 0,
+      shorn: 0,
+      baby: mom ? BABY_TIME : 0,
+      mom,
+      flee: 0,
+      calm: 0,
+      coat,
+    };
+  }
+
+  /** Feet can stand here: open grass, off the buildings, pond and garden. */
+  private grazable(p: Vec) {
+    const q = this.pasture;
+    if (p.x < q.x0 || p.x > q.x1 || p.y < q.y0 || p.y > q.y1) return false;
+    if (inBox(p, pad(this.garden, P))) return false;
+    if (this.pond && inBox(p, pad(this.pond, 2 * P))) return false;
+    return !this.buildings.some((b) => inBox(p, pad(this.footprint(b), P)));
+  }
+
+  private grazePath(a: Vec, b: Vec) {
+    const n = Math.max(1, Math.ceil(dist(a, b) / 8));
+    for (let i = 1; i <= n; i++) {
+      if (!this.grazable({ x: a.x + ((b.x - a.x) * i) / n, y: a.y + ((b.y - a.y) * i) / n })) return false;
+    }
+    return true;
+  }
+
+  private freeGrass(near: Vec | null, spread: number): Vec | null {
+    const q = this.pasture;
+    for (let i = 0; i < 60; i++) {
+      const p = near
+        ? { x: near.x + rand(-spread, spread), y: near.y + rand(-spread, spread) * 0.6 }
+        : { x: rand(q.x0, q.x1), y: rand(q.y0, q.y1) };
+      if (this.grazable(p) && !this.animals.some((a) => dist(a, p) < 40)) return p;
+    }
+    return null;
+  }
+
+  /** Somewhere to wander next. Sheep drift toward the flock, babies follow mom. */
+  private nextGoal(a: Animal): Vec | null {
+    let center: Vec = a;
+    let reach = a.kind === "bunny" ? 110 : a.kind === "cow" ? 140 : 120;
+    if (a.mom && a.baby > 0) {
+      center = a.mom;
+      reach = 30;
+    } else if (a.kind === "sheep" && Math.random() < 0.5) {
+      const others = this.animals.filter((o) => o.kind === "sheep" && o !== a);
+      if (others.length) {
+        center = pick(others);
+        reach = 50;
+      }
+    }
+    for (let i = 0; i < 12; i++) {
+      const ang = rand(0, Math.PI * 2);
+      const r = rand(reach * 0.3, reach);
+      const p = { x: center.x + Math.cos(ang) * r, y: center.y + Math.sin(ang) * r * 0.6 };
+      if (this.grazable(p) && this.grazePath(a, p)) return p;
+    }
+    return null;
+  }
+
+  private updateAnimals(dt: number) {
+    const cursor = this.cursorActive() ? this.cursor : null;
+    for (const a of this.animals) {
+      a.jump = Math.max(0, a.jump - dt);
+      a.calm = Math.max(0, a.calm - dt);
+      a.flee = Math.max(0, a.flee - dt);
+      a.baby = Math.max(0, a.baby - dt);
+      if (a.shorn > 0) {
+        a.shorn -= dt;
+        if (a.shorn <= 0) this.sign(a.x, this.animalBox(a).y, { text: "FLUFFY", life: 1.4 });
+      }
+      if (a.baby <= 0) a.mom = null;
+
+      // Bunnies are skittish: the cursor, or a meeple flying past, sends them off.
+      if (a.kind === "bunny" && cursor && a.flee <= 0 && dist(cursor, a) < 70) this.scare(a, cursor);
+      for (const m of this.meeples) {
+        if (m.inside || m.mode !== "walk" || Math.hypot(m.vx, m.vy) < TUMBLE_SPEED * 2) continue;
+        if (a.calm > 0 || !overlap({ x: m.x, y: m.y, w: W, h: H }, this.animalBox(a))) continue;
+        a.jump = 0.5;
+        a.calm = 1.5;
+        this.sign(a.x, this.animalBox(a).y, { text: "!", life: 0.8 });
+        if (a.kind === "bunny") this.scare(a, center(m));
+      }
+
+      if (a.kind === "bunny") this.hopAlong(a, dt);
+      else this.walkAlong(a, dt);
+    }
+  }
+
+  /** Run directly away from p, as far as the grass allows. */
+  private scare(a: Animal, from: Vec) {
+    const d = Math.hypot(a.x - from.x, a.y - from.y) || 1;
+    for (const r of [110, 70, 40]) {
+      const p = { x: a.x + ((a.x - from.x) / d) * r, y: a.y + ((a.y - from.y) / d) * r * 0.7 };
+      if (this.grazable(p) && this.grazePath(a, p)) {
+        a.goal = p;
+        a.pause = 0;
+        a.flee = 1.2;
+        return;
+      }
+    }
+  }
+
+  private arrive(a: Animal) {
+    a.goal = null;
+    a.pause = a.kind === "bunny" ? rand(0.6, 3) : rand(2, 7); // grazing
+  }
+
+  private walkAlong(a: Animal, dt: number) {
+    if (a.pause > 0) {
+      a.pause -= dt;
+      return;
+    }
+    a.goal ??= this.nextGoal(a);
+    if (!a.goal) return void (a.pause = 1);
+    const dx = a.goal.x - a.x;
+    const dy = a.goal.y - a.y;
+    const d = Math.hypot(dx, dy);
+    const step = ANIMALS[a.kind].speed * dt;
+    if (d <= step) {
+      a.x = a.goal.x;
+      a.y = a.goal.y;
+      return this.arrive(a);
+    }
+    if (Math.abs(dx) > 2) a.dir = dx > 0 ? 1 : -1;
+    a.x += (dx / d) * step;
+    a.y += (dy / d) * step;
+    a.stepT += dt;
+    if (a.stepT > 0.28) {
+      a.stepT = 0;
+      a.frame = a.frame ? 0 : 1;
+    }
+  }
+
+  /** Bunnies only move mid-hop, with a short sit between hops. */
+  private hopAlong(a: Animal, dt: number) {
+    if (a.hop >= 0) {
+      a.hop += dt;
+      if (a.goal) {
+        const dx = a.goal.x - a.x;
+        const dy = a.goal.y - a.y;
+        const d = Math.hypot(dx, dy);
+        const step = ANIMALS.bunny.speed * (a.flee > 0 ? 1.6 : 1) * (a.baby > 0 ? 0.8 : 1) * dt;
+        if (d <= step) {
+          a.x = a.goal.x;
+          a.y = a.goal.y;
+          a.hop = -1;
+          return this.arrive(a);
+        }
+        a.x += (dx / d) * step;
+        a.y += (dy / d) * step;
+      }
+      if (a.hop >= HOP) {
+        a.hop = -1;
+        a.pause = a.flee > 0 ? 0.04 : rand(0.15, 0.5);
+      }
+      a.frame = a.hop >= 0 ? 1 : 0;
+      return;
+    }
+    if (a.pause > 0) {
+      a.pause -= dt;
+      return;
+    }
+    a.goal ??= this.nextGoal(a);
+    if (!a.goal) return void (a.pause = 1);
+    if (Math.abs(a.goal.x - a.x) > 2) a.dir = a.goal.x > a.x ? 1 : -1;
+    a.hop = 0;
+  }
+
+  private animalUnit(a: Animal) {
+    return a.baby > 0 ? 4 : U;
+  }
+
+  private animalRows(a: Animal) {
+    const body = a.kind === "cow" ? COW_BODY : a.kind === "bunny" ? BUNNY_BODY : a.shorn > 0 ? SHORN_BODY : SHEEP_BODY;
+    return [...body, ...ANIMALS[a.kind].legs[a.frame]];
+  }
+
+  private animalLift(a: Animal) {
+    let lift = 0;
+    if (a.hop >= 0) lift += Math.sin((Math.PI * a.hop) / HOP) * (a.flee > 0 ? 10 : 7);
+    if (a.jump > 0) lift += Math.sin((Math.PI * a.jump) / 0.5) * 12;
+    return Math.round(lift);
+  }
+
+  private animalBox(a: Animal): Box {
+    const rows = this.animalRows(a);
+    const u = this.animalUnit(a);
+    const w = rows[0].length * u;
+    const h = rows.length * u;
+    return { x: a.x - w / 2, y: a.y - h - this.animalLift(a), w, h };
+  }
+
+  private hitAnimal(p: Vec, padding: number) {
+    let best: Animal | null = null;
+    for (const a of this.animals) {
+      if (!inBox(p, pad(this.animalBox(a), padding))) continue;
+      if (!best || a.y > best.y) best = a; // the one in front
+    }
+    return best;
+  }
+
+  /** Tap a cow and the herd moos; tap a sheep for its wool; tap a bunny and there are more bunnies. */
+  private tapAnimal(a: Animal) {
+    const top = this.animalBox(a).y;
+    a.jump = 0.5;
+    a.pause = Math.max(a.pause, 0.6);
+    if (a.kind === "cow") {
+      this.sign(a.x, top, { text: "MOO", life: 1.4 });
+      let delay = 0.5;
+      for (const o of this.animals) {
+        if (o.kind !== "cow" || o === a) continue;
+        this.sign(o.x, this.animalBox(o).y, { text: "MOO", delay, life: 1.2 });
+        delay += 0.35;
+      }
+      const m = this.nearestMeeple(a, 220);
+      if (m) this.say(m, { text: "MOO", delay: delay + 0.2 });
+    } else if (a.kind === "sheep") {
+      if (a.shorn > 0) {
+        this.sign(a.x, top, { text: "BAA?", life: 1.2 });
+        return;
+      }
+      a.shorn = rand(12, 18);
+      this.sign(a.x, top, { text: "BAA", life: 1.4 });
+      const box = this.animalBox(a);
+      for (let i = 0; i < 14; i++) {
+        this.particles.push({
+          x: box.x + rand(0, box.w),
+          y: box.y + rand(0, box.h * 0.6),
+          vx: rand(-60, 60),
+          vy: rand(-110, -40),
+          g: 240,
+          t: 0,
+          life: rand(0.9, 1.5),
+          size: pick([4, 5, 6]),
+          color: pick([COAT.white, COAT.white, C.stoneShade]),
+        });
+      }
+      const m = this.nearestMeeple(a, 220);
+      if (m) this.say(m, { text: "COZY", delay: 0.5 });
+    } else {
+      const bunnies = this.animals.filter((o) => o.kind === "bunny");
+      if (a.baby > 0 || bunnies.length >= MAX_BUNNIES) {
+        this.sign(a.x, top, { icon: "carrot", life: 1.2 });
+        return;
+      }
+      this.sign(a.x, top, { icon: "heart", life: 1.4 });
+      const at = [-1, 1]
+        .map((s) => ({ x: a.x + s * 22, y: a.y + 4 }))
+        .find((p) => this.grazable(p));
+      if (at) {
+        const kid = this.makeAnimal("bunny", at, a);
+        kid.pause = 0.6;
+        kid.jump = 0.5;
+        this.animals.push(kid);
+      }
+    }
+  }
+
+  private nearestMeeple(p: Vec, within: number) {
+    return this.meeples
+      .filter((m) => m.mode === "walk" && !m.inside && !m.asleep && !m.bubble)
+      .map((m) => ({ m, d: dist(feet(m), p) }))
+      .filter((o) => o.d < within)
+      .sort((a, b) => a.d - b.d)[0]?.m;
+  }
+
+  private drawAnimal(a: Animal) {
+    const rows = this.animalRows(a);
+    const u = this.animalUnit(a);
+    const box = this.animalBox(a);
+    const w = rows[0].length;
+    const shorn = a.shorn > 0;
+    const colors: Record<string, string> = {
+      W: shorn ? COAT.skin : a.coat,
+      S: shorn ? COAT.skinShade : C.stoneShade,
+      K: a.kind === "cow" && a.coat === COAT.cream ? COAT.brown : C.ink,
+      N: COAT.pink,
+      E: C.pebble,
+      B: a.coat,
+      I: a.coat === COAT.white ? COAT.pink : a.coat,
+      T: COAT.white,
+    };
+    // The legs and eyes stay ink on a brown-spotted cow.
+    const ink = (ch: string, ry: number, rx: number) =>
+      a.kind === "cow" && ch === "K" && (ry >= COW_BODY.length || (ry === 2 && rx === 10)) ? C.ink : colors[ch];
+    // A shadow on the grass that stays put while it hops.
+    const sw = Math.round(box.w * 0.7);
+    this.rect(Math.round(a.x - sw / 2), Math.round(a.y) - 1, sw, 2, C.tuftDark);
+    const x0 = Math.round(box.x);
+    const y0 = Math.round(box.y);
+    rows.forEach((row, ry) =>
+      [...row].forEach((ch, rx) => {
+        if (ch === ".") return;
+        const c = ink(ch, ry, rx);
+        if (!c) return;
+        const cx = a.dir > 0 ? rx : w - 1 - rx;
+        this.rect(x0 + cx * u, y0 + ry * u, u, u, c);
+      }),
+    );
   }
 
   private bushes: Tree[] = [];
@@ -1077,6 +1482,7 @@ export class VillageEngine {
       });
     }
     for (const t of this.trees) t.shake = Math.max(0, t.shake - dt);
+    this.updateAnimals(dt);
 
     for (const p of this.particles) {
       p.t += dt;
@@ -1940,7 +2346,9 @@ export class VillageEngine {
     const press = this.press;
     if (press && e.pointerId === press.pointerId) {
       this.press = null;
-      if (e.type === "pointerup" && press.moved < 8 && e.timeStamp - press.t0 < 500) this.tap(press.start);
+      if (e.type === "pointerup" && press.moved < 8 && e.timeStamp - press.t0 < 500) {
+        this.tap(press.start, e.pointerType === "mouse" ? 2 : 8);
+      }
     }
     const drag = this.drag;
     if (!drag || e.pointerId !== drag.pointerId) return;
@@ -1985,6 +2393,7 @@ export class VillageEngine {
   private tappable(p: Vec) {
     return (
       this.buildings.some((b) => inBox(p, b.box)) ||
+      this.hitAnimal(p, 2) !== null ||
       this.trees.some((t) => inBox(p, this.treeBox(t))) ||
       this.slots.some((s) => !s.plant && Math.abs(p.x - s.x) < 10 && p.y > s.y - 3 * P && p.y < s.y + 4)
     );
@@ -1996,7 +2405,10 @@ export class VillageEngine {
     return { x: t.x, y: t.y - h, w, h };
   }
 
-  private tap(p: Vec) {
+  private tap(p: Vec, padding = 2) {
+    const animal = this.hitAnimal(p, padding);
+    if (animal) return this.tapAnimal(animal);
+
     const b = this.buildings.find((b) => inBox(p, b.box));
     if (b?.kind === "hall") return this.ringBell();
     if (b?.kind === "court") return this.holdCourt();
@@ -2187,6 +2599,7 @@ export class VillageEngine {
     const items: { y: number; draw: () => void }[] = [];
     for (const b of this.buildings) items.push({ y: b.box.y + b.box.h, draw: () => this.drawBuilding(b) });
     for (const t of this.trees) items.push({ y: t.y, draw: () => this.drawTree(t) });
+    for (const a of this.animals) items.push({ y: a.y, draw: () => this.drawAnimal(a) });
     for (const m of this.meeples) {
       if (m.inside || m.mode === "exploded" || m.mode === "reassemble") continue;
       items.push({ y: m.y + H + (m.mode === "drag" ? 1000 : 0), draw: () => this.drawMeeple(m) });
