@@ -17,7 +17,24 @@ export type MeepleConfig = {
    * later, as the reduced-motion pose.
    */
   home: { x: number; y: number };
+  /**
+   * Where it rests on phones instead, when `home` would put it on the blurb
+   * under the headline (components/LandingBlurb.tsx). Phones are the same
+   * media query as the half-size grid in globals.css (PHONE_QUERY).
+   */
+  phoneHome?: { x: number; y: number };
 };
+
+/** Phones and short windows: the 22px grid in globals.css. */
+export const PHONE_QUERY = "not all and (min-width: 720px) and (min-height: 520px)";
+
+/** Where a meeple rests right now, for this viewport. */
+export function homeOf(cfg: MeepleConfig) {
+  if (cfg.phoneHome && typeof window !== "undefined" && window.matchMedia(PHONE_QUERY).matches) {
+    return cfg.phoneHome;
+  }
+  return cfg.home;
+}
 
 export const MEEPLES: MeepleConfig[] = [
   {
@@ -45,8 +62,10 @@ export const MEEPLES: MeepleConfig[] = [
     color: "var(--color-meeple-green)",
     hex: "#5FCC8A",
     personality: "Scoots away when the cursor gets close, then peeks back. Gardens in the bottom-left corner, two flowers to every carrot.",
-    // Starts in its bottom-left hideout, between HEY and the case-study links.
-    home: { x: 0.27, y: 0.67 },
+    // Starts in its bottom-left hideout, left of the blurb and above the
+    // case-study links (it was at 0.27, 0.67 before the blurb moved in).
+    home: { x: 0.07, y: 0.72 },
+    phoneHome: { x: 0.06, y: 0.9 },
   },
   {
     id: "red",
@@ -55,7 +74,10 @@ export const MEEPLES: MeepleConfig[] = [
     color: "var(--color-meeple-red)",
     hex: "#E05A32",
     personality: "Fast. Bumps into the others and rushes the cursor.",
-    home: { x: 0.11, y: 0.609 },
+    // Beside RYKER's period, the square it likes to shove (it stood left of
+    // HEY at 0.11, 0.609 before the blurb moved in there).
+    home: { x: 0.9, y: 0.609 },
+    phoneHome: { x: 0.72, y: 0.24 },
   },
   {
     id: "blue",

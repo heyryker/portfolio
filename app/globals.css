@@ -72,7 +72,8 @@ body {
  * side bearing 0.057, and RYKER's ink is 3.23 wide with the -0.015em tracking.
  */
 .headline-grid,
-.case-nav {
+.case-nav,
+.landing-blurb {
   /* Phones, on the 22px grid. */
   --hl-cap-cells: 2;
   --hl-gap-cells: 1;
@@ -81,6 +82,9 @@ body {
   --hl-cap: calc(var(--hl-cap-cells) * var(--grid-cell));
   --hl-indent: calc(var(--hl-indent-cells) * var(--grid-cell));
   --hl-ryker-ink: calc(var(--hl-cap) * 3.23 / 0.7275);
+  /* Cells the blurb adds below the headline (phones only), so the two are
+     centered as one block. */
+  --hl-below-cells: 0;
 }
 
 .headline-grid {
@@ -97,9 +101,9 @@ body {
   /* Centered, then snapped to the nearest grid line. The page's grid is
      anchored at its top-left corner, so whole cells from there land on lines. */
   left: calc((100% - var(--hl-width)) / 2);
-  top: calc((100% - var(--hl-height)) / 2);
+  top: calc((100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell)) / 2);
   left: round(nearest, (100% - var(--hl-width)) / 2, var(--grid-cell));
-  top: round(nearest, (100% - var(--hl-height)) / 2, var(--grid-cell));
+  top: round(nearest, (100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell)) / 2, var(--grid-cell));
 }
 
 .headline-line {
@@ -174,7 +178,8 @@ body {
 
 @media (min-width: 720px) and (min-height: 520px) {
   .headline-grid,
-  .case-nav {
+  .case-nav,
+  .landing-blurb {
     --hl-cap-cells: 2;
     --hl-indent-cells: 6;
   }
@@ -183,7 +188,8 @@ body {
 /* The mockup's size (1486×935): a 3-cell cap height. */
 @media (min-width: 1100px) and (min-height: 640px) {
   .headline-grid,
-  .case-nav {
+  .case-nav,
+  .landing-blurb {
     --hl-cap-cells: 3;
     --hl-indent-cells: 8;
   }
@@ -191,7 +197,8 @@ body {
 
 @media (min-width: 1680px) and (min-height: 880px) {
   .headline-grid,
-  .case-nav {
+  .case-nav,
+  .landing-blurb {
     --hl-cap-cells: 4;
     --hl-gap-cells: 2;
     --hl-indent-cells: 11;
@@ -199,97 +206,207 @@ body {
 }
 
 /*
- * The case-study links, on the grid (see components/CaseStudyNav.tsx). On
- * desktop the row spans exactly the headline's width: [HACKATHON]'s bracket
- * starts on the same vertical grid line as H, [EDITORIAL]'s ends under
- * RYKER's period, and the four gaps between labels are equal. (Equal columns
- * put every label on a line but left the gaps uneven, since the labels differ
- * in width; Ryker asked for even spacing.) The row is centered in a one-cell
- * grid row (with line-height 1, Inter's caps are centered in the line box).
- * Phones get three over two, centered.
+ * The blurb about Ryker (components/LandingBlurb.tsx). It works out the
+ * headline's box from the same cell counts, so it lands on the same grid
+ * lines. Phones: below the headline, from H's left edge, two cells down.
+ * Larger screens: in the empty corner left of RYKER (the indent, less one
+ * cell of air), bottom-aligned so its last baseline sits on RYKER's.
  */
-.case-nav {
-  /* From H's left edge to the right edge of RYKER's period: the indent,
-     RYKER's ink, and the period's overhang past it (0.1097em of the
-     headline's type, measured), in px since the nav's em is smaller. */
-  --nav-width: calc(
-    var(--hl-indent) + var(--hl-ryker-ink) + var(--hl-cap) / 0.7275 * 0.1097
-  );
-  --nav-height: var(--grid-cell);
+.landing-blurb {
+  --hl-height: calc((var(--hl-cap-cells) * 2 + var(--hl-gap-cells)) * var(--grid-cell));
+  --hl-box: calc(var(--hl-indent) + var(--hl-ryker-ink) + var(--hl-cap) / 0.7275 * 0.171);
+  --hl-top: round(nearest, (100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell)) / 2, var(--grid-cell));
+  --blurb-gap-cells: 2;
+  --blurb-line: 22px;
 
   position: absolute;
   z-index: 10;
-  font-size: clamp(13px, 1.5vw, 22px);
-  width: var(--nav-width);
-  /* The headline's own box (.headline-grid's --hl-width), so both snap to
-     the same grid line. */
-  --nav-box: calc(var(--hl-indent) + var(--hl-ryker-ink) + var(--hl-cap) / 0.7275 * 0.171);
-  left: calc((100% - var(--nav-box)) / 2);
-  left: round(nearest, (100% - var(--nav-box)) / 2, var(--grid-cell));
+  left: round(nearest, (100% - var(--hl-box)) / 2, var(--grid-cell));
+  top: calc(var(--hl-top) + var(--hl-height) + var(--blurb-gap-cells) * var(--grid-cell));
+  width: var(--hl-box);
+  font-size: 15px;
+  line-height: var(--blurb-line);
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+
+.landing-blurb-links {
+  --button-height: var(--grid-cell);
+  display: flex;
+  gap: calc(var(--grid-cell) / 2);
+  margin-top: calc(var(--grid-cell) / 2);
+  font-size: 0.875em;
+}
+
+/* Resume is the primary action: filled. Email is outlined. */
+.landing-blurb-links .landing-button {
+  color: var(--color-accent);
+}
+
+.landing-blurb-links .landing-button-primary {
+  border-color: var(--color-accent);
+  background-color: var(--color-accent);
+  color: var(--color-bg);
+}
+
+.landing-blurb-links .landing-button-primary:hover,
+.landing-blurb-links .landing-button-primary:focus-visible {
+  border-color: var(--color-ink);
+  background-color: var(--color-ink);
+}
+
+@media not all and (min-width: 720px) and (min-height: 520px) {
+  /* Two cells of gap, three lines of text (22px rows), half a cell, then
+     two-cell buttons. */
+  .headline-grid,
+  .landing-blurb {
+    --hl-below-cells: 8;
+  }
+
+  .landing-blurb-links {
+    --button-height: calc(var(--grid-cell) * 2);
+  }
+}
+
+@media (min-width: 720px) and (min-height: 520px) {
+  .landing-blurb {
+    top: var(--hl-top);
+    width: calc(var(--hl-indent) - var(--grid-cell));
+    /* The buttons' bottom edge on RYKER's baseline. */
+    transform: translateY(calc(var(--hl-height) - 100%));
+    font-size: 13px;
+  }
+
+  /* The corner is small here, so smaller buttons (three meeple pixels) and
+     a tighter gap keep the blurb clear of HEY. */
+  .landing-blurb-links {
+    --button-height: calc(var(--meeple-px) * 3);
+    margin-top: calc(var(--grid-cell) / 4);
+  }
+}
+
+@media (min-width: 1100px) and (min-height: 640px) {
+  .landing-blurb {
+    font-size: 15px;
+  }
+
+  .landing-blurb-links {
+    --button-height: var(--grid-cell);
+    margin-top: calc(var(--grid-cell) / 2);
+  }
+}
+
+@media (min-width: 1680px) and (min-height: 880px) {
+  .landing-blurb {
+    --blurb-line: 26px;
+    font-size: 18px;
+  }
+}
+
+/*
+ * The static meeples' resting spots (components/StaticMeeples.tsx), kept
+ * fully on screen on narrow viewports. Phones use phoneHome where a meeple
+ * has one, so none stands on the blurb.
+ */
+.static-meeple {
+  left: min(var(--home-x), calc(100% - var(--meeple-px) * 3 - 8px));
+  top: min(var(--home-y), calc(100% - var(--meeple-px) * 4 - 8px));
+}
+
+@media not all and (min-width: 720px) and (min-height: 520px) {
+  .static-meeple {
+    left: min(var(--phone-home-x), calc(100% - var(--meeple-px) * 3 - 8px));
+    top: min(var(--phone-home-y), calc(100% - var(--meeple-px) * 4 - 8px));
+  }
+}
+
+/*
+ * The case-study buttons (see components/CaseStudyNav.tsx): a compact row
+ * centered on the screen, with a meeple pixel (11px) between buttons. Each
+ * button is three meeple pixels tall, centered in a one-cell grid row.
+ * Phones get three over two, centered.
+ */
+.case-nav {
+  --nav-height: var(--grid-cell);
+  --button-height: calc(var(--meeple-px) * 3);
+
+  position: absolute;
+  z-index: 10;
+  font-size: 13px;
+  left: 0;
+  right: 0;
   top: calc(100% - max(24px, 9.5vh) - var(--nav-height));
   top: round(down, 100% - max(24px, 9.5vh) - var(--nav-height), var(--grid-cell));
 }
 
 .case-nav ul {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  gap: var(--meeple-px);
   align-items: center;
   height: var(--grid-cell);
 }
 
-/* Pull the brackets' ink, not their side bearings, onto the edges. */
-.case-nav li:first-child .case-nav-link {
-  margin-left: -0.075em;
+/*
+ * A landing-page button: a thin outline in its own text color, so a meeple
+ * walking over it tints the whole button. No fill, so meeples stay visible
+ * behind it. Hover and focus fill it with the accent.
+ */
+.landing-button {
+  display: flex;
+  align-items: center;
+  height: var(--button-height);
+  padding-inline: 1.1em;
+  border: 1px solid currentColor;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  text-transform: uppercase;
+  transition:
+    color 200ms,
+    background-color 200ms,
+    border-color 200ms;
 }
 
-.case-nav li:last-child .case-nav-link {
-  margin-right: -0.075em;
+.landing-button:hover,
+.landing-button:focus-visible {
+  border-color: var(--color-accent);
+  background-color: var(--color-accent);
+  color: var(--color-bg) !important;
+}
+
+.case-nav .landing-button {
+  color: var(--color-muted);
 }
 
 @media not all and (min-width: 720px) and (min-height: 520px) {
   /*
-   * Phones: three over two, each row centered with equal gaps between the
-   * labels. Rows stay on the grid; with equal spacing, the labels' left edges
-   * can't all land on vertical lines, so centering wins here.
+   * Phones: three over two, each row centered, with a meeple pixel between
+   * buttons and between rows. The two rows sit in four 22px grid cells.
    */
   .case-nav {
-    --nav-width: 100%;
-    --nav-box: 100%;
-    --nav-height: calc(var(--grid-cell) * 3);
+    --nav-height: calc(var(--grid-cell) * 4);
+    font-size: 12px;
   }
 
   .case-nav ul {
-    display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    column-gap: calc(var(--grid-cell) * 2);
-    row-gap: 0;
+    align-content: center;
+    gap: var(--meeple-px);
+    height: var(--nav-height);
   }
 
-  .case-nav li {
-    display: flex;
-    align-items: center;
-    height: var(--grid-cell);
-  }
-
-  /* A full-width, one-cell spacer that breaks the list after the third label. */
+  /* A full-width spacer that breaks the list after the third button. It
+     takes back one row gap, so the rows are one gap apart. */
   .case-nav ul::before {
     content: "";
     flex-basis: 100%;
-    height: var(--grid-cell);
+    margin-top: calc(var(--meeple-px) * -1);
     order: 1;
   }
 
   .case-nav li:nth-child(n + 4) {
     order: 2;
-  }
-
-  .case-nav ul {
-    height: auto;
-  }
-
-  .case-nav li .case-nav-link {
-    margin: 0;
   }
 }
 
