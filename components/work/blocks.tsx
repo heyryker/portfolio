@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { PixelSquare } from "@/components/PixelSquare";
+import { LazyVideo } from "./LazyVideo";
 import { Placeholder } from "./Placeholder";
 
 /*
@@ -50,22 +51,12 @@ export function Figure({ src, alt, caption, width = 2400, height = 1350, narrow 
   );
 }
 
-/** A full-bleed, muted, looping video. Lazy: it only loads once on screen. */
+/** A full-bleed, muted, looping video. Lazy: it only loads once near the screen. */
 export function Video({ src, poster, alt, caption }: Media & { poster?: string }) {
   return (
     <figure className="my-11">
       {src ? (
-        <video
-          src={src}
-          poster={poster}
-          aria-label={alt}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="none"
-          className="h-auto w-full"
-        />
+        <LazyVideo src={src} poster={poster} alt={alt} className="h-auto w-full" />
       ) : (
         <Placeholder label={alt.replace(/^TODO\(ryker\):\s*/i, "")} className="h-[calc(var(--grid-cell)*12)]" />
       )}

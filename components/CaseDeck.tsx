@@ -17,6 +17,13 @@ const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 /** One row of cards when spread out; two by two below this. Matches globals.css. */
 const ROW_QUERY = "(min-width: 860px)";
 
+/** Undoes the fan's frame from globals.css, for when there's no script to fan. */
+const NO_FAN = `
+.case-deck { margin-top: calc(var(--card-h) * -0.4); height: auto; padding: 0 16px 48px; pointer-events: auto }
+.case-deck .case-deck-stage { display: flex; position: static; height: auto; overflow: visible }
+.case-deck .case-card, .case-deck:not([data-ready]) .case-card { position: static; opacity: 1 }
+`;
+
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
@@ -29,7 +36,8 @@ const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2
  *
  * Without JavaScript, or with reduced motion, the cards skip the fan: they
  * sit straight, side by side, peeking over the fold, and scroll like the
- * rest of the page. That's also what the server renders, so nothing jumps.
+ * rest of the page. The fan's frame is in the CSS, so the server renders it
+ * and nothing shifts when the script takes over.
  * Placement lives in globals.css under `.case-deck`.
  */
 export function CaseDeck({ cards }: { cards: CaseCard[] }) {
@@ -39,7 +47,6 @@ export function CaseDeck({ cards }: { cards: CaseCard[] }) {
   useLayoutEffect(() => {
     const deck = deckRef.current;
     if (!deck || window.matchMedia(REDUCED_MOTION).matches) return;
-    deck.dataset.fan = "";
 
     const row = window.matchMedia(ROW_QUERY);
     let raf = 0;
@@ -109,16 +116,15 @@ export function CaseDeck({ cards }: { cards: CaseCard[] }) {
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
       row.removeEventListener("change", schedule);
-      delete deck.dataset.fan;
       delete deck.dataset.ready;
     };
   }, []);
 
   return (
     <nav ref={deckRef} aria-label="Case studies" className="case-deck">
-      {/* Without JavaScript the cards never get fanned, so show them as they are. */}
+      {/* Without JavaScript the cards never get fanned, so lay them out flat. */}
       <noscript>
-        <style>{".case-deck .case-card { opacity: 1 }"}</style>
+        <style>{NO_FAN}</style>
       </noscript>
       <ul className="case-deck-stage">
         {cards.map((c, i) => (
