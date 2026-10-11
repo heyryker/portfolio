@@ -26,12 +26,22 @@ function Caption({ children }: { children?: React.ReactNode }) {
   );
 }
 
-/** A full-bleed image with a short caption. */
-export function Figure({ src, alt, caption, width = 2400, height = 1350 }: Media) {
+/**
+ * A full-bleed image with a short caption. `narrow` keeps a tall image in the
+ * text column instead, so it doesn't fill several screens.
+ */
+export function Figure({ src, alt, caption, width = 2400, height = 1350, narrow }: Media & { narrow?: boolean }) {
   return (
     <figure className="my-11">
       {src ? (
-        <Image src={src} alt={alt} width={width} height={height} sizes="100vw" className="h-auto w-full" />
+        <Image
+          src={src}
+          alt={alt}
+          width={width}
+          height={height}
+          sizes={narrow ? "880px" : "100vw"}
+          className={narrow ? "case-col block h-auto w-auto" : "h-auto w-full"}
+        />
       ) : (
         <Placeholder label={alt.replace(/^TODO\(ryker\):\s*/i, "")} className="h-[calc(var(--grid-cell)*12)]" />
       )}
