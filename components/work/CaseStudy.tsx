@@ -26,10 +26,10 @@ export async function CaseStudy({ slug }: { slug: CaseStudySlug }) {
   return (
     <article className="min-h-svh bg-bg">
       {/* The header band, matching About and the blog: a strip of pixel grass. */}
-      <div className="bg-graph relative h-[calc(var(--grid-cell)*4)] md:h-[calc(var(--grid-cell)*3)]">
+      <div className="bg-graph relative h-[calc(var(--grid-cell)*6)] md:h-[calc(var(--grid-cell)*3)]">
         <PixelGarden />
         <SiteHeader />
-        <div className="absolute top-[calc(var(--grid-cell)*2.5)] left-[22px] md:top-[33px] md:left-[88px]">
+        <div className="absolute flex top-[34px] left-[66px] md:top-[33px] md:left-[88px]">
           <CloseCaseStudy />
         </div>
         {/* Sits just above the grass. */}

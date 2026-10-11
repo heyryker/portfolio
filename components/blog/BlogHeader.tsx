@@ -9,11 +9,11 @@ import { SiteHeader } from "@/components/SiteHeader";
  */
 export function BlogHeader({ back }: { back: { href: string; label: string } }) {
   return (
-    <div className="bg-graph relative h-[calc(var(--grid-cell)*4)] md:h-[calc(var(--grid-cell)*3)]">
+    <div className="bg-graph relative h-[calc(var(--grid-cell)*6)] md:h-[calc(var(--grid-cell)*3)]">
       <SiteHeader />
       <Link
         href={back.href}
-        className="absolute -mx-2 -my-1 bg-bg px-2 py-1 top-[calc(var(--grid-cell)*2.5)] left-[22px] text-sm tracking-[0.08em] text-muted uppercase transition-colors hover:text-ink focus-visible:text-ink md:top-[33px] md:left-[88px]"
+        className="absolute -mx-2 -my-1 bg-bg px-2 py-1 top-[34px] left-[66px] text-sm tracking-[0.08em] text-muted uppercase transition-colors hover:text-ink focus-visible:text-ink md:top-[33px] md:left-[88px]"
       >
         [&larr; {back.label}]
       </Link>
