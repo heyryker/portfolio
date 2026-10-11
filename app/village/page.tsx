@@ -28,7 +28,8 @@ export default function VillagePage() {
       <p className="sr-only">
         A pixel town where the five meeples live. Each has a house in its own color around a community garden, with
         the Town Hall at the top and the courthouse at the bottom. They plant, water and harvest the garden, carry the
-        harvest to each other&apos;s doors, visit, nap, and gather when the bell rings for a town meeting.
+        harvest to each other&apos;s doors, visit, nap, and gather when the bell rings for a town meeting. Cows, sheep
+        and bunnies roam the grass around town.
       </p>
     </div>
   );
