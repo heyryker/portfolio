@@ -369,7 +369,7 @@ body {
 /*
  * Without the fan (no JavaScript, or reduced motion): the cards sit straight,
  * side by side, with their top 40% peeking over the fold, and scroll with the
- * page. This is also what the server renders.
+ * page.
  */
 .case-deck {
   position: relative;
@@ -395,35 +395,36 @@ body {
  * The fan. The deck starts at the top of the page, over the landing screen,
  * and is taller than the screen by the scroll it takes to deal the cards out.
  * Its stage sticks to the screen meanwhile; the script places each card.
+ * This is in the CSS rather than switched on by the script so the server
+ * renders it too: the deck never moves after load (no layout shift). The
+ * cards stay hidden until the script has fanned them, so they don't jump.
+ * CaseDeck's <noscript> undoes it when there's no JavaScript.
  */
-.case-deck[data-fan] {
-  margin-top: -100svh;
-  height: 190svh;
-  padding: 0;
-  pointer-events: none;
-}
-
-.case-deck[data-fan] .case-deck-stage {
-  display: block;
-  position: sticky;
-  top: 0;
-  height: 100svh;
-  overflow: clip;
-}
-
-.case-deck[data-fan] .case-card {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: var(--z, 1);
-  pointer-events: auto;
-}
-
-/* Hidden until the script has fanned them, so they don't jump on load. */
 @media (prefers-reduced-motion: no-preference) {
-  .case-card {
+  .case-deck {
+    margin-top: -100svh;
+    height: 190svh;
+    padding: 0;
+    pointer-events: none;
+  }
+
+  .case-deck .case-deck-stage {
+    display: block;
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: clip;
+  }
+
+  .case-deck .case-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: var(--z, 1);
+    pointer-events: auto;
     transition: opacity 400ms;
   }
+
   .case-deck:not([data-ready]) .case-card {
     opacity: 0;
   }
