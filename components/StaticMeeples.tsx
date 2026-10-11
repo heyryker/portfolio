@@ -18,6 +18,7 @@ export function StaticMeeples() {
         <Meeple
           key={m.id}
           color={m.color}
+          hat={m.id}
           className="static-meeple absolute"
           style={
             {
