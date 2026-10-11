@@ -12,7 +12,7 @@ import path from "node:path";
 
 const DIR = path.join(process.cwd(), "content/blog");
 
-export type PostMeta = {
+type PostMeta = {
   slug: string;
   title: string;
   /** ISO date, e.g. 2025-09-02. */
