@@ -53,14 +53,14 @@ Use meeple colors only for meeples and small playful moments, never for body tex
 
 - **Square brackets** frame labels and asides: `[HACKATHON]`, `[I'M]`, `[RESUME]`. Use them consistently across nav, tags and section labels.
 - **Small blue pixel squares** act as punctuation: the period after RYKER, a mark before "HEY", and one in the top-left corner as the logo/home mark. Reuse them as bullets and section markers.
-- **Background grid:** a subtle square grid of 1px `grid` lines over the white, covering the whole viewport, like graph paper. Cells are about 44px in the mockup. Ideally the cell size is a clean multiple of the meeple pixel size, so the meeples feel like they live on the grid. Keep it subtle enough that it never competes with the text. Use it on the landing page. On case studies and the blog, use it lightly (e.g. only in headers) or not at all, if it fights with the work.
+- **Background grid (not drawn, decided 2026-10-11):** the lines were dropped because plain white feels more infinite. The cell size still drives layout, so keep placing things on the invisible grid. Original brief: a subtle square grid of 1px `grid` lines over the white, covering the whole viewport, like graph paper. Cells are about 44px in the mockup. Ideally the cell size is a clean multiple of the meeple pixel size, so the meeples feel like they live on the grid. Keep it subtle enough that it never competes with the text. Use it on the landing page. On case studies and the blog, use it lightly (e.g. only in headers) or not at all, if it fights with the work.
 - Lots of white space. The page should feel calm until someone plays with it.
 
 ## 4. Landing page (`/`)
 
 Match `/design/landing-mockup.png`:
 
-- The subtle background grid (see §3).
+- The invisible layout grid (see §3; the lines are not drawn).
 
 - Large, staggered headline taking up most of the width: **HEY** on the first line, with **[I'M]** in blue and smaller next to it, then **RYKER** on the second line, offset to the right. A blue pixel square sits at the top-left corner of HEY, and another forms RYKER's period. Both squares are scaled up to match the big type.
 - **The blue headline elements change color when a meeple walks over them.** That means "[I'M]" and the two pixel squares. When a meeple overlaps one of them, that element smoothly takes on the meeple's color (yellow, green, purple or orange-red; blue stays blue). After the meeple leaves, it fades back to `accent` within about a second. Use simple bounding-box overlap. A thrown meeple flying across should leave a quick color flicker. Respect reduced motion: no color changes, since the meeples don't move.
