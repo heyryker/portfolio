@@ -12,8 +12,9 @@ import { trackOnce } from "@/lib/analytics";
  * The avatar is drawn by hand rather than traced from the photo, in the
  * spirit of the classic 8-bit avatar portraits: a 16 x 20 head and neck,
  * three-quarter view facing left, outlined in ink, with a tousled quiff,
- * brows over pixel eyes, an ear and a nose bump. Three colors; blue, the
- * background, is the Ryker meeple's color.
+ * brows over pixel eyes, a nose bump, and an ear with a stud earring (one
+ * yellow pixel ringed in ink). Three colors; blue, the background, is the
+ * Ryker meeple's color.
  */
 const COLS = 16;
 const ROWS = 20;
@@ -35,8 +36,8 @@ const AVATAR = [
   "...KKKYYKKYYKYK.",
   "..KYKYYYKYYYKYK.",
   ".KYYYYYYYYYYYK..",
-  "..KKYYYYYYYYK...",
-  "...KYYYYYYYYK...",
+  "..KKYYYYYYYYKYK.",
+  "...KYYYYYYYYKK..",
   "...KYYKKKYYYK...",
   "....KYYYYYYK....",
   ".....KKKYYYK....",
