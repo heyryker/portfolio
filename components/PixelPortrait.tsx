@@ -12,9 +12,8 @@ import { trackOnce } from "@/lib/analytics";
  * The avatar is drawn by hand rather than traced from the photo, in the
  * spirit of the classic 8-bit avatar portraits: a 16 x 20 head and neck,
  * three-quarter view facing left, outlined in ink, with a tousled quiff,
- * brows over pixel eyes, a nose bump, and an ear with a stud earring (one
- * yellow pixel ringed in ink). Three colors; blue, the background, is the
- * Ryker meeple's color.
+ * brows over pixel eyes, a flat face and an ear with a round hoop earring.
+ * Three colors; blue, the background, is the Ryker meeple's color.
  */
 const COLS = 16;
 const ROWS = 20;
@@ -29,22 +28,26 @@ const AVATAR = [
   "...KKK.KK.......",
   "..KKKKKKKKKK....",
   "..KKKKKKKKKKK...",
-  "...KKKKKKKKKKK..",
-  "...KYYYYYKKKKK..",
-  "...KYYYYYYYKKK..",
-  "...KYYYYYYYYKK..",
-  "...KKKYYKKYYKYK.",
+  "..KKKKKKKKKKKK..",
+  "..KYYYYYYKKKKK..",
+  "..KYYYYYYYYKKK..",
+  "..KYYYYYYYYYKK..",
+  "..KKKKYYKKYYKYK.",
   "..KYKYYYKYYYKYK.",
-  ".KYYYYYYYYYYYK..",
-  "..KKYYYYYYYYKYK.",
-  "...KYYYYYYYYKK..",
-  "...KYYKKKYYYK...",
-  "....KYYYYYYK....",
-  ".....KKKYYYK....",
+  "..KYYYYYYYYYYK..",
+  "..KYYYYYYYYYYK..",
+  "..KYYYYYYYYYYK..",
+  "..KYYKKKYYYYK...",
+  "...KYYYYYYYK....",
+  "....KKKKYYYK....",
   ".......KYYYK....",
   ".......KYYYK....",
   ".......KYYYK....",
 ];
+// The earring is the one thing that isn't a pixel: a smooth yellow hoop,
+// outlined in ink, hanging from the earlobe. In grid cells; sizes in px at
+// the full 264px width.
+const HOOP = { x: 14.05, y: 12.15, r: 0.85, ink: 8, gold: 3 };
 // Matches the photo's object-position.
 const FOCUS = { x: 0.5, y: 0.3 };
 
@@ -125,6 +128,22 @@ export function PixelPortrait({ src, alt }: { src: StaticImageData; alt: string 
       ctx.fillStyle = c.color;
       ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
     });
+    // The hoop: an ink ring with a yellow one inside it, drawn smooth.
+    const cell = canvas.width / COLS;
+    const px = canvas.width / 264;
+    const cx = HOOP.x * cell;
+    const cy = HOOP.y * cell;
+    const r = HOOP.r * cell - (HOOP.ink / 2) * px;
+    for (const [color, width] of [
+      [COLORS.K, HOOP.ink],
+      [COLORS.Y, HOOP.gold],
+    ] as const) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width * px;
+      ctx.stroke();
+    }
   }, []);
 
   // Keep the still sharp if the frame changes size (it's fluid on phones).
