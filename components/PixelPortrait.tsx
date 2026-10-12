@@ -9,9 +9,11 @@ import { trackOnce } from "@/lib/analytics";
  * pixels that scatter across the screen, and the pixels drift back, bottom row
  * first, as a pixel avatar. Click again for the photo.
  *
- * The avatar is drawn by hand rather than traced from the photo: a 16 x 20
- * bust in three colors, with the swept-up hair, the look off to the side and
- * the open shirt over a tee. Blue, the background, is the Ryker meeple's color.
+ * The avatar is drawn by hand rather than traced from the photo, in the
+ * spirit of the classic 8-bit avatar portraits: a 16 x 20 head and neck,
+ * three-quarter view facing left, outlined in ink, with a tousled quiff,
+ * brows over pixel eyes, an ear and a nose bump. Three colors; blue, the
+ * background, is the Ryker meeple's color.
  */
 const COLS = 16;
 const ROWS = 20;
@@ -23,24 +25,24 @@ const COLORS: Record<string, string> = {
 const AVATAR = [
   "................",
   "................",
-  "......KKKK......",
-  "....KKKKKKKK....",
+  "...KKK.KK.......",
+  "..KKKKKKKKKK....",
+  "..KKKKKKKKKKK...",
   "...KKKKKKKKKKK..",
-  "....KKKKKKKKKK..",
-  "....KYYYYYKKKK..",
-  "...YYYYYYYYKKK..",
-  "...YKYYYYYYYK...",
-  "..YYYYYYYYYYKY..",
-  "...YYYYYYYYYYY..",
-  "....YKKYYYYYY...",
-  ".....YYYYYYY....",
-  "......YYYYY.....",
-  "...KKKYYYYYKKK..",
-  "..KKKKKYYYKKKKK.",
-  ".KKKKKKYYYKKKKKK",
-  ".KKKKKKYYYKKKKKK",
-  "KKKKKKKYYYKKKKKK",
-  "KKKKKKKYYYKKKKKK",
+  "...KYYYYYKKKKK..",
+  "...KYYYYYYYKKK..",
+  "...KYYYYYYYYKK..",
+  "...KKKYYKKYYKYK.",
+  "..KYKYYYKYYYKYK.",
+  ".KYYYYYYYYYYYK..",
+  "..KKYYYYYYYYK...",
+  "...KYYYYYYYYK...",
+  "...KYYKKKYYYK...",
+  "....KYYYYYYK....",
+  ".....KKKYYYK....",
+  ".......KYYYK....",
+  ".......KYYYK....",
+  ".......KYYYK....",
 ];
 // Matches the photo's object-position.
 const FOCUS = { x: 0.5, y: 0.3 };
