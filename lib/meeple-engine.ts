@@ -79,10 +79,8 @@ const FLATTEN_TIME = 0.14;
 const GOLD_LIFE = 9; // seconds from the click until the gold flower goes
 const GOLD_FADE = 0.6;
 const SPRING_BACK = 0.6; // then the period springs back up
-const PRAISE_RADIUS = 92; // how far from the gold flower the meeples gather
-// Where each meeple stands around it, in degrees either side of the most open
-// direction (down and toward the middle of the page).
-const PRAISE_ANGLES = [-80, -40, 0, 40, 80];
+// How far from the gold flower the meeples gather: the closest ring that fits.
+const PRAISE_RADII = [72, 86, 100, 118, 136];
 const WILD_LIFE: [number, number] = [14, 20]; // the little flowers it sets off
 const HOP_TIME = 0.42; // one hop
 const HOP_HEIGHT = 16;
@@ -331,6 +329,7 @@ type Drag = {
   samples: { t: number; x: number; y: number }[];
 };
 
+const TAU = Math.PI * 2;
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
@@ -702,6 +701,11 @@ export class MeepleEngine {
 
   // ---------------------------------------------------------- personality
 
+  /** A group moment is on: everyone's heading to the gold flower or the dance line. */
+  private get gathering() {
+    return this.dance !== null || this.praise !== null;
+  }
+
   private get cursorActive() {
     // A cursor that has sat still for a while stops being interesting.
     return this.cursor.inside && this.time - this.cursor.lastMove < 10;
@@ -1028,21 +1032,19 @@ export class MeepleEngine {
       const g = r.width / 2;
       // The flower's head, matching drawGold: centered 2.5 of its pixels in, 5.5 up.
       const head = { x: r.x + gold.off.x + 2.5 * g, y: r.y + gold.off.y + r.height - 5.5 * g };
-      // Face the fan club down and toward the middle of the page, where there's room.
-      const toMiddle = clamp((this.vw / 2 - head.x) / (this.vw / 2), -1, 1);
-      const open = Math.atan2(1, toMiddle);
-      // Hand out the spots in the order the meeples already sit around the
-      // flower, so their paths don't cross and they don't jostle on the way.
-      const bearing = (v: Vec) => {
-        const b = Math.atan2(v.y - head.y, v.x - head.x) - open;
-        return Math.atan2(Math.sin(b), Math.cos(b));
-      };
-      const ordered = [...this.meeples].sort((a, b) => bearing(center(a)) - bearing(center(b)));
+      // A ring all the way round it, the meeples taking their places in the
+      // order they already stand around it, so nobody crosses paths.
+      const ring = this.praiseRing(head);
+      const angle = (v: Vec) => Math.atan2(v.y + H / 2 - head.y, v.x + W / 2 - head.x);
+      const angles = ring.map(angle);
+      // Measure bearings from the middle of the ring's gap (or between two
+      // spots, for a closed ring), so the order wraps in the right place.
+      const span = (((angles[angles.length - 1] - angles[0]) % TAU) + TAU) % TAU;
+      const from = angles[0] - (TAU - span) / 2;
+      const bearing = (a: number) => (((a - from) % TAU) + TAU) % TAU;
+      const order = [...this.meeples].sort((a, b) => bearing(angle(a)) - bearing(angle(b)));
       const spots = new Map<Meeple, Vec>();
-      ordered.forEach((m, i) => {
-        const a = open + (PRAISE_ANGLES[i] * Math.PI) / 180;
-        spots.set(m, this.clampTarget(head.x + Math.cos(a) * PRAISE_RADIUS - W / 2, head.y + Math.sin(a) * PRAISE_RADIUS - H / 2));
-      });
+      order.forEach((m, i) => spots.set(m, ring[i]));
       this.praise = { square: gold, head, spots };
       for (const m of this.meeples) {
         this.wake(m);
@@ -1055,6 +1057,48 @@ export class MeepleEngine {
       }
     }
     this.glance = { at: this.praise.head, until: this.time + 0.3 };
+  }
+
+  /**
+   * Where the gold flower's fan club stands, in order round the ring: five
+   * spots evenly all the way round the flower, as close in as fits on screen
+   * without anyone overlapping (name tags are off while it's up). Spots off
+   * the blurb are preferred, but they may stand on it if that's the only way.
+   * Where a full ring can't fit (on a phone the flower is at the screen's
+   * right edge), the ring opens toward the room: above, beside and below it.
+   */
+  private praiseRing(head: Vec): Vec[] {
+    const n = this.meeples.length;
+    const v = this.view();
+    const ring = (radius: number, first: number, step: number) =>
+      Array.from({ length: n }, (_, i) => {
+        const a = first + i * step;
+        return { x: head.x + Math.cos(a) * radius - W / 2, y: head.y + Math.sin(a) * radius - H / 2 };
+      });
+    const onScreen = (p: Vec) =>
+      p.x >= MARGIN && p.x <= this.vw - W - MARGIN && p.y >= Math.max(MARGIN, v.top + 64) && p.y <= v.bottom - H - MARGIN;
+    // Each meeple with its hat, plus a little elbow room.
+    const box = (p: Vec) => new DOMRect(p.x - 4, p.y - 12, W + 8, H + 16);
+    const apart = (spots: Vec[]) => spots.every((p, i) => spots.every((q, j) => j <= i || !overlaps(box(p), box(q))));
+    const onBlurb = (spots: Vec[]) =>
+      spots.filter((p) => this.keepOut.some((r) => overlaps(r, new DOMRect(p.x, p.y, W, H)))).length;
+
+    // A closed ring first, then one opening wider and wider toward the room
+    // (the open ones cover this share of the way round).
+    const spreads = [TAU / n, ...[0.6, 0.5, 0.42, 0.36].map((share) => (TAU * share) / (n - 1))];
+    for (const avoidBlurb of [true, false]) {
+      for (const step of spreads) {
+        for (const radius of PRAISE_RADII) {
+          for (let turn = 0; turn < 36; turn++) {
+            const spots = ring(radius, (turn * TAU) / 36, step);
+            if (!spots.every(onScreen) || !apart(spots)) continue;
+            if (!avoidBlurb || onBlurb(spots) === 0) return spots;
+          }
+        }
+      }
+    }
+    // Nothing fits (a very small screen): the closest ring, kept on screen.
+    return ring(PRAISE_RADII[0], -Math.PI / 2, TAU / n).map((p) => this.clampTarget(p.x, p.y));
   }
 
   private worship(m: Meeple, dt: number) {
@@ -1219,9 +1263,10 @@ export class MeepleEngine {
   private integrate(m: Meeple, dt: number) {
     m.x += (m.wx + m.vx) * dt;
     m.y += (m.wy + m.vy) * dt;
-    // On the way into the dance line they may cut across the blurb: it's a
-    // few seconds, and walking round it could leave someone stranded.
-    if (!this.dance) this.keepClear(m);
+    // On the way to a group moment (the gold flower, the dance line) they
+    // may cut across the blurb: it's a few seconds, and walking round it
+    // can leave someone stranded on the far side, especially on phones.
+    if (!this.gathering) this.keepClear(m);
     const f = Math.exp(-FRICTION * dt);
     m.vx *= f;
     m.vy *= f;
@@ -1311,12 +1356,20 @@ export class MeepleEngine {
 
   // ------------------------------------------------------------ collisions
 
+  /** Being dragged, or flying from a throw or a bump. */
+  private knocking(m: Meeple) {
+    return m.mode === "drag" || Math.hypot(m.vx, m.vy) > TUMBLE_SPEED;
+  }
+
   private collide() {
     const solid = this.meeples.filter((m) => m.mode === "idle" || m.mode === "walk" || m.mode === "drag");
     for (let i = 0; i < solid.length; i++) {
       for (let j = i + 1; j < solid.length; j++) {
         const a = solid[i];
         const b = solid[j];
+        // Heading to a group moment, they step round each other rather than
+        // bump: only a dragged or flying meeple still knocks into the rest.
+        if (this.gathering && !this.knocking(a) && !this.knocking(b)) continue;
         // Slightly smaller than the sprite, so corners can graze.
         const ox = Math.min(a.x, b.x) + W - Math.max(a.x, b.x) - 2;
         const oy = Math.min(a.y, b.y) + H - Math.max(a.y, b.y) - 2;
@@ -2209,8 +2262,9 @@ export class MeepleEngine {
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = ZZZ_COLOR;
-    // No name tags during the dance break: it's a show, not a meet-and-greet.
-    if (this.dance) {
+    // No name tags during the dance break or round the gold flower: they
+    // stand close together for those, and the tags would run into each other.
+    if (this.gathering) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       return;
     }
