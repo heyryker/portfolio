@@ -155,8 +155,8 @@ const PLANTS: Plant[] = ["flower", "grass", "flower"];
 const DANCE_GATHER = 1; // seconds to get into line, however far they are
 const DANCE_TIME = 5;
 const DANCE_BEAT = 0.2; // one kick
-const DANCE_SPACING = W + 26; // closest meeple to meeple in the line
-const TAG_STAGGER = 11; // every other name tag rides this much higher when the line is tight
+const DANCE_SPACING = W + 30; // meeple to meeple in the line, at most
+const DANCE_STAGGER = P; // every other dancer stands this much further back
 const KICK_UP = 5; // how high a kicking foot flies, in px
 const KICK_OUT = 3;
 const NOTE_EVERY = 0.13; // seconds between music notes
@@ -302,8 +302,6 @@ type Dance = {
   t: number;
   /** Each meeple's spot in the line (top-left corner). */
   spots: Map<Meeple, Vec>;
-  /** Raise every other name tag, when the line's too tight for them side by side. */
-  stagger: boolean;
   /** Who has made it into line, so they dance rather than walk. */
   inLine: Set<Meeple>;
   /** How fast each one hurries over, so they all arrive together. */
@@ -476,18 +474,14 @@ export class MeepleEngine {
     // Line up in the order they already stand, left to right, so nobody
     // has to cross the others' paths to get there.
     const order = [...this.meeples].sort((a, b) => a.x - b.x);
-    // Far enough apart for their name tags, if the screen is wide enough;
-    // otherwise as far as it allows, with the tags staggered.
-    const widest = Math.max(W, ...this.meeples.map((m) => m.tagWidth));
-    const tags = widest + 10;
-    // The end meeples' tags hang half their width past them; keep those on screen.
-    const room = (this.vw - 2 * MARGIN - widest) / (order.length - 1);
-    const spacing = Math.max(DANCE_SPACING, Math.min(tags, room));
+    // Name tags are off for the show, so the line only needs to fit the screen.
+    const spacing = Math.min(DANCE_SPACING, (this.vw - 2 * MARGIN - W) / (order.length - 1));
     const left = this.vw / 2 - ((order.length - 1) * spacing + W) / 2;
     const spots = new Map<Meeple, Vec>();
     const speeds = new Map<Meeple, number>();
     order.forEach((m, i) => {
-      const spot = { x: Math.round(left + i * spacing), y: Math.round(floor) };
+      // A staggered line: every other dancer a step further back.
+      const spot = { x: Math.round(left + i * spacing), y: Math.round(floor - (i % 2 ? DANCE_STAGGER : 0)) };
       spots.set(m, spot);
       speeds.set(m, Math.max(160, Math.hypot(spot.x - m.x, spot.y - m.y) / DANCE_GATHER));
       this.wake(m);
@@ -500,7 +494,7 @@ export class MeepleEngine {
     });
     // The garden clears the stage.
     for (const f of this.flowers) if (f.fade < 0) f.fade = 0;
-    this.dance = { t: 0, spots, stagger: spacing < tags, inLine: new Set(), speeds, nextNote: DANCE_GATHER };
+    this.dance = { t: 0, spots, inLine: new Set(), speeds, nextNote: DANCE_GATHER };
     this.resume();
     trackOnce("Meeple play", "whistle", { action: "whistle" });
     return true;
@@ -1198,14 +1192,6 @@ export class MeepleEngine {
     if (b >= 16 && b < 20) return leap(b % 1, 9);
     if (b >= 23.5 && b < 25) return leap((b - 23.5) / 1.5, 16);
     return 0;
-  }
-
-  /** Every other dancer's name tag rides higher, when the line is tight. */
-  private tagStagger(m: Meeple) {
-    const d = this.dance;
-    if (!d?.stagger || !d.inLine.has(m)) return 0;
-    const order = [...d.spots.keys()];
-    return order.indexOf(m) % 2 ? TAG_STAGGER : 0;
   }
 
   /** Which foot is kicking (0 left, 1 right) and how far through the kick, or null. */
@@ -2223,12 +2209,17 @@ export class MeepleEngine {
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = ZZZ_COLOR;
+    // No name tags during the dance break: it's a show, not a meet-and-greet.
+    if (this.dance) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      return;
+    }
     for (const m of this.meeples) {
       if (!m.tagWidth) m.tagWidth = ctx.measureText(m.cfg.tag).width;
       if (m.mode === "exploded" || m.mode === "reassemble" || m.lasso?.phase === "twirl") continue;
       // Clear of its hat.
       const lift = hatHeight(m.cfg.id) + 4;
-      ctx.fillText(m.cfg.tag, Math.round(m.x + W / 2), Math.round(m.y) - hopHeight(m) - this.danceLift(m) - lift - this.tagStagger(m));
+      ctx.fillText(m.cfg.tag, Math.round(m.x + W / 2), Math.round(m.y) - hopHeight(m) - lift);
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }

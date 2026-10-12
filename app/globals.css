@@ -548,8 +548,8 @@ body {
    fixed; lift them clear of it. */
 @media (max-width: 640px) {
   .site-footer-links {
-    /* The whistle: 22px from the bottom, 48px tall. */
-    padding-bottom: 80px;
+    /* The whistle: 22px from the bottom, 56px tall. */
+    padding-bottom: 88px;
   }
 }
 
@@ -869,63 +869,100 @@ html:has(.site-menu[open]) {
 }
 
 /*
- * The whistle (components/MeepleField.tsx): fixed to the bottom-left corner,
- * mirroring the home mark in the top-left, so it's in reach wherever the
- * visitor has scrolled. Below the case-study overlay (z-50).
+ * The whistle (components/MeepleField.tsx): a round floating button fixed to
+ * the bottom-left corner, mirroring the home mark in the top-left, so it's in
+ * reach wherever the visitor has scrolled. Below the case-study overlay (z-50).
+ * The one meeple trick that isn't hidden, so it looks like a button and nudges
+ * now and then until it's been blown.
  */
 .whistle {
-  --whistle-color: var(--color-accent);
   position: fixed;
   left: 22px;
   bottom: 22px;
   z-index: 30;
   display: grid;
   place-items: center;
-  width: 64px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-bg);
+  box-shadow:
+    0 6px 16px rgb(34 31 32 / 0.18),
+    0 1px 3px rgb(34 31 32 / 0.12);
   cursor: pointer;
+  transition:
+    transform 150ms,
+    box-shadow 150ms;
 }
 
-.whistle svg {
-  transform-origin: 60% 50%;
-  transition: transform 150ms;
+/* Meeple yellow, outlined in ink so it holds up against the white button. */
+.whistle-icon {
+  width: 34px;
+  height: 34px;
+  color: var(--color-meeple-yellow);
+  stroke: var(--color-ink-soft);
+  stroke-width: 44px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+  overflow: visible;
+  transform-origin: 45% 60%;
 }
 
-/* Hover only where there's a mouse: on phones a tap would leave it stuck. */
 @media (hover: hover) {
-  .whistle:hover svg {
-    --whistle-color: var(--color-ink-soft);
-    transform: rotate(-8deg);
+  .whistle:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 10px 22px rgb(34 31 32 / 0.22),
+      0 2px 4px rgb(34 31 32 / 0.12);
   }
 }
 
-.whistle:focus-visible svg {
-  --whistle-color: var(--color-ink-soft);
-  transform: rotate(-8deg);
+.whistle:active {
+  transform: translateY(1px);
 }
 
-.whistle[data-blowing] svg {
+/* A little tilt every few seconds, until it's been tried. */
+.whistle:not([data-used]) .whistle-icon {
+  animation: whistle-nudge 6s 3s infinite;
+}
+
+.whistle[data-blowing] .whistle-icon {
   animation: whistle-blow 700ms steps(2) both;
 }
 
-/* Three short blasts out of the mouthpiece, in pixel dashes. */
+/* Three short blasts out of the mouthpiece (top right), in pixel dashes. */
 .whistle-toot {
   position: absolute;
-  left: -4px;
-  top: 6px;
+  left: 50px;
+  top: 2px;
   width: 10px;
   height: 18px;
   opacity: 0;
   pointer-events: none;
   background:
-    linear-gradient(var(--color-ink-soft), var(--color-ink-soft)) 4px 0 / 6px 2px,
-    linear-gradient(var(--color-ink-soft), var(--color-ink-soft)) 0 8px / 8px 2px,
-    linear-gradient(var(--color-ink-soft), var(--color-ink-soft)) 4px 16px / 6px 2px;
+    linear-gradient(var(--color-ink-soft), var(--color-ink-soft)) 0 0 / 6px 2px,
+    linear-gradient(var(--color-ink-soft), var(--color-ink-soft)) 2px 8px / 8px 2px,
+    linear-gradient(var(--color-ink-soft), var(--color-ink-soft)) 0 16px / 6px 2px;
   background-repeat: no-repeat;
 }
 
 .whistle[data-blowing] .whistle-toot {
   animation: whistle-toot 700ms steps(1) both;
+}
+
+@keyframes whistle-nudge {
+  0%,
+  12%,
+  100% {
+    transform: rotate(0);
+  }
+  3%,
+  9% {
+    transform: rotate(-14deg);
+  }
+  6% {
+    transform: rotate(8deg);
+  }
 }
 
 @keyframes whistle-blow {
