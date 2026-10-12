@@ -21,6 +21,11 @@
  * the page. All five meeples gather round the gold flower and hop in praise
  * until it fades, then the period springs back.
  *
+ * The whistle in the bottom-left corner calls a dance break: the garden
+ * wilts away, all five line up in the biggest empty stretch on screen and
+ * do a quick Irish step dance (stiff arms, flying feet) while music notes
+ * float up, then go back to whatever they were doing.
+ *
  * The canvas ignores pointer events. The engine listens on the page instead
  * and only claims a press that lands on a meeple and not on a link or button,
  * so meeples never block the case-study labels or the menu.
@@ -144,6 +149,24 @@ const SHAPES: Record<Plant, { grown: string[]; flat: string[] }> = {
 // What each gardener plants, in turn: mostly flowers, then grass, then (the
 // Shy One only) carrots.
 const PLANTS: Plant[] = ["flower", "grass", "flower"];
+
+// The whistle's dance break. Everyone hurries into a line, dances for
+// DANCE_TIME on a fixed beat, and takes a bow-hop at the end.
+const DANCE_GATHER = 1; // seconds to get into line, however far they are
+const DANCE_TIME = 5;
+const DANCE_BEAT = 0.2; // one kick
+const DANCE_SPACING = W + 26; // closest meeple to meeple in the line
+const TAG_STAGGER = 11; // every other name tag rides this much higher when the line is tight
+const KICK_UP = 5; // how high a kicking foot flies, in px
+const KICK_OUT = 3;
+const NOTE_EVERY = 0.13; // seconds between music notes
+const NOTE_LIFE = 1.7;
+const NOTE_COLORS = ["#985DF6", "#E05A32", "#58B9F8", "#5FCC8A", "#221F20"];
+// A quaver and two beamed quavers, drawn at 2px per pixel.
+const NOTE_GLYPHS = [
+  ["..XX.", "..X.X", "..X..", "..X..", "XXX..", "XXX.."],
+  ["..XXXXX", "..X...X", "..X...X", "XXX.XXX", "XXX.XXX"],
+];
 const SHY_PLANTS: Plant[] = ["flower", "grass", "flower", "grass", "flower", "carrot"];
 
 type Mode = "idle" | "walk" | "drag" | "shake" | "exploded" | "reassemble";
@@ -272,6 +295,22 @@ type Flower = {
   kind: Plant;
 };
 
+type Note = { x: number; y: number; age: number; color: string; glyph: string[]; sway: number };
+
+type Dance = {
+  /** Seconds since the whistle. */
+  t: number;
+  /** Each meeple's spot in the line (top-left corner). */
+  spots: Map<Meeple, Vec>;
+  /** Raise every other name tag, when the line's too tight for them side by side. */
+  stagger: boolean;
+  /** Who has made it into line, so they dance rather than walk. */
+  inLine: Set<Meeple>;
+  /** How fast each one hurries over, so they all arrive together. */
+  speeds: Map<Meeple, number>;
+  nextNote: number;
+};
+
 type SquareDrag = {
   t: TintTarget;
   pointerId: number;
@@ -317,6 +356,9 @@ export class MeepleEngine {
   private tints: TintTarget[] = [];
   private squares: TintTarget[] = [];
   private flowers: Flower[] = [];
+  /** The whistle's dance break, while it's on. */
+  private dance: Dance | null = null;
+  private notes: Note[] = [];
   /** Areas the garden keeps off: the headline's two lines (not the whole box, so the gaps beside them can bloom), the blurb, the links and the menu. */
   private noPlant: DOMRect[] = [];
   /** When the Chaotic One may next shove a square on purpose. */
@@ -422,6 +464,46 @@ export class MeepleEngine {
   start() {
     this.render();
     if (this.onScreen()) this.resume();
+  }
+
+  /**
+   * Blows the whistle: a dance break, unless one is already going. Returns
+   * whether it started.
+   */
+  whistle(): boolean {
+    if (this.dance) return false;
+    const floor = this.danceFloor();
+    // Line up in the order they already stand, left to right, so nobody
+    // has to cross the others' paths to get there.
+    const order = [...this.meeples].sort((a, b) => a.x - b.x);
+    // Far enough apart for their name tags, if the screen is wide enough;
+    // otherwise as far as it allows, with the tags staggered.
+    const widest = Math.max(W, ...this.meeples.map((m) => m.tagWidth));
+    const tags = widest + 10;
+    // The end meeples' tags hang half their width past them; keep those on screen.
+    const room = (this.vw - 2 * MARGIN - widest) / (order.length - 1);
+    const spacing = Math.max(DANCE_SPACING, Math.min(tags, room));
+    const left = this.vw / 2 - ((order.length - 1) * spacing + W) / 2;
+    const spots = new Map<Meeple, Vec>();
+    const speeds = new Map<Meeple, number>();
+    order.forEach((m, i) => {
+      const spot = { x: Math.round(left + i * spacing), y: Math.round(floor) };
+      spots.set(m, spot);
+      speeds.set(m, Math.max(160, Math.hypot(spot.x - m.x, spot.y - m.y) / DANCE_GATHER));
+      this.wake(m);
+      this.cancelLasso(m);
+      m.planting = -1;
+      m.target = null;
+      m.rushing = false;
+      m.scaredFor = 0;
+      m.fleeTo = null;
+    });
+    // The garden clears the stage.
+    for (const f of this.flowers) if (f.fade < 0) f.fade = 0;
+    this.dance = { t: 0, spots, stagger: spacing < tags, inLine: new Set(), speeds, nextNote: DANCE_GATHER };
+    this.resume();
+    trackOnce("Meeple play", "whistle", { action: "whistle" });
+    return true;
   }
 
   destroy() {
@@ -588,6 +670,7 @@ export class MeepleEngine {
 
   private update(dt: number) {
     this.updatePraise();
+    this.updateDance(dt);
     for (const m of this.meeples) {
       m.modeT += dt;
       switch (m.mode) {
@@ -633,6 +716,11 @@ export class MeepleEngine {
   private think(m: Meeple, dt: number) {
     m.wx = 0;
     m.wy = 0;
+
+    if (this.dance) {
+      this.jig(m, dt);
+      return;
+    }
 
     if (this.praise) {
       this.worship(m, dt);
@@ -993,6 +1081,143 @@ export class MeepleEngine {
     if (m.hop === null) m.hop = -rand(0.05, 0.35);
   }
 
+  /**
+   * Where the dance line goes, as a meeple's top edge in canvas px: the
+   * middle of the biggest empty band across the screen right now. At the top
+   * of the page that's between the headline and the cards; further down,
+   * between the cards and the footer.
+   */
+  private danceFloor(): number {
+    const c = this.canvas.getBoundingClientRect();
+    // Clear of the header controls at the top and the whistle at the bottom.
+    const top = 88;
+    const bottom = window.innerHeight - 24;
+    const taken = Array.from(
+      this.root.querySelectorAll(".headline-line, .landing-blurb, .case-card, footer"),
+      (el) => el.getBoundingClientRect(),
+    )
+      .filter((r) => r.width > 0 && r.height > 0 && r.bottom > top && r.top < bottom)
+      .map((r) => [Math.max(top, r.top), Math.min(bottom, r.bottom)] as const)
+      .sort((a, b) => a[0] - b[0]);
+    let best = { from: top, to: top };
+    let y = top;
+    for (const [from, to] of [...taken, [bottom, bottom] as const]) {
+      if (from - y > best.to - best.from) best = { from: y, to: from };
+      y = Math.max(y, to);
+    }
+    // Nudged down a little, so the name tags and hats fit above.
+    const middle = best.to - best.from > 0 ? (best.from + best.to) / 2 : window.innerHeight / 2;
+    const floor = middle - H / 2 + 10 - c.top;
+    return clamp(floor, MARGIN + TAG_HEIGHT, this.vh - H - MARGIN);
+  }
+
+  private updateDance(dt: number) {
+    for (const n of this.notes) {
+      n.age += dt;
+      n.y -= 42 * dt;
+    }
+    this.notes = this.notes.filter((n) => n.age < NOTE_LIFE);
+
+    const d = this.dance;
+    if (!d) return;
+    d.t += dt;
+    if (d.t >= DANCE_GATHER + DANCE_TIME) {
+      // Curtain. Everyone wanders off; the Sleepy One stays up for a bit.
+      this.dance = null;
+      for (const m of this.meeples) {
+        m.mode = "idle";
+        m.idleFor = rand(0.4, 1.4);
+        m.plantIn = rand(...PLANT_EVERY);
+      }
+      return;
+    }
+    // Notes float up from the line while they dance.
+    while (d.t >= d.nextNote && d.t < DANCE_GATHER + DANCE_TIME - 0.6) {
+      d.nextNote += NOTE_EVERY * rand(0.6, 1.4);
+      const dancers = [...d.inLine];
+      const m = dancers[Math.floor(Math.random() * dancers.length)];
+      if (!m) continue;
+      this.notes.push({
+        x: m.x + rand(-14, W + 4),
+        y: m.y - rand(14, 30),
+        age: 0,
+        color: NOTE_COLORS[Math.floor(Math.random() * NOTE_COLORS.length)],
+        glyph: NOTE_GLYPHS[Math.random() < 0.6 ? 0 : 1],
+        sway: rand(0, Math.PI * 2),
+      });
+    }
+  }
+
+  /** Dance break: hurry to its spot in the line, then dance on the beat. */
+  private jig(m: Meeple, dt: number) {
+    const d = this.dance!;
+    this.wake(m);
+    m.planting = -1;
+    // Sliding after a throw or a bump: let it slow down first.
+    if (Math.hypot(m.vx, m.vy) > TUMBLE_SPEED) {
+      d.inLine.delete(m);
+      return;
+    }
+    const spot = d.spots.get(m)!;
+    const x = spot.x + this.danceShift();
+    if (!d.inLine.has(m)) {
+      if (this.walkTo(m, x, spot.y, d.speeds.get(m)!, dt)) d.inLine.add(m);
+      else {
+        m.mode = "walk";
+        return;
+      }
+    }
+    // In line: the whole line moves together, so place it rather than walk.
+    m.mode = "idle";
+    m.idleFor = 0.5;
+    m.x = x;
+    m.y = spot.y;
+  }
+
+  /** Beats into the dance proper (negative while they're still gathering). */
+  private danceBeat() {
+    return this.dance ? (this.dance.t - DANCE_GATHER) / DANCE_BEAT : -1;
+  }
+
+  /**
+   * The line's sideways travel: a few beats of kicks in place, a shuffle
+   * right and back, then in place again for the leaps and the finish.
+   */
+  private danceShift() {
+    const b = this.danceBeat();
+    if (b < 8 || b >= 16) return 0;
+    const k = b - 8; // 0..8
+    return Math.round((k < 4 ? k : 8 - k) * (P / 2));
+  }
+
+  /** How far a dancer is off the ground: unison leaps, then the big finish. */
+  private danceLift(m: Meeple) {
+    if (!this.dance?.inLine.has(m)) return 0;
+    const b = this.danceBeat();
+    const leap = (u: number, h: number) => Math.round(Math.sin(Math.PI * u) * h);
+    if (b >= 16 && b < 20) return leap(b % 1, 9);
+    if (b >= 23.5 && b < 25) return leap((b - 23.5) / 1.5, 16);
+    return 0;
+  }
+
+  /** Every other dancer's name tag rides higher, when the line is tight. */
+  private tagStagger(m: Meeple) {
+    const d = this.dance;
+    if (!d?.stagger || !d.inLine.has(m)) return 0;
+    const order = [...d.spots.keys()];
+    return order.indexOf(m) % 2 ? TAG_STAGGER : 0;
+  }
+
+  /** Which foot is kicking (0 left, 1 right) and how far through the kick, or null. */
+  private danceKick(m: Meeple): { foot: 0 | 1; u: number } | null {
+    if (!this.dance?.inLine.has(m)) return null;
+    const b = this.danceBeat();
+    if (b < 0 || (b >= 16 && b < 20) || b >= 23.5) return null;
+    // Double time just before the finish.
+    const beat = b >= 20 ? b * 2 : b;
+    return { foot: (Math.floor(beat) % 2) as 0 | 1, u: beat % 1 };
+  }
+
   /** Sets the walking velocity toward (x, y). Returns true on arrival. */
   private walkTo(m: Meeple, x: number, y: number, speed: number, dt: number) {
     const dx = x - m.x;
@@ -1008,7 +1233,9 @@ export class MeepleEngine {
   private integrate(m: Meeple, dt: number) {
     m.x += (m.wx + m.vx) * dt;
     m.y += (m.wy + m.vy) * dt;
-    this.keepClear(m);
+    // On the way into the dance line they may cut across the blurb: it's a
+    // few seconds, and walking round it could leave someone stranded.
+    if (!this.dance) this.keepClear(m);
     const f = Math.exp(-FRICTION * dt);
     m.vx *= f;
     m.vy *= f;
@@ -1052,6 +1279,13 @@ export class MeepleEngine {
   private updateFace(m: Meeple, dt: number) {
     const c = center(m);
     let goal: Vec | null = null;
+    if (this.dance?.inLine.has(m)) {
+      // Eyes front, for the audience.
+      const k = 1 - Math.exp(-10 * dt);
+      m.look.x += (0 - m.look.x) * k;
+      m.look.y += (0.6 - m.look.y) * k;
+      return;
+    }
     if (this.glance && this.time < this.glance.until && !m.asleep) {
       goal = this.glance.at;
     } else if (
@@ -1960,7 +2194,25 @@ export class MeepleEngine {
       if (m.mode === "exploded" || m.mode === "reassemble") this.drawBlocks(m);
       else this.drawMeeple(m);
     }
+    this.drawNotes();
     this.drawTags();
+  }
+
+  /** Music notes drifting up from the dance line, swaying as they go. */
+  private drawNotes() {
+    const { ctx } = this;
+    for (const n of this.notes) {
+      const u = n.age / NOTE_LIFE;
+      ctx.globalAlpha = u < 0.1 ? u / 0.1 : u > 0.6 ? 1 - (u - 0.6) / 0.4 : 1;
+      const x = Math.round(n.x + Math.sin(n.age * 4 + n.sway) * 6);
+      const y = Math.round(n.y);
+      n.glyph.forEach((row, ry) =>
+        [...row].forEach((ch, rx) => {
+          if (ch === "X") this.rect(x + rx * 2, y + ry * 2, 2, 2, n.color);
+        }),
+      );
+    }
+    ctx.globalAlpha = 1;
   }
 
   /** A small name tag over each meeple's head, in the pixel font. */
@@ -1976,7 +2228,7 @@ export class MeepleEngine {
       if (m.mode === "exploded" || m.mode === "reassemble" || m.lasso?.phase === "twirl") continue;
       // Clear of its hat.
       const lift = hatHeight(m.cfg.id) + 4;
-      ctx.fillText(m.cfg.tag, Math.round(m.x + W / 2), Math.round(m.y) - hopHeight(m) - lift);
+      ctx.fillText(m.cfg.tag, Math.round(m.x + W / 2), Math.round(m.y) - hopHeight(m) - this.danceLift(m) - lift - this.tagStagger(m));
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
@@ -1995,7 +2247,7 @@ export class MeepleEngine {
 
   private drawMeeple(m: Meeple) {
     let ox = Math.round(m.x);
-    let oy = Math.round(m.y) - hopHeight(m);
+    let oy = Math.round(m.y) - hopHeight(m) - this.danceLift(m);
     if (m.mode === "shake") {
       ox += Math.round(rand(-2, 2));
       oy += Math.round(rand(-2, 2));
@@ -2009,10 +2261,18 @@ export class MeepleEngine {
       this.rect(ox + W / 2 + side * (W / 2 + 6 + k * 4), oy + H - 2 - k * 6, 2, 2, DIRT);
     }
     const walking = m.mode === "walk" && Math.hypot(m.wx, m.wy) > 1;
+    const kick = this.danceKick(m);
     MEEPLE_BLOCKS.forEach((b, i) => {
       // Blocks 5 and 6 are the legs. Lift one at a time while walking.
-      const lift = walking && ((i === 5 && m.stepFrame === 0) || (i === 6 && m.stepFrame === 1)) ? -2 : 0;
-      this.rect(ox + b.x * P, oy + b.y * P + lift, P, P, m.cfg.hex);
+      let lift = walking && ((i === 5 && m.stepFrame === 0) || (i === 6 && m.stepFrame === 1)) ? -2 : 0;
+      let out = 0;
+      if (kick && i === 5 + kick.foot) {
+        // Step dancing: the kicking foot flies up and out, then snaps back.
+        const k = Math.sin(Math.PI * Math.min(1, kick.u * 1.6));
+        lift = -Math.round(k * KICK_UP);
+        out = Math.round(k * KICK_OUT) * (kick.foot ? 1 : -1);
+      }
+      this.rect(ox + b.x * P + out, oy + b.y * P + lift, P, P, m.cfg.hex);
     });
     for (const c of HATS[m.cfg.id]) this.rect(ox + P + c.x, oy + c.y, c.w, c.h, c.c);
     this.drawEyes(m, ox + P, oy);

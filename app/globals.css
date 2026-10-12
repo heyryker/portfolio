@@ -544,6 +544,15 @@ body {
   color: var(--color-muted);
 }
 
+/* On phones the links reach the bottom-left corner, where the whistle is
+   fixed; lift them clear of it. */
+@media (max-width: 640px) {
+  .site-footer-links {
+    /* The whistle: 22px from the bottom, 48px tall. */
+    padding-bottom: 80px;
+  }
+}
+
 .site-footer-links a {
   transition: color 200ms;
 }
@@ -856,5 +865,97 @@ html:has(.site-menu[open]) {
 @media (prefers-reduced-motion: reduce) {
   .ai-summary-panel li {
     animation: none;
+  }
+}
+
+/*
+ * The whistle (components/MeepleField.tsx): fixed to the bottom-left corner,
+ * mirroring the home mark in the top-left, so it's in reach wherever the
+ * visitor has scrolled. Below the case-study overlay (z-50).
+ */
+.whistle {
+  --whistle-color: var(--color-accent);
+  position: fixed;
+  left: 22px;
+  bottom: 22px;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 48px;
+  cursor: pointer;
+}
+
+.whistle svg {
+  transform-origin: 60% 50%;
+  transition: transform 150ms;
+}
+
+/* Hover only where there's a mouse: on phones a tap would leave it stuck. */
+@media (hover: hover) {
+  .whistle:hover svg {
+    --whistle-color: var(--color-ink-soft);
+    transform: rotate(-8deg);
+  }
+}
+
+.whistle:focus-visible svg {
+  --whistle-color: var(--color-ink-soft);
+  transform: rotate(-8deg);
+}
+
+.whistle[data-blowing] svg {
+  animation: whistle-blow 700ms steps(2) both;
+}
+
+/* Three short blasts out of the mouthpiece, in pixel dashes. */
+.whistle-toot {
+  position: absolute;
+  left: -4px;
+  top: 6px;
+  width: 10px;
+  height: 18px;
+  opacity: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--color-ink-soft), var(--color-ink-soft)) 4px 0 / 6px 2px,
+    linear-gradient(var(--color-ink-soft), var(--color-ink-soft)) 0 8px / 8px 2px,
+    linear-gradient(var(--color-ink-soft), var(--color-ink-soft)) 4px 16px / 6px 2px;
+  background-repeat: no-repeat;
+}
+
+.whistle[data-blowing] .whistle-toot {
+  animation: whistle-toot 700ms steps(1) both;
+}
+
+@keyframes whistle-blow {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25%,
+  75% {
+    transform: rotate(-10deg);
+  }
+  50% {
+    transform: rotate(4deg);
+  }
+}
+
+@keyframes whistle-toot {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  10%,
+  30%,
+  50%,
+  70% {
+    opacity: 1;
+  }
+  20%,
+  40%,
+  60% {
+    opacity: 0;
   }
 }
