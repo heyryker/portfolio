@@ -7,19 +7,41 @@ import { trackOnce } from "@/lib/analytics";
 /*
  * The About page portrait, with a trick: click it and it shakes, bursts into
  * pixels that scatter across the screen, and the pixels drift back, bottom row
- * first, as a pixel portrait in the meeple colors. Click again for the photo.
+ * first, as a pixel avatar. Click again for the photo.
  *
- * The pixel version is kept simple: a 24 x 30 grid, so each pixel is a full
- * meeple pixel (11px) at the 264px width. Brightness picks the color, darkest
- * to lightest, in six bands that each cover about the same share of the
- * picture, so the wall's soft vignette turns into rainbow rings. Then lone
- * pixels take their neighbors' color, leaving flat shapes, except the dark
- * ones, which carry the features.
+ * The avatar is drawn by hand rather than traced from the photo: a 16 x 20
+ * bust in three colors, with the swept-up hair, the look off to the side and
+ * the open shirt over a tee. Blue, the background, is the Ryker meeple's color.
  */
-const COLS = 24;
-const ROWS = 30;
-const CLEAN_PASSES = 2;
-const RAMP = ["#221F20", "#985DF6", "#E05A32", "#58B9F8", "#5FCC8A", "#FBEC5A"]; // ink, then the meeples
+const COLS = 16;
+const ROWS = 20;
+const COLORS: Record<string, string> = {
+  ".": "#58B9F8", // blue
+  K: "#221F20", // ink
+  Y: "#FBEC5A", // yellow
+};
+const AVATAR = [
+  "................",
+  "................",
+  "......KKKK......",
+  "....KKKKKKKK....",
+  "...KKKKKKKKKKK..",
+  "....KKKKKKKKKK..",
+  "....KYYYYYKKKK..",
+  "...YYYYYYYYKKK..",
+  "...YKYYYYYYYK...",
+  "..YYYYYYYYYYKY..",
+  "...YYYYYYYYYYY..",
+  "....YKKYYYYYY...",
+  ".....YYYYYYY....",
+  "......YYYYY.....",
+  "...KKKYYYYYKKK..",
+  "..KKKKKYYYKKKKK.",
+  ".KKKKKKYYYKKKKKK",
+  ".KKKKKKYYYKKKKKK",
+  "KKKKKKKYYYKKKKKK",
+  "KKKKKKKYYYKKKKKK",
+];
 // Matches the photo's object-position.
 const FOCUS = { x: 0.5, y: 0.3 };
 
@@ -34,7 +56,7 @@ type Showing = "photo" | "pixels";
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
-/** Reads the photo into the grid: each cell's gray, and its color in the meeple ramp. */
+/** Reads the photo into the grid: each cell's gray, and its color in the avatar. */
 function sample(img: HTMLImageElement): Cell[] | null {
   if (!img.complete || !img.naturalWidth) return null;
   const k = 8; // subsamples per cell, each way
@@ -65,40 +87,11 @@ function sample(img: HTMLImageElement): Cell[] | null {
       lum.push(sum / (k * k));
     }
   }
-  // Band edges at equal shares of the picture, so every color gets a fair go.
-  const sorted = [...lum].sort((a, b) => a - b);
-  const edges = RAMP.slice(1).map((_, i) => sorted[Math.floor((sorted.length * (i + 1)) / RAMP.length)]);
-  const band = simplify(lum.map((l) => edges.filter((e) => l >= e).length));
+  // Each block leaves as a patch of the photo and comes home as the avatar.
   return lum.map((l, i) => {
     const v = Math.round(l);
-    return { gray: `rgb(${v},${v},${v})`, color: RAMP[band[i]] };
+    return { gray: `rgb(${v},${v},${v})`, color: COLORS[AVATAR[Math.floor(i / COLS)][i % COLS]] };
   });
-}
-
-/**
- * Flattens the bands: a pixel that matches none of its four neighbors takes
- * the color most of them share. Ink (band 0) is left alone.
- */
-function simplify(bands: number[]): number[] {
-  let grid = bands;
-  for (let pass = 0; pass < CLEAN_PASSES; pass++) {
-    const next = [...grid];
-    grid.forEach((b, i) => {
-      if (b === 0) return;
-      const x = i % COLS;
-      const y = Math.floor(i / COLS);
-      const near = [
-        y > 0 ? grid[i - COLS] : -1,
-        y < ROWS - 1 ? grid[i + COLS] : -1,
-        x > 0 ? grid[i - 1] : -1,
-        x < COLS - 1 ? grid[i + 1] : -1,
-      ].filter((n) => n >= 0);
-      if (near.includes(b)) return;
-      next[i] = near.reduce((best, n) => (near.filter((m) => m === n).length > near.filter((m) => m === best).length ? n : best), near[0]);
-    });
-    grid = next;
-  }
-  return grid;
 }
 
 export function PixelPortrait({ src, alt }: { src: StaticImageData; alt: string }) {
@@ -110,7 +103,7 @@ export function PixelPortrait({ src, alt }: { src: StaticImageData; alt: string 
   const [showing, setShowing] = useState<Showing>("photo");
   const [flying, setFlying] = useState(false);
 
-  /** Paints the resting pixel portrait into the frame. */
+  /** Paints the resting avatar into the frame. */
   const paintStill = useCallback(() => {
     const canvas = stillRef.current;
     const frame = frameRef.current;
@@ -290,7 +283,7 @@ export function PixelPortrait({ src, alt }: { src: StaticImageData; alt: string 
           priority
           sizes="264px"
           placeholder="blur"
-          // Hidden, not removed, while pixels show, so the alt text stays.
+          // Hidden, not removed, while the avatar shows, so the alt text stays.
           className={`object-cover object-[50%_30%] ${showing === "photo" && !flying ? "" : "opacity-0"}`}
         />
         <canvas
