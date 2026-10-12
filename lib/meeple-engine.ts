@@ -27,6 +27,7 @@
  */
 import { MEEPLE_BLOCKS, MEEPLES, homeOf, type MeepleConfig, type MeepleId } from "./meeples";
 import { HATS, hatHeight } from "./meeple-hats";
+import { trackOnce } from "./analytics";
 
 /** One meeple pixel, in CSS px. A grid cell is four of these. */
 const P = 11;
@@ -1331,6 +1332,7 @@ export class MeepleEngine {
     if (allowClick && drag.moved < 6 && now - drag.t0 < 400) {
       m.mode = "shake";
       m.vx = m.vy = 0;
+      trackOnce("Meeple play", "explode", { action: "explode", meeple: m.cfg.id });
       return;
     }
 
@@ -1353,6 +1355,7 @@ export class MeepleEngine {
     m.vy = vy;
     m.mode = "idle";
     m.idleFor = rand(0.5, 1.2);
+    trackOnce("Meeple play", "throw", { action: "throw", meeple: m.cfg.id });
   }
 
   private onPointerLeave = (e: PointerEvent) => {

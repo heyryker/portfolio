@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Silkscreen } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { AnalyticsEvents } from "@/components/AnalyticsEvents";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -57,6 +59,8 @@ export default function RootLayout({ children, work }: LayoutProps<"/">) {
             (app/@work). Empty otherwise. */}
         {work}
         <Analytics />
+        <SpeedInsights />
+        <AnalyticsEvents />
       </body>
     </html>
   );

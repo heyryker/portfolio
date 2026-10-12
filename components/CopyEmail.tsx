@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 /** Click-to-copy for the email address, with a small witty confirmation (§6). */
 export function CopyEmail({ email }: { email: string }) {
@@ -18,6 +19,7 @@ export function CopyEmail({ email }: { email: string }) {
         type="button"
         onClick={() => {
           navigator.clipboard?.writeText(email).then(() => setCopied(true), () => {});
+          trackEvent("Email copy", { from: window.location.pathname });
         }}
         className="cursor-pointer text-sm tracking-[0.08em] text-muted uppercase transition-colors hover:text-accent focus-visible:text-accent"
       >
