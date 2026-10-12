@@ -9,13 +9,16 @@ import { trackOnce } from "@/lib/analytics";
  * pixels that scatter across the screen, and the pixels drift back, bottom row
  * first, as a pixel portrait in the meeple colors. Click again for the photo.
  *
- * The pixel version is a 48 x 60 grid: half a meeple pixel each at the full
- * 264px width, the same size as the meeples' garden. Brightness picks the
- * color, darkest to lightest, in six bands that each cover about the same
- * share of the picture, so the wall's soft vignette turns into rainbow rings.
+ * The pixel version is kept simple: a 24 x 30 grid, so each pixel is a full
+ * meeple pixel (11px) at the 264px width. Brightness picks the color, darkest
+ * to lightest, in six bands that each cover about the same share of the
+ * picture, so the wall's soft vignette turns into rainbow rings. Then lone
+ * pixels take their neighbors' color, leaving flat shapes, except the dark
+ * ones, which carry the features.
  */
-const COLS = 48;
-const ROWS = 60;
+const COLS = 24;
+const ROWS = 30;
+const CLEAN_PASSES = 2;
 const RAMP = ["#221F20", "#985DF6", "#E05A32", "#58B9F8", "#5FCC8A", "#FBEC5A"]; // ink, then the meeples
 // Matches the photo's object-position.
 const FOCUS = { x: 0.5, y: 0.3 };
@@ -65,10 +68,37 @@ function sample(img: HTMLImageElement): Cell[] | null {
   // Band edges at equal shares of the picture, so every color gets a fair go.
   const sorted = [...lum].sort((a, b) => a - b);
   const edges = RAMP.slice(1).map((_, i) => sorted[Math.floor((sorted.length * (i + 1)) / RAMP.length)]);
-  return lum.map((l) => {
+  const band = simplify(lum.map((l) => edges.filter((e) => l >= e).length));
+  return lum.map((l, i) => {
     const v = Math.round(l);
-    return { gray: `rgb(${v},${v},${v})`, color: RAMP[edges.filter((e) => l >= e).length] };
+    return { gray: `rgb(${v},${v},${v})`, color: RAMP[band[i]] };
   });
+}
+
+/**
+ * Flattens the bands: a pixel that matches none of its four neighbors takes
+ * the color most of them share. Ink (band 0) is left alone.
+ */
+function simplify(bands: number[]): number[] {
+  let grid = bands;
+  for (let pass = 0; pass < CLEAN_PASSES; pass++) {
+    const next = [...grid];
+    grid.forEach((b, i) => {
+      if (b === 0) return;
+      const x = i % COLS;
+      const y = Math.floor(i / COLS);
+      const near = [
+        y > 0 ? grid[i - COLS] : -1,
+        y < ROWS - 1 ? grid[i + COLS] : -1,
+        x > 0 ? grid[i - 1] : -1,
+        x < COLS - 1 ? grid[i + 1] : -1,
+      ].filter((n) => n >= 0);
+      if (near.includes(b)) return;
+      next[i] = near.reduce((best, n) => (near.filter((m) => m === n).length > near.filter((m) => m === best).length ? n : best), near[0]);
+    });
+    grid = next;
+  }
+  return grid;
 }
 
 export function PixelPortrait({ src, alt }: { src: StaticImageData; alt: string }) {
