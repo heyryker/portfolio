@@ -45,9 +45,11 @@ const AVATAR = [
   ".......KYYYK....",
 ];
 // The earring is the one thing that isn't a pixel: a smooth yellow hoop,
-// outlined in ink, hanging from the earlobe. In grid cells; sizes in px at
-// the full 264px width.
-const HOOP = { x: 14.05, y: 12.15, r: 0.85, ink: 8, gold: 3 };
+// outlined in ink, threaded through the earlobe. Its top passes behind the
+// lobe pixel and the rest hangs in front. Position and radius in grid cells,
+// line widths in px at the full 264px width, the front arc in degrees
+// (clockwise from 3 o'clock).
+const HOOP = { x: 13.95, y: 11.55, r: 0.8, ink: 8, gold: 3, lobe: { col: 13, row: 10 }, front: [-70, 190] };
 // Matches the photo's object-position.
 const FOCUS = { x: 0.5, y: 0.3 };
 
@@ -131,19 +133,28 @@ export function PixelPortrait({ src, alt }: { src: StaticImageData; alt: string 
     // The hoop: an ink ring with a yellow one inside it, drawn smooth.
     const cell = canvas.width / COLS;
     const px = canvas.width / 264;
-    const cx = HOOP.x * cell;
-    const cy = HOOP.y * cell;
-    const r = HOOP.r * cell - (HOOP.ink / 2) * px;
-    for (const [color, width] of [
-      [COLORS.K, HOOP.ink],
-      [COLORS.Y, HOOP.gold],
-    ] as const) {
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.strokeStyle = color;
-      ctx.lineWidth = width * px;
-      ctx.stroke();
-    }
+    const ring = (from: number, to: number) => {
+      for (const [color, width] of [
+        [COLORS.K, HOOP.ink],
+        [COLORS.Y, HOOP.gold],
+      ] as const) {
+        ctx.beginPath();
+        ctx.arc(HOOP.x * cell, HOOP.y * cell, HOOP.r * cell - (HOOP.ink / 2) * px, from, to);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width * px;
+        ctx.stroke();
+      }
+    };
+    ring(0, Math.PI * 2);
+    // Through the piercing: the lobe covers the ring, then the front of the
+    // ring is drawn back over it, so only the top goes behind the ear.
+    const { col, row } = HOOP.lobe;
+    const lx = Math.round((col * canvas.width) / COLS);
+    const ly = Math.round((row * canvas.height) / ROWS);
+    ctx.fillStyle = COLORS.Y;
+    ctx.fillRect(lx, ly, Math.round(((col + 1) * canvas.width) / COLS) - lx, Math.round(((row + 1) * canvas.height) / ROWS) - ly);
+    const [from, to] = HOOP.front.map((deg) => (deg * Math.PI) / 180);
+    ring(from, to);
   }, []);
 
   // Keep the still sharp if the frame changes size (it's fluid on phones).
