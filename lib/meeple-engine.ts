@@ -702,6 +702,11 @@ export class MeepleEngine {
 
   // ---------------------------------------------------------- personality
 
+  /** A group moment is on: everyone's heading to the gold flower or the dance line. */
+  private get gathering() {
+    return this.dance !== null || this.praise !== null;
+  }
+
   private get cursorActive() {
     // A cursor that has sat still for a while stops being interesting.
     return this.cursor.inside && this.time - this.cursor.lastMove < 10;
@@ -1028,9 +1033,13 @@ export class MeepleEngine {
       const g = r.width / 2;
       // The flower's head, matching drawGold: centered 2.5 of its pixels in, 5.5 up.
       const head = { x: r.x + gold.off.x + 2.5 * g, y: r.y + gold.off.y + r.height - 5.5 * g };
-      // Face the fan club down and toward the middle of the page, where there's room.
+      // Face the fan club down and toward the middle of the page, where
+      // there's usually room. Where that's crowded (on phones the blurb sits
+      // right under RYKER), turn the fan toward whichever side fits it best.
       const toMiddle = clamp((this.vw / 2 - head.x) / (this.vw / 2), -1, 1);
-      const open = Math.atan2(1, toMiddle);
+      const fan = this.openFan(head, Math.atan2(1, toMiddle));
+      const row = fan ? null : this.praiseRow(head);
+      const open = fan ? fan.angle : Math.atan2(0, row![0].x - head.x);
       // Hand out the spots in the order the meeples already sit around the
       // flower, so their paths don't cross and they don't jostle on the way.
       const bearing = (v: Vec) => {
@@ -1039,10 +1048,16 @@ export class MeepleEngine {
       };
       const ordered = [...this.meeples].sort((a, b) => bearing(center(a)) - bearing(center(b)));
       const spots = new Map<Meeple, Vec>();
-      ordered.forEach((m, i) => {
-        const a = open + (PRAISE_ANGLES[i] * Math.PI) / 180;
-        spots.set(m, this.clampTarget(head.x + Math.cos(a) * PRAISE_RADIUS - W / 2, head.y + Math.sin(a) * PRAISE_RADIUS - H / 2));
-      });
+      if (fan) {
+        ordered.forEach((m, i) => {
+          const a = open + (PRAISE_ANGLES[i] * fan.spread * Math.PI) / 180;
+          spots.set(m, this.clampTarget(head.x + Math.cos(a) * fan.radius - W / 2, head.y + Math.sin(a) * fan.radius - H / 2));
+        });
+      } else {
+        // In a row, whoever is nearest the flower takes the spot nearest it.
+        const near = [...this.meeples].sort((a, b) => dist(center(a), head) - dist(center(b), head));
+        near.forEach((m, i) => spots.set(m, row![i]));
+      }
       this.praise = { square: gold, head, spots };
       for (const m of this.meeples) {
         this.wake(m);
@@ -1055,6 +1070,71 @@ export class MeepleEngine {
       }
     }
     this.glance = { at: this.praise.head, until: this.time + 0.3 };
+  }
+
+  /**
+   * How to fan the gold flower's fan club out: the preferred direction at the
+   * usual size if all five spots fit there (on screen, off the blurb and the
+   * header controls). Otherwise the nearest direction that fits, trying a
+   * tighter arc or a wider circle. Null if no arc fits at all.
+   */
+  private openFan(head: Vec, preferred: number): { angle: number; radius: number; spread: number } | null {
+    const v = this.view();
+    const fits = (angle: number, radius: number, spread: number) => {
+      const spots = PRAISE_ANGLES.map((deg) => {
+        const t = angle + (deg * spread * Math.PI) / 180;
+        return { x: head.x + Math.cos(t) * radius - W / 2, y: head.y + Math.sin(t) * radius - H / 2 };
+      });
+      // Neighbors mustn't overlap, counting the hat and name tag above each.
+      const room = (p: Vec) => new DOMRect(p.x - 4, p.y - TAG_HEIGHT, W + 8, H + TAG_HEIGHT);
+      if (spots.some((p, i) => i > 0 && overlaps(room(p), room(spots[i - 1])))) return 0;
+      return spots.filter(
+        (p) =>
+          p.x >= MARGIN &&
+          p.x <= this.vw - W - MARGIN &&
+          p.y >= Math.max(MARGIN + TAG_HEIGHT, v.top + 64) &&
+          p.y <= v.bottom - H - MARGIN &&
+          !this.keepOut.some((r) => overlaps(r, new DOMRect(p.x, p.y, W, H))),
+      ).length;
+    };
+    // Usual size first, then a tighter arc or a wider circle.
+    const sizes: [number, number][] = [
+      [PRAISE_RADIUS, 1],
+      [PRAISE_RADIUS, 0.85],
+      [PRAISE_RADIUS * 1.25, 1],
+      [PRAISE_RADIUS * 1.25, 0.8],
+      [PRAISE_RADIUS * 1.5, 0.75],
+      [PRAISE_RADIUS * 1.75, 0.65],
+    ];
+    for (const [radius, spread] of sizes) {
+      // Turn either way from the preferred direction, a little more each time.
+      for (let step = 0; step <= 18; step++) {
+        for (const sign of step ? [1, -1] : [1]) {
+          const angle = preferred + sign * step * (Math.PI / 18);
+          if (fits(angle, radius, spread) === PRAISE_ANGLES.length) return { angle, radius, spread };
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * The fallback when no arc fits (a phone, with the flower at the screen's
+   * edge and the blurb right below): the fan club stands in a row beside the
+   * flower, level with it, stretching toward the middle of the screen.
+   * Returns the spots nearest the flower first.
+   */
+  private praiseRow(head: Vec): Vec[] {
+    const n = PRAISE_ANGLES.length;
+    const toward = head.x > this.vw / 2 ? -1 : 1;
+    const room = toward < 0 ? head.x - MARGIN - W / 2 : this.vw - MARGIN - W / 2 - head.x;
+    const gap = clamp(room / n, W + 8, W + 30);
+    const y = head.y - H / 2;
+    // Staggered like the dance line, every other one a step back, which
+    // also keeps their name tags from running together.
+    return Array.from({ length: n }, (_, i) =>
+      this.clampTarget(head.x + toward * (i + 1) * gap - W / 2, y - (i % 2 ? P : 0)),
+    );
   }
 
   private worship(m: Meeple, dt: number) {
@@ -1219,9 +1299,10 @@ export class MeepleEngine {
   private integrate(m: Meeple, dt: number) {
     m.x += (m.wx + m.vx) * dt;
     m.y += (m.wy + m.vy) * dt;
-    // On the way into the dance line they may cut across the blurb: it's a
-    // few seconds, and walking round it could leave someone stranded.
-    if (!this.dance) this.keepClear(m);
+    // On the way to a group moment (the gold flower, the dance line) they
+    // may cut across the blurb: it's a few seconds, and walking round it
+    // can leave someone stranded on the far side, especially on phones.
+    if (!this.gathering) this.keepClear(m);
     const f = Math.exp(-FRICTION * dt);
     m.vx *= f;
     m.vy *= f;
@@ -1311,12 +1392,20 @@ export class MeepleEngine {
 
   // ------------------------------------------------------------ collisions
 
+  /** Being dragged, or flying from a throw or a bump. */
+  private knocking(m: Meeple) {
+    return m.mode === "drag" || Math.hypot(m.vx, m.vy) > TUMBLE_SPEED;
+  }
+
   private collide() {
     const solid = this.meeples.filter((m) => m.mode === "idle" || m.mode === "walk" || m.mode === "drag");
     for (let i = 0; i < solid.length; i++) {
       for (let j = i + 1; j < solid.length; j++) {
         const a = solid[i];
         const b = solid[j];
+        // Heading to a group moment, they step round each other rather than
+        // bump: only a dragged or flying meeple still knocks into the rest.
+        if (this.gathering && !this.knocking(a) && !this.knocking(b)) continue;
         // Slightly smaller than the sprite, so corners can graze.
         const ox = Math.min(a.x, b.x) + W - Math.max(a.x, b.x) - 2;
         const oy = Math.min(a.y, b.y) + H - Math.max(a.y, b.y) - 2;
@@ -2426,6 +2515,10 @@ export class MeepleEngine {
       t.el.style[t.prop] = color ?? "";
     }
   }
+}
+
+function dist(a: Vec, b: Vec) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
 function center(m: Meeple): Vec {
