@@ -79,10 +79,8 @@ const FLATTEN_TIME = 0.14;
 const GOLD_LIFE = 9; // seconds from the click until the gold flower goes
 const GOLD_FADE = 0.6;
 const SPRING_BACK = 0.6; // then the period springs back up
-const PRAISE_RADIUS = 92; // how far from the gold flower the meeples gather
-// Where each meeple stands around it, in degrees either side of the most open
-// direction (down and toward the middle of the page).
-const PRAISE_ANGLES = [-80, -40, 0, 40, 80];
+// How far from the gold flower the meeples gather: the closest ring that fits.
+const PRAISE_RADII = [72, 86, 100, 118, 136];
 const WILD_LIFE: [number, number] = [14, 20]; // the little flowers it sets off
 const HOP_TIME = 0.42; // one hop
 const HOP_HEIGHT = 16;
@@ -331,6 +329,7 @@ type Drag = {
   samples: { t: number; x: number; y: number }[];
 };
 
+const TAU = Math.PI * 2;
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
@@ -1033,31 +1032,19 @@ export class MeepleEngine {
       const g = r.width / 2;
       // The flower's head, matching drawGold: centered 2.5 of its pixels in, 5.5 up.
       const head = { x: r.x + gold.off.x + 2.5 * g, y: r.y + gold.off.y + r.height - 5.5 * g };
-      // Face the fan club down and toward the middle of the page, where
-      // there's usually room. Where that's crowded (on phones the blurb sits
-      // right under RYKER), turn the fan toward whichever side fits it best.
-      const toMiddle = clamp((this.vw / 2 - head.x) / (this.vw / 2), -1, 1);
-      const fan = this.openFan(head, Math.atan2(1, toMiddle));
-      const row = fan ? null : this.praiseRow(head);
-      const open = fan ? fan.angle : Math.atan2(0, row![0].x - head.x);
-      // Hand out the spots in the order the meeples already sit around the
-      // flower, so their paths don't cross and they don't jostle on the way.
-      const bearing = (v: Vec) => {
-        const b = Math.atan2(v.y - head.y, v.x - head.x) - open;
-        return Math.atan2(Math.sin(b), Math.cos(b));
-      };
-      const ordered = [...this.meeples].sort((a, b) => bearing(center(a)) - bearing(center(b)));
+      // A ring all the way round it, the meeples taking their places in the
+      // order they already stand around it, so nobody crosses paths.
+      const ring = this.praiseRing(head);
+      const angle = (v: Vec) => Math.atan2(v.y + H / 2 - head.y, v.x + W / 2 - head.x);
+      const angles = ring.map(angle);
+      // Measure bearings from the middle of the ring's gap (or between two
+      // spots, for a closed ring), so the order wraps in the right place.
+      const span = (((angles[angles.length - 1] - angles[0]) % TAU) + TAU) % TAU;
+      const from = angles[0] - (TAU - span) / 2;
+      const bearing = (a: number) => (((a - from) % TAU) + TAU) % TAU;
+      const order = [...this.meeples].sort((a, b) => bearing(angle(a)) - bearing(angle(b)));
       const spots = new Map<Meeple, Vec>();
-      if (fan) {
-        ordered.forEach((m, i) => {
-          const a = open + (PRAISE_ANGLES[i] * fan.spread * Math.PI) / 180;
-          spots.set(m, this.clampTarget(head.x + Math.cos(a) * fan.radius - W / 2, head.y + Math.sin(a) * fan.radius - H / 2));
-        });
-      } else {
-        // In a row, whoever is nearest the flower takes the spot nearest it.
-        const near = [...this.meeples].sort((a, b) => dist(center(a), head) - dist(center(b), head));
-        near.forEach((m, i) => spots.set(m, row![i]));
-      }
+      order.forEach((m, i) => spots.set(m, ring[i]));
       this.praise = { square: gold, head, spots };
       for (const m of this.meeples) {
         this.wake(m);
@@ -1073,68 +1060,45 @@ export class MeepleEngine {
   }
 
   /**
-   * How to fan the gold flower's fan club out: the preferred direction at the
-   * usual size if all five spots fit there (on screen, off the blurb and the
-   * header controls). Otherwise the nearest direction that fits, trying a
-   * tighter arc or a wider circle. Null if no arc fits at all.
+   * Where the gold flower's fan club stands, in order round the ring: five
+   * spots evenly all the way round the flower, as close in as fits on screen
+   * without anyone overlapping (name tags are off while it's up). Spots off
+   * the blurb are preferred, but they may stand on it if that's the only way.
+   * Where a full ring can't fit (on a phone the flower is at the screen's
+   * right edge), the ring opens toward the room: above, beside and below it.
    */
-  private openFan(head: Vec, preferred: number): { angle: number; radius: number; spread: number } | null {
+  private praiseRing(head: Vec): Vec[] {
+    const n = this.meeples.length;
     const v = this.view();
-    const fits = (angle: number, radius: number, spread: number) => {
-      const spots = PRAISE_ANGLES.map((deg) => {
-        const t = angle + (deg * spread * Math.PI) / 180;
-        return { x: head.x + Math.cos(t) * radius - W / 2, y: head.y + Math.sin(t) * radius - H / 2 };
+    const ring = (radius: number, first: number, step: number) =>
+      Array.from({ length: n }, (_, i) => {
+        const a = first + i * step;
+        return { x: head.x + Math.cos(a) * radius - W / 2, y: head.y + Math.sin(a) * radius - H / 2 };
       });
-      // Neighbors mustn't overlap, counting the hat and name tag above each.
-      const room = (p: Vec) => new DOMRect(p.x - 4, p.y - TAG_HEIGHT, W + 8, H + TAG_HEIGHT);
-      if (spots.some((p, i) => i > 0 && overlaps(room(p), room(spots[i - 1])))) return 0;
-      return spots.filter(
-        (p) =>
-          p.x >= MARGIN &&
-          p.x <= this.vw - W - MARGIN &&
-          p.y >= Math.max(MARGIN + TAG_HEIGHT, v.top + 64) &&
-          p.y <= v.bottom - H - MARGIN &&
-          !this.keepOut.some((r) => overlaps(r, new DOMRect(p.x, p.y, W, H))),
-      ).length;
-    };
-    // Usual size first, then a tighter arc or a wider circle.
-    const sizes: [number, number][] = [
-      [PRAISE_RADIUS, 1],
-      [PRAISE_RADIUS, 0.85],
-      [PRAISE_RADIUS * 1.25, 1],
-      [PRAISE_RADIUS * 1.25, 0.8],
-      [PRAISE_RADIUS * 1.5, 0.75],
-      [PRAISE_RADIUS * 1.75, 0.65],
-    ];
-    for (const [radius, spread] of sizes) {
-      // Turn either way from the preferred direction, a little more each time.
-      for (let step = 0; step <= 18; step++) {
-        for (const sign of step ? [1, -1] : [1]) {
-          const angle = preferred + sign * step * (Math.PI / 18);
-          if (fits(angle, radius, spread) === PRAISE_ANGLES.length) return { angle, radius, spread };
+    const onScreen = (p: Vec) =>
+      p.x >= MARGIN && p.x <= this.vw - W - MARGIN && p.y >= Math.max(MARGIN, v.top + 64) && p.y <= v.bottom - H - MARGIN;
+    // Each meeple with its hat, plus a little elbow room.
+    const box = (p: Vec) => new DOMRect(p.x - 4, p.y - 12, W + 8, H + 16);
+    const apart = (spots: Vec[]) => spots.every((p, i) => spots.every((q, j) => j <= i || !overlaps(box(p), box(q))));
+    const onBlurb = (spots: Vec[]) =>
+      spots.filter((p) => this.keepOut.some((r) => overlaps(r, new DOMRect(p.x, p.y, W, H)))).length;
+
+    // A closed ring first, then one opening wider and wider toward the room
+    // (the open ones cover this share of the way round).
+    const spreads = [TAU / n, ...[0.6, 0.5, 0.42, 0.36].map((share) => (TAU * share) / (n - 1))];
+    for (const avoidBlurb of [true, false]) {
+      for (const step of spreads) {
+        for (const radius of PRAISE_RADII) {
+          for (let turn = 0; turn < 36; turn++) {
+            const spots = ring(radius, (turn * TAU) / 36, step);
+            if (!spots.every(onScreen) || !apart(spots)) continue;
+            if (!avoidBlurb || onBlurb(spots) === 0) return spots;
+          }
         }
       }
     }
-    return null;
-  }
-
-  /**
-   * The fallback when no arc fits (a phone, with the flower at the screen's
-   * edge and the blurb right below): the fan club stands in a row beside the
-   * flower, level with it, stretching toward the middle of the screen.
-   * Returns the spots nearest the flower first.
-   */
-  private praiseRow(head: Vec): Vec[] {
-    const n = PRAISE_ANGLES.length;
-    const toward = head.x > this.vw / 2 ? -1 : 1;
-    const room = toward < 0 ? head.x - MARGIN - W / 2 : this.vw - MARGIN - W / 2 - head.x;
-    const gap = clamp(room / n, W + 8, W + 30);
-    const y = head.y - H / 2;
-    // Staggered like the dance line, every other one a step back, which
-    // also keeps their name tags from running together.
-    return Array.from({ length: n }, (_, i) =>
-      this.clampTarget(head.x + toward * (i + 1) * gap - W / 2, y - (i % 2 ? P : 0)),
-    );
+    // Nothing fits (a very small screen): the closest ring, kept on screen.
+    return ring(PRAISE_RADII[0], -Math.PI / 2, TAU / n).map((p) => this.clampTarget(p.x, p.y));
   }
 
   private worship(m: Meeple, dt: number) {
@@ -2298,8 +2262,9 @@ export class MeepleEngine {
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = ZZZ_COLOR;
-    // No name tags during the dance break: it's a show, not a meet-and-greet.
-    if (this.dance) {
+    // No name tags during the dance break or round the gold flower: they
+    // stand close together for those, and the tags would run into each other.
+    if (this.gathering) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       return;
     }
@@ -2515,10 +2480,6 @@ export class MeepleEngine {
       t.el.style[t.prop] = color ?? "";
     }
   }
-}
-
-function dist(a: Vec, b: Vec) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
 function center(m: Meeple): Vec {
