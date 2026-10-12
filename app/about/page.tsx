@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { CopyEmail } from "@/components/CopyEmail";
 import { JsonLd } from "@/components/JsonLd";
 import { Meeple } from "@/components/Meeple";
 import { PixelGarden } from "@/components/PixelGarden";
+import { PixelPortrait } from "@/components/PixelPortrait";
 import { PixelSquare } from "@/components/PixelSquare";
 import { SiteHeader } from "@/components/SiteHeader";
 import { EDUCATION, EMAIL, EXPERIENCE, PROFILES, RESUME, SITE_URL, WEBSITE_ID, absoluteUrl, pageMetadata, person } from "@/lib/site";
@@ -107,17 +107,11 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <div className="relative aspect-[4/5] w-full max-w-[264px] overflow-hidden border border-grid">
-            <Image
-              src={portrait}
-              alt="Ryker Marble, in a denim shirt over a white tee, looking off to the side. Black and white."
-              fill
-              priority
-              sizes="264px"
-              placeholder="blur"
-              className="object-cover object-[50%_30%]"
-            />
-          </div>
+          {/* Click it: it bursts into pixels and comes back in the meeple colors. */}
+          <PixelPortrait
+            src={portrait}
+            alt="Ryker Marble, in a denim shirt over a white tee, looking off to the side. Black and white."
+          />
         </div>
 
         <section aria-labelledby="contact" className="mt-22 scroll-mt-11">
