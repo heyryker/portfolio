@@ -1,0 +1,115 @@
+---
+title: "Conjure: A Reward for Writing Bad Poetry"
+date: 2026-10-14
+summary: "I built a little site that turns any poem, good or bad, into a one-of-a-kind picture. Here’s how it reads your words."
+cover: /blog/conjure/field.webp
+coverAlt: "A Conjure picture: a dithered, melting field of pink, cyan, yellow and purple pixels with wavy drips along the bottom and fine grain over everything."
+coverWidth: 1920
+coverHeight: 1080
+tags: [Side project, Behind the scenes]
+aiSummary:
+  - Conjure is a small web app Ryker built with Claude, GitHub and Vercel. You write a poem, press Submit, and it paints a 16:9 picture from it.
+  - The goal is to get Ryker writing more poetry, even bad poetry, by giving every poem a small reward at the end.
+  - The poem is never saved. It is cleared from the page the moment the picture appears, so there is nothing to judge later.
+  - Conjure reads the poem’s sound, rhythm, rhyme, punctuation, mood and imagery as numbers, then uses them to pick a scene (a color field, a landscape or ASCII), a palette and a pixel size.
+  - A random value is mixed into every poem, so the same poem never makes the same picture twice. About 1 in 10 pictures breaks the rules on purpose.
+---
+
+I want to write more poetry. The problem is that most of what I write is bad, and bad poems tend to die in a notes app where nobody, including me, ever looks at them again.
+
+So I built myself a reward. It’s called [Conjure](https://conjure-inky.vercel.app/). You write a poem, press Submit, and it paints you a picture of it. Good poem, bad poem, a poem about toast: you still get a picture. The point isn’t to write something great. The point is to write something, and to get a little hit of joy for showing up.
+
+<Figure src="/blog/conjure/write.webp" width={1440} height={900} alt="The Conjure writing screen: a white card with the Conjure logo on a pixel-textured orange and blue banner, a four-line poem about burning toast typed inside, and a black Submit button, all floating over a generated turquoise and orange background." caption="The writing card. The background is a fresh picture every time you load the page." />
+
+## The rules
+
+There are only two, and they’re both about making it easy to write badly.
+
+- **Your poem isn’t saved.** It disappears the moment the picture appears. It isn’t stored or sent anywhere, so there’s nothing to be embarrassed about later.
+- **The picture is yours.** You can flip it to grayscale and download it. That’s it. No account, no feed, no likes.
+
+The picture is the only thing that survives. Which means the reward for writing a poem is a strange little piece of art that exists nowhere else.
+
+<Figure src="/blog/conjure/result.webp" width={1440} height={900} alt="The Conjure result view: a full-screen picture made of rows of ASCII characters in cyan and magenta over a pale, grainy background, with Back, Color and Grayscale, and Download buttons along the bottom." caption="The toast poem, conjured. Back, a Color / Grayscale switch and Download are the only controls." />
+
+## The setup
+
+Same three tools I used to build this site:
+
+- **Claude** wrote the code. I described the feeling I wanted, looked at what came back and kept pushing it somewhere weirder.
+- **GitHub** holds the code. Every change is a commit I can look back on.
+- **Vercel** hosts it. Every push to the main branch redeploys the site.
+
+Conjure itself is about as simple as a website gets: plain HTML, CSS and a canvas. No framework, no build step and no server. Everything happens in your browser, which is also why your poem never has to go anywhere.
+
+I built most of it in one day. The commit log is mostly me tweaking how it looks: softer palettes, a faster reveal, then a grungier one, then a more jarring one, then ASCII.
+
+{/* TODO(ryker): "The mood board" section goes here once the Pinterest link is in: a screenshot as public/blog/conjure/pinterest.webp in a Figure, a link to the board, and a sentence or two on what you pinned. */}
+
+## How a poem becomes a picture
+
+Conjure doesn’t use AI to make the pictures. Claude helped write the code, but the art itself comes from a set of rules that measure your poem and turn those measurements into choices. It works in two steps.
+
+### Step 1: read the poem
+
+First, Conjure reads the poem and turns it into a list of numbers, most of them on a scale from 0 to 1. It looks at:
+
+- **Sound.** What share of the letters are hard consonants (p, b, t, d, k, g), hissing ones (s, z, sh), liquid ones (l, r) or humming ones (m, n), compared to typical English.
+- **Rhythm.** How many syllables each line has, and how steady that count is. Steady lines read as meter. It also counts stanzas, line lengths and how many lines run on without punctuation.
+- **Rhyme.** It compares the endings of nearby lines. A full rhyme counts as one, a slant rhyme (same final consonants) counts as a half.
+- **Punctuation.** Exclamation points, question marks, commas, dashes and ellipses, per line.
+- **Repetition and alliteration.** How often you repeat yourself, and how often neighboring words start with the same sound.
+- **Feeling.** It counts words from a short list of warm ones (love, light, bloom, home) and heavy ones (dark, cold, ache, gone) to get a mood from negative to positive, and how intense it is.
+- **Imagery.** It checks for words about water, fire, earth, air, night, the body, time and love. Color words like “gold” or “sea” get noted too.
+- **Pronouns.** How much “I,” how much “you” and how much “we.”
+
+From those, it works out a few bigger moods: **energy** (exclamation points, hard consonants, short lines), **calm** (soft sounds, steady meter, longer lines) and **openness** (questions, trailing dots and dashes).
+
+### Step 2: paint it
+
+Then those numbers make the decisions.
+
+**The scene.** Every poem becomes one of three scenes, scored against the poem:
+
+- A **color field** that melts and warps, with one bloom per stanza. Feeling words, liquid sounds, love, the body and run-on lines pull toward this one.
+- A **landscape** of dithered towers over a lake, fading into fog. Earth, water, air, calm and steady meter pull toward it.
+- **ASCII**, where the picture is drawn out of typed characters. Repetition, steady meter, commas, time and hard consonants pull toward it.
+
+<Gallery>
+  <Figure src="/blog/conjure/landscape.webp" width={1920} height={1080} alt="A landscape scene: rows of pixel towers in hot pink and blue melting down into a pale pink sky, with grain and scattered specks." caption="A calm poem about a river and fog became a landscape." />
+  <Figure src="/blog/conjure/ascii.webp" width={1920} height={1080} alt="An ASCII scene: hills built from rows of small dark characters over a cream background, with a few streaks of light and fine lines crossing it." caption="A very repetitive poem about Mondays became ASCII." />
+</Gallery>
+
+**The pixel size.** Hard consonants make chunky pixels. Soft sounds make fine ones. A poem full of “k” and “t” gets big blocky squares; a poem full of “s” and “l” gets something closer to a fine print.
+
+**The palette.** There are 25 color palettes, mostly soft and light, each tagged with the imagery it suits. Water, fire, night and so on nudge the pick toward palettes that match. About 1 in 5 pictures also gets its colors shifted, borrowed from another palette, or given an extra color.
+
+**The details.** Smaller rules layer on top:
+
+- Rhymes become a web of thin threads.
+- Questions draw thin rings.
+- Commas scatter dust.
+- Dashes and energy draw zigzag lines.
+- “I” becomes a slatted sun, and “you” becomes a dashed orbit.
+- Sad words, fire and night make the picture melt. Flowing lines and s-sounds smear it. Calm, soft poems blur it.
+
+**The grit.** Finally, the picture gets roughed up. Grain, color splits, glitchy rows, and on most pieces a photocopier-style grunge pass with fold creases, film scratches, dust and burnt edges. Darker poems get dirtier.
+
+**Breaking the rules.** About 1 in 10 pictures ignores all of the above on purpose. Any scene, any palette, every effect pushed to an extreme, sometimes a mirror fold or a second scene spliced in along a jagged edge. A bad poem deserves a chance at a wild picture too.
+
+<Gallery>
+  <Figure src="/blog/conjure/field.webp" width={1920} height={1080} alt="A color field scene: swirling, dithered pink, cyan, yellow, purple and green pixels with wavy drips along the bottom." caption="A poem about love and summer became a melting color field." />
+  <Figure src="/blog/conjure/wild.webp" width={1920} height={1080} alt="A wild piece: a mirrored, kaleidoscope-like pattern of purple, blue, orange and red pixels on the left, spliced into a dark red and black field on the right." caption="The toast poem again, on one of its wild days." />
+</Gallery>
+
+### Why it’s never the same twice
+
+Every poem also gets a random number mixed in before it’s painted. The poem decides the general direction, and the random number decides the specifics. Submit the same poem twice and you’ll get two pictures that feel related but aren’t the same. That also means every picture is a one-off. Once you close it, it’s gone, just like the poem.
+
+{/* TODO(ryker): the example pictures above came from short test poems. Swap in pictures from your own poems if you want. */}
+
+## The takeaway
+
+I didn’t need a tool to make me a better poet. I needed a reason to write the bad poems so the better ones have a chance to show up. A picture at the end turns out to be a pretty good reason.
+
+[Try Conjure](https://conjure-inky.vercel.app/). Write something bad. You still get a picture.
