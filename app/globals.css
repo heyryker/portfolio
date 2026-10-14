@@ -811,6 +811,31 @@ html:has(.site-menu[open]) {
 }
 
 /*
+ * The sound button on case-study videos (components/work/LazyVideo.tsx): a
+ * one-cell white square in the video's bottom-right corner, like the other
+ * header icons. The videos start muted because browsers only autoplay muted.
+ */
+.video-sound {
+  position: absolute;
+  right: calc(var(--grid-cell) / 2);
+  bottom: calc(var(--grid-cell) / 2);
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  background: var(--color-bg);
+  color: var(--color-ink-soft);
+  transition: color 0.2s;
+}
+
+.video-sound:hover,
+.video-sound:focus-visible,
+.video-sound[aria-pressed="true"] {
+  color: var(--color-accent);
+}
+
+/*
  * The AI summary at the top of case studies and blog posts
  * (components/AiSummary.tsx). The button is a landing-page button; the points
  * are bulleted with pixel squares and fade in one after another.
