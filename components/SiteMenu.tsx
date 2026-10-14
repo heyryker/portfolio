@@ -7,6 +7,8 @@ import { Icon } from "@/components/Icon";
 
 const RESUME = "/resume/ryker-marble-resume.pdf";
 
+const CONJURE = "https://conjure-inky.vercel.app/";
+
 const LINKS = [
   { href: "/about", label: "ABOUT" },
   { href: "/blog", label: "BLOG" },
@@ -86,6 +88,15 @@ export function SiteMenu() {
                 </Link>
               </li>
             ))}
+            <li>
+              <a href={CONJURE} target="_blank" rel="noopener" className="menu-link">
+                <span className="menu-text">
+                  CONJURE
+                  <Icon name="arrow_outward" className="menu-icon" />
+                </span>
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+            </li>
             <li className="flex items-start gap-[calc(var(--grid-cell)/2)]">
               <a href={RESUME} target="_blank" rel="noopener" className="menu-link">
                 <span className="menu-text">
