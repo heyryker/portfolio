@@ -43,6 +43,8 @@ export function CaseStudyOverlay({ title, children }: { title: string; children:
     node?.focus({ preventScroll: true });
 
     const onKey = (e: KeyboardEvent) => {
+      // Esc inside the menu (a <dialog>) closes just the menu.
+      if (e.target instanceof Element && e.target.closest("dialog[open]")) return;
       if (e.key === "Escape") close();
     };
     window.addEventListener("keydown", onKey);

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef } from "react";
+import { useId, useRef } from "react";
 import { Icon } from "@/components/Icon";
 
 const RESUME = "/resume/ryker-marble-resume.pdf";
@@ -26,6 +26,9 @@ const LINKS = [
 export function SiteMenu() {
   const dialog = useRef<HTMLDialogElement>(null);
   const pathname = usePathname();
+  // A case study open over the landing page has its own menu, so two can be
+  // in the page at once.
+  const id = useId();
 
   const close = () => dialog.current?.close();
 
@@ -43,7 +46,7 @@ export function SiteMenu() {
         type="button"
         aria-label="Open menu"
         aria-haspopup="dialog"
-        aria-controls="site-menu"
+        aria-controls={id}
         onClick={() => dialog.current?.showModal()}
         className="pointer-events-auto absolute top-[22px] right-[22px] grid size-11 cursor-pointer place-items-center text-ink-soft transition-colors hover:text-accent focus-visible:text-accent md:right-[53px]"
       >
@@ -52,7 +55,7 @@ export function SiteMenu() {
 
       <dialog
         ref={dialog}
-        id="site-menu"
+        id={id}
         aria-label="Menu"
         // Keeps the meeple engine from treating taps on the menu as grabs.
         data-meeple-ignore=""
