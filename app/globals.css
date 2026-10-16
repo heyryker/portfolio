@@ -557,9 +557,23 @@ body {
   transition: color 200ms;
 }
 
-.site-footer-links a:hover,
-.site-footer-links a:focus-visible {
-  color: var(--color-accent);
+.site-footer-note {
+  padding: 0 16px 28px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--color-muted);
+}
+
+/* With the note below them, the links hand their bottom padding (and the
+   whistle clearance on phones) to the note. */
+.site-footer:has(.site-footer-note) .site-footer-links {
+  padding-bottom: 12px;
+}
+
+@media (max-width: 640px) {
+  .site-footer-note {
+    padding-bottom: 88px;
+  }
 }
 
 /*
@@ -1019,5 +1033,60 @@ html:has(.site-menu[open]) {
   40%,
   60% {
     opacity: 0;
+  }
+}
+
+/*
+ * The GA cookie notice (components/CookieNotice.tsx), only for visitors in
+ * Europe. Bottom right, away from the whistle in the bottom left, and above
+ * the meeples but below the case study overlay (z-50) and the menu.
+ */
+.cookie-notice {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 40;
+  max-width: 280px;
+  padding: 14px 16px;
+  background: var(--color-bg);
+  box-shadow:
+    0 6px 16px rgb(34 31 32 / 0.18),
+    0 1px 3px rgb(34 31 32 / 0.12);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-ink);
+}
+
+.cookie-notice-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cookie-notice-actions button {
+  cursor: pointer;
+  color: var(--color-muted);
+  transition: color 200ms;
+}
+
+.cookie-notice-actions button:first-child {
+  color: var(--color-accent);
+}
+
+.cookie-notice-actions button:hover,
+.cookie-notice-actions button:focus-visible {
+  color: var(--color-ink);
+}
+
+@media (max-width: 640px) {
+  /* Clear the whistle (22px + 56px tall) by sitting above it, full width. */
+  .cookie-notice {
+    left: 16px;
+    right: 16px;
+    bottom: 94px;
+    max-width: none;
   }
 }

@@ -3,6 +3,8 @@ import { Inter, Silkscreen } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { AnalyticsEvents } from "@/components/AnalyticsEvents";
+import { CookieNotice } from "@/components/CookieNotice";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -61,6 +63,8 @@ export default function RootLayout({ children, work }: LayoutProps<"/">) {
         <Analytics />
         <SpeedInsights />
         <AnalyticsEvents />
+        <GoogleAnalytics />
+        <CookieNotice />
       </body>
     </html>
   );
