@@ -17,6 +17,13 @@ export const OG_IMAGE_ALT = "HEY [I'M] RYKER. Ryker Marble, brand and creative l
 export const EMAIL = "rykermarble@gmail.com";
 export const RESUME = "/resume/ryker-marble-resume.pdf";
 
+/*
+ * Google Analytics 4 measurement ID (G-…). It's public by design (it ships in
+ * every page), so it lives here rather than in a Vercel env var. Empty means
+ * no GA tag at all; Vercel Analytics keeps running either way.
+ */
+export const GA_MEASUREMENT_ID = ""; // TODO(ryker): paste the G-… ID from GA Admin > Data streams
+
 // From Ryker's resume (public/resume/ryker-marble-resume.pdf).
 export const EXPERIENCE = [
   { role: "Senior Brand Designer", org: "Lucid Software", years: "2022–present" },
