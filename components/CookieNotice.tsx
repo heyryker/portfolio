@@ -57,7 +57,6 @@ export function CookieNotice() {
 
   return (
     <div className="cookie-notice" role="region" aria-label="Cookie notice">
-      {/* TODO(ryker): approve line */}
       <p>I count visits with Google Analytics. Okay to set a cookie?</p>
       <div className="cookie-notice-actions">
         <button type="button" onClick={() => answer("granted")}>

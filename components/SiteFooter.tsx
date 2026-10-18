@@ -24,7 +24,6 @@ export function SiteFooter() {
         </li>
       </ul>
       {GA_MEASUREMENT_ID && (
-        // TODO(ryker): approve line
         <p className="site-footer-note">Visits counted by Google Analytics. Meeples counted by hand.</p>
       )}
     </footer>
