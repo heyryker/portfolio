@@ -46,6 +46,14 @@ export function wipeOut(node: HTMLElement, scrollTop: number) {
   copy.style.inset = "0";
   copy.removeAttribute("role");
   copy.removeAttribute("aria-modal");
+  // The copy is only a picture. A cloned <video> keeps its src and autoplay
+  // but not its muted state (React sets that as a property, which cloning
+  // drops), so it would start playing out loud for the length of the wipe.
+  for (const video of copy.querySelectorAll("video")) {
+    video.muted = true;
+    video.autoplay = false;
+    video.pause();
+  }
   ghost.append(copy);
   document.body.append(ghost);
 
