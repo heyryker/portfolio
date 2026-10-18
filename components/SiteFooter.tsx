@@ -1,9 +1,11 @@
 import { PixelGarden } from "./PixelGarden";
-import { EMAIL, PROFILES } from "@/lib/site";
+import { EMAIL, GA_MEASUREMENT_ID, PROFILES } from "@/lib/site";
 
 /**
  * The landing page's footer, under the case-study cards: the same strip of
- * pixel grass and flowers as the case study headers, then email and LinkedIn.
+ * pixel grass and flowers as the case study headers, then email and LinkedIn,
+ * and a one-line note that the site uses Google Analytics (Google's terms ask
+ * sites to say so).
  */
 export function SiteFooter() {
   return (
@@ -21,6 +23,9 @@ export function SiteFooter() {
           </a>
         </li>
       </ul>
+      {GA_MEASUREMENT_ID && (
+        <p className="site-footer-note">Visits counted by Google Analytics. Meeples counted by hand.</p>
+      )}
     </footer>
   );
 }
