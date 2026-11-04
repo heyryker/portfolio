@@ -6,7 +6,7 @@ import { VillageField } from "@/components/VillageField";
 export const metadata: Metadata = pageMetadata({
   title: "Village",
   description:
-    "Where the five meeples from Ryker Marble's homepage live: a little pixel town with houses, a community garden, a Town Hall and a courthouse.",
+    "Where the five meeples from Ryker Marble's homepage live: a little pixel town with houses, a community garden, a Town Hall, a courthouse, a post office and a church.",
   path: "/village",
 });
 
@@ -28,7 +28,9 @@ export default function VillagePage() {
       <p className="sr-only">
         A pixel town where the five meeples live. Each has a house in its own color around a community garden, with
         the Town Hall at the top and the courthouse at the bottom. They plant, water and harvest the garden, carry the
-        harvest to each other&apos;s doors, visit, nap, and gather when the bell rings for a town meeting. Cows, sheep
+        harvest to each other&apos;s doors, visit, nap, and gather when the bell rings for a town meeting. They post
+        letters to each other at the post office and sing at choir practice in the church. A monument holds the two
+        blue squares from the homepage headline, which the meeples like to knock loose and lasso back. Cows, sheep
         and bunnies roam the grass around town.
       </p>
     </div>

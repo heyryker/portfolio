@@ -12,7 +12,7 @@ function subscribe(onChange: () => void) {
 }
 
 /**
- * The village canvas and the two town buttons. With reduced motion the
+ * The village canvas and the town buttons (the bell, court and the dance-break whistle). With reduced motion the
  * village is drawn once, everyone standing at home, and the buttons go.
  *
  * Must be rendered inside the village page's [data-village-root] container,
@@ -44,12 +44,15 @@ export function VillageField() {
     <>
       <canvas ref={canvasRef} aria-hidden="true" className="pointer-events-none absolute inset-0 size-full" />
       {!reduced && (
-        <div className="absolute bottom-[52px] left-[22px] z-10 flex gap-[22px] md:right-[44px] md:bottom-[22px] md:left-auto">
-          <button type="button" onClick={() => engineRef.current?.ringBell()} className="cursor-pointer text-sm tracking-[0.08em] whitespace-nowrap text-muted uppercase transition-colors hover:text-ink focus-visible:text-ink">
+        <div className="absolute bottom-[52px] left-[22px] z-10 flex gap-[14px] md:right-[44px] md:gap-[22px] md:bottom-[22px] md:left-auto">
+          <button type="button" onClick={() => engineRef.current?.ringBell()} className="cursor-pointer text-xs tracking-[0.08em] whitespace-nowrap text-muted uppercase md:text-sm transition-colors hover:text-ink focus-visible:text-ink">
             [RING THE BELL]
           </button>
-          <button type="button" onClick={() => engineRef.current?.holdCourt()} className="cursor-pointer text-sm tracking-[0.08em] whitespace-nowrap text-muted uppercase transition-colors hover:text-ink focus-visible:text-ink">
+          <button type="button" onClick={() => engineRef.current?.holdCourt()} className="cursor-pointer text-xs tracking-[0.08em] whitespace-nowrap text-muted uppercase md:text-sm transition-colors hover:text-ink focus-visible:text-ink">
             [HOLD COURT]
+          </button>
+          <button type="button" onClick={() => engineRef.current?.whistle()} className="cursor-pointer text-xs tracking-[0.08em] whitespace-nowrap text-muted uppercase md:text-sm transition-colors hover:text-ink focus-visible:text-ink">
+            [WHISTLE]
           </button>
         </div>
       )}
