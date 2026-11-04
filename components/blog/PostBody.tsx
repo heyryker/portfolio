@@ -47,9 +47,12 @@ function Figure({ src, alt, width, height, caption, narrow }: FigureProps) {
 /**
  * Several figures in a two-column grid (one column on phones). `cols={4}` is
  * for small tall pieces like phone stories: two across on phones, four on wider screens.
+ * `cols={3}` is for a set of three phone-sized pieces: one column on phones, three on wider screens.
  */
-function Gallery({ children, cols = 2 }: { children: React.ReactNode; cols?: 2 | 4 }) {
-  const grid = cols === 4 ? "grid-cols-2 sm:grid-cols-4" : "sm:grid-cols-2";
+const GALLERY_GRID = { 2: "sm:grid-cols-2", 3: "sm:grid-cols-3", 4: "grid-cols-2 sm:grid-cols-4" } as const;
+
+function Gallery({ children, cols = 2 }: { children: React.ReactNode; cols?: 2 | 3 | 4 }) {
+  const grid = GALLERY_GRID[cols];
   return <div className={`blog-gallery my-11 grid gap-[22px] ${grid}`}>{children}</div>;
 }
 
