@@ -44,9 +44,13 @@ function Figure({ src, alt, width, height, caption, narrow }: FigureProps) {
   );
 }
 
-/** Several figures in a two-column grid (one column on phones). */
-function Gallery({ children }: { children: React.ReactNode }) {
-  return <div className="blog-gallery my-11 grid gap-[22px] sm:grid-cols-2">{children}</div>;
+/**
+ * Several figures in a two-column grid (one column on phones). `cols={4}` is
+ * for small tall pieces like phone stories: two across on phones, four on wider screens.
+ */
+function Gallery({ children, cols = 2 }: { children: React.ReactNode; cols?: 2 | 4 }) {
+  const grid = cols === 4 ? "grid-cols-2 sm:grid-cols-4" : "sm:grid-cols-2";
+  return <div className={`blog-gallery my-11 grid gap-[22px] ${grid}`}>{children}</div>;
 }
 
 const components: MDXComponents = {
