@@ -93,7 +93,7 @@ body {
   color: var(--color-ink);
 }
 
-/* Two lines on wider screens: what I do, then where, in italics. */
+/* One sentence per line: what I am, what I do, then where, in italics. */
 .landing-intro-blurb {
   margin-top: 28px;
   font-size: clamp(19px, 1.75vw, 23px);

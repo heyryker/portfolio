@@ -12,7 +12,9 @@ export function LandingIntro() {
       <h1 className="landing-intro-title">Hi, I’m Ryker</h1>
       {/* TODO(ryker): approve line */}
       <p className="landing-intro-blurb">
-        Brand designer and art director. I build brand systems that stay clear as they scale.
+        Brand designer and art director.
+        <br />
+        I build brand systems that stay clear as they scale.
         <br />
         <em>Based in Utah.</em>
       </p>
