@@ -14,7 +14,7 @@ export function LandingIntro() {
       <p className="landing-intro-blurb">
         Brand designer and art director. I build brand systems that stay clear as they scale.
         <br />
-        Based in Utah.
+        <em>Based in Utah.</em>
       </p>
       <p className="landing-intro-links">
         <a href={RESUME} target="_blank" rel="noopener">

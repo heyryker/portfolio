@@ -67,7 +67,7 @@ body {
 /*
  * The landing page (app/page.tsx), redesigned in 2026-11 to be quieter:
  * a centered intro in Times New Roman, then every case study and blog post
- * in one drifting wall. Times New Roman is a system font, so there's nothing
+ * in one rack of cards. Times New Roman is a system font, so there's nothing
  * to download and no font swap to shift the layout.
  */
 .landing-intro,
@@ -93,11 +93,11 @@ body {
   color: var(--color-ink);
 }
 
+/* Two lines on wider screens: what I do, then where, in italics. */
 .landing-intro-blurb {
-  max-width: 30ch;
   margin-top: 28px;
-  font-size: clamp(20px, 2.1vw, 26px);
-  line-height: 1.35;
+  font-size: clamp(19px, 1.75vw, 23px);
+  line-height: 1.4;
   color: var(--color-ink-soft);
   text-wrap: balance;
 }
@@ -214,46 +214,17 @@ body {
 }
 
 /*
- * The motion. The section starts at the top of the page and is two screens
- * tall: its stage sticks to the screen while the first 75% of a screen of
- * scroll condenses the floating cards into the rack (CONDENSE in the
- * component), holds the rack a moment, then scrolls away with the page.
- * In the CSS rather than switched on by the script so the server renders the
- * same frame (no layout shift). Cards stay hidden until placed.
- * Every card is centred on the stage; the script moves it from there.
+ * The rack. The stage is a fixed height from the card size, with the title
+ * above the rack and the lifted card's title below it; the script places
+ * each card from the centre. In the CSS rather than switched on by the script
+ * so the server renders the same frame (no layout shift). Cards stay hidden
+ * until placed.
  */
 @media (prefers-reduced-motion: no-preference) {
-  .showcase {
-    height: 200svh;
-  }
-
   .showcase-stage {
-    position: sticky;
-    top: 0;
-    height: 100svh;
+    position: relative;
+    height: calc(var(--card-h) + 340px);
     overflow: clip;
-  }
-
-  /* Above the floating cards, fading out as they condense. */
-  .showcase-intro {
-    position: absolute;
-    inset: 0;
-    z-index: 2000;
-    display: grid;
-    place-items: center;
-    opacity: calc(1 - var(--fold, 0) * 1.8);
-    transform: translateY(calc(var(--fold, 0) * -60px));
-    pointer-events: none;
-  }
-
-  .showcase-intro .landing-intro {
-    min-height: 0;
-    padding: 0 24px;
-    pointer-events: auto;
-  }
-
-  .showcase[data-racked] .showcase-intro .landing-intro {
-    pointer-events: none;
   }
 
   .showcase-title {
@@ -261,7 +232,6 @@ body {
     inset-inline: 0;
     bottom: calc(50% + var(--card-h) / 2 + 72px);
     margin: 0;
-    opacity: calc(var(--fold, 0) * 2 - 1);
   }
 
   .showcase-rack {
@@ -295,11 +265,11 @@ body {
       0 24px 48px -16px rgb(0 0 0 / 0.28);
   }
 
-  /* In the rack, cards away from the lifted one dim a little. */
+  /* Cards away from the lifted one dim a little. */
   .showcase-card .showcase-image img {
     transition: filter 300ms;
   }
-  .showcase[data-racked] .showcase-card:not([data-active]) .showcase-image img {
+  .showcase-card:not([data-active]) .showcase-image img {
     filter: saturate(0.85) brightness(0.97);
   }
 
@@ -314,7 +284,6 @@ body {
     display: block;
     padding: 0 24px;
     text-align: center;
-    opacity: calc(var(--fold, 0) * 2 - 1);
   }
 
   .showcase-caption-inner {
