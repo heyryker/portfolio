@@ -65,257 +65,242 @@ body {
 }
 
 /*
- * The landing headline, locked to the grid (see components/Headline.tsx).
- * Sizes are counted in grid cells: the cap height, the gap between the two
- * lines and RYKER's indent. Inter's metrics at weight 800, in em: cap height
- * 0.7275, cap top 0.1365 below the line box (at line-height 1), H and R left
- * side bearing 0.057, and RYKER's ink is 3.23 wide with the -0.015em tracking.
+ * The landing page (app/page.tsx), redesigned in 2026-11 to be quieter:
+ * a centered intro in Times New Roman, then every case study and blog post
+ * in one drifting wall. Times New Roman is a system font, so there's nothing
+ * to download and no font swap to shift the layout.
  */
-.headline-grid,
-.landing-blurb {
-  /* Phones, on the 22px grid. */
-  --hl-cap-cells: 2;
-  --hl-gap-cells: 1;
-  --hl-indent-cells: 5;
-
-  --hl-cap: calc(var(--hl-cap-cells) * var(--grid-cell));
-  --hl-indent: calc(var(--hl-indent-cells) * var(--grid-cell));
-  --hl-ryker-ink: calc(var(--hl-cap) * 3.23 / 0.7275);
-  /* Cells the blurb adds below the headline (phones only), so the two are
-     centered as one block. */
-  --hl-below-cells: 0;
-  /* The headline is centered in the space above the fanned case-study cards
-     (components/CaseDeck.tsx), not the whole screen. */
-  --deck-peek: calc(var(--card-h) * 0.4);
+.landing-intro,
+.showcase {
+  font-family: "Times New Roman", Times, serif;
 }
 
-.headline-grid {
-  --hl-line2-top: calc((var(--hl-cap-cells) + var(--hl-gap-cells)) * var(--grid-cell));
-  --hl-height: calc((var(--hl-cap-cells) * 2 + var(--hl-gap-cells)) * var(--grid-cell));
-  /* The pixel squares are the size of H's stem, since they're cut from it. */
-  --hl-square: 0.171em;
-  --hl-width: calc(var(--hl-indent) + var(--hl-ryker-ink) + var(--hl-square));
-
-  position: absolute;
-  width: var(--hl-width);
-  height: var(--hl-height);
-  font-size: calc(var(--hl-cap) / 0.7275);
-  /* Centered, then snapped to the nearest grid line. The page's grid is
-     anchored at its top-left corner, so whole cells from there land on lines. */
-  left: calc((100% - var(--hl-width)) / 2);
-  top: calc((100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell) - var(--deck-peek)) / 2);
-  left: round(nearest, (100% - var(--hl-width)) / 2, var(--grid-cell));
-  top: round(nearest, (100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell) - var(--deck-peek)) / 2, var(--grid-cell));
-}
-
-.headline-line {
-  position: absolute;
-  display: block;
-  white-space: nowrap;
-  /* Pull the ink, not the line box, onto the grid lines. */
-  margin-top: -0.1365em;
-  margin-left: -0.057em;
-}
-
-/*
- * The modified letters. Coordinates are in em from the glyph's origin, at
- * line-height 1: Inter's ink starts 0.057em in, the cap top is 0.1365em down
- * and the baseline 0.864em down. R's leg starts 0.27em in at the cut height
- * and its right edge there is at 0.555em.
- */
-.hl-letter {
-  position: relative;
-  display: inline-block;
-}
-
-.hl-h,
-.hl-r {
-  display: inline-block;
-}
-
-/* Remove a stem-sized block from the top-left corner of H (the cut runs a
-   hair past the stem so its anti-aliased edge goes too; that's open counter). */
-.hl-h {
-  clip-path: polygon(
-    calc(0.077em + var(--hl-square)) -50%,
-    150% -50%,
-    150% 150%,
-    -50% 150%,
-    -50% calc(0.1365em + var(--hl-square)),
-    calc(0.077em + var(--hl-square)) calc(0.1365em + var(--hl-square))
-  );
-}
-
-/* Remove a stem-high slice from the bottom of R's leg. */
-.hl-r {
-  clip-path: polygon(
-    -50% -50%,
-    150% -50%,
-    150% calc(0.864em - var(--hl-square)),
-    0.327em calc(0.864em - var(--hl-square)),
-    0.327em 150%,
-    -50% 150%
-  );
-}
-
-.hl-square {
-  position: absolute;
-  width: var(--hl-square);
-  height: var(--hl-square);
-}
-
-/* Pushed up and left: it touches H only at the stem's new top-left corner. */
-.hl-square-h {
-  top: 0.1365em;
-  left: calc(0.057em - var(--hl-square));
-}
-
-/* Pushed right: it touches the cut end of R's leg at its top-left corner. */
-.hl-square-r {
-  top: calc(0.864em - var(--hl-square));
-  left: 0.555em;
-  /* Squashes flat onto its bottom edge when clicked (lib/meeple-engine.ts). */
-  transform-origin: 50% 100%;
-}
-
-@media (min-width: 720px) and (min-height: 520px) {
-  .headline-grid,
-  .landing-blurb {
-    --hl-cap-cells: 2;
-    --hl-indent-cells: 6;
-  }
-}
-
-/* The mockup's size (1486×935): a 3-cell cap height. */
-@media (min-width: 1100px) and (min-height: 640px) {
-  .headline-grid,
-  .landing-blurb {
-    --hl-cap-cells: 3;
-    --hl-indent-cells: 8;
-  }
-}
-
-@media (min-width: 1680px) and (min-height: 880px) {
-  .headline-grid,
-  .landing-blurb {
-    --hl-cap-cells: 4;
-    --hl-gap-cells: 2;
-    --hl-indent-cells: 11;
-  }
-}
-
-/*
- * The blurb about Ryker (components/LandingBlurb.tsx). It works out the
- * headline's box from the same cell counts, so it lands on the same grid
- * lines. Phones: below the headline, from H's left edge, two cells down.
- * Larger screens: in the empty corner left of RYKER (the indent, less one
- * cell of air), bottom-aligned so its last baseline sits on RYKER's.
- */
-.landing-blurb {
-  --hl-height: calc((var(--hl-cap-cells) * 2 + var(--hl-gap-cells)) * var(--grid-cell));
-  --hl-box: calc(var(--hl-indent) + var(--hl-ryker-ink) + var(--hl-cap) / 0.7275 * 0.171);
-  --hl-top: round(nearest, (100% - var(--hl-height) - var(--hl-below-cells) * var(--grid-cell) - var(--deck-peek)) / 2, var(--grid-cell));
-  --blurb-gap-cells: 2;
-  --blurb-line: 22px;
-
-  position: absolute;
-  z-index: 10;
-  left: round(nearest, (100% - var(--hl-box)) / 2, var(--grid-cell));
-  top: calc(var(--hl-top) + var(--hl-height) + var(--blurb-gap-cells) * var(--grid-cell));
-  width: var(--hl-box);
-  font-size: 15px;
-  line-height: var(--blurb-line);
-  color: var(--color-ink);
-  text-wrap: pretty;
-}
-
-.landing-blurb-links {
-  --button-height: var(--grid-cell);
+.landing-intro {
   display: flex;
-  gap: calc(var(--grid-cell) / 2);
-  margin-top: calc(var(--grid-cell) / 2);
-  font-size: 0.875em;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 72svh;
+  padding: 120px 24px 40px;
+  text-align: center;
 }
 
-/* Resume is the primary action: filled. Email is outlined. */
-.landing-blurb-links .landing-button {
+.landing-intro-title {
+  font-size: clamp(56px, 10vw, 136px);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+  color: var(--color-ink);
+}
+
+.landing-intro-blurb {
+  max-width: 30ch;
+  margin-top: 28px;
+  font-size: clamp(20px, 2.1vw, 26px);
+  line-height: 1.35;
+  color: var(--color-ink-soft);
+  text-wrap: balance;
+}
+
+.landing-intro-links {
+  display: flex;
+  gap: 32px;
+  margin-top: 28px;
+  font-size: clamp(18px, 1.6vw, 21px);
+}
+
+.landing-intro-links a,
+.showcase-pause {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  transition:
+    color 200ms,
+    text-decoration-color 200ms;
+}
+
+.landing-intro-links a:hover,
+.landing-intro-links a:focus-visible,
+.showcase-pause:hover,
+.showcase-pause:focus-visible {
   color: var(--color-accent);
 }
 
-.landing-blurb-links .landing-button-primary {
-  border-color: var(--color-accent);
-  background-color: var(--color-accent);
-  color: var(--color-bg);
+/*
+ * The showcase rack (components/Showcase.tsx). By default, which is what
+ * reduced motion and no-JS get, it's a still grid of tiles with titles.
+ */
+.showcase {
+  --card-w: min(420px, 32vw);
+  position: relative;
+  padding: 0 16px 64px;
 }
 
-.landing-blurb-links .landing-button-primary:hover,
-.landing-blurb-links .landing-button-primary:focus-visible {
-  border-color: var(--color-ink);
-  background-color: var(--color-ink);
-}
-
-@media not all and (min-width: 720px) and (min-height: 520px) {
-  /* Two cells of gap, three lines of text (22px rows), half a cell, then
-     two-cell buttons. */
-  .headline-grid,
-  .landing-blurb {
-    --hl-below-cells: 8;
-  }
-
-  .landing-blurb-links {
-    --button-height: calc(var(--grid-cell) * 2);
+@media not all and (min-width: 860px) {
+  .showcase {
+    --card-w: 70vw;
   }
 }
 
-@media (min-width: 720px) and (min-height: 520px) {
-  .landing-blurb {
-    top: var(--hl-top);
-    width: calc(var(--hl-indent) - var(--grid-cell));
-    /* The buttons' bottom edge on RYKER's baseline. */
-    transform: translateY(calc(var(--hl-height) - 100%));
-    font-size: 13px;
-  }
-
-  /* The corner is small here, so smaller buttons (three meeple pixels) and
-     a tighter gap keep the blurb clear of HEY. */
-  .landing-blurb-links {
-    --button-height: calc(var(--meeple-px) * 3);
-    margin-top: calc(var(--grid-cell) / 4);
-  }
+.showcase-title {
+  margin-bottom: 32px;
+  text-align: center;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
 }
 
-@media (min-width: 1100px) and (min-height: 640px) {
-  .landing-blurb {
-    font-size: 15px;
-  }
-
-  .landing-blurb-links {
-    --button-height: var(--grid-cell);
-    margin-top: calc(var(--grid-cell) / 2);
-  }
+.showcase-rack {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 40vw), 1fr));
+  gap: 32px 24px;
+  max-width: 1280px;
+  margin-inline: auto;
 }
 
-@media (min-width: 1680px) and (min-height: 880px) {
-  .landing-blurb {
-    --blurb-line: 26px;
-    font-size: 18px;
-  }
+.showcase-tile {
+  display: block;
+  border-radius: 16px;
+}
+
+.showcase-image {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #f5f5f7;
+}
+
+.showcase-image img {
+  object-fit: cover;
+}
+
+.showcase-text {
+  display: block;
+}
+
+.showcase-eyebrow {
+  display: block;
+  margin-top: 12px;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+}
+
+.showcase-name {
+  display: block;
+  margin-top: 2px;
+  font-size: 19px;
+  line-height: 1.25;
+  color: var(--color-ink);
+  text-wrap: balance;
+}
+
+.showcase-tile:hover .showcase-name,
+.showcase-tile:focus-visible .showcase-name,
+.showcase-caption .showcase-name:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.showcase-caption {
+  display: none;
 }
 
 /*
- * The static meeples' resting spots (components/StaticMeeples.tsx), kept
- * fully on screen on narrow viewports. Phones use phoneHome where a meeple
- * has one, so none stands on the blurb.
+ * The rack. The section is taller than the screen by the scroll it takes to
+ * flip through every card; its stage sticks meanwhile and the script places
+ * each card. In the CSS rather than switched on by the script so the server
+ * renders the same frame (no layout shift). Cards stay hidden until placed.
  */
-.static-meeple {
-  left: min(var(--home-x), calc(100% - var(--meeple-px) * 3 - 8px));
-  top: min(var(--home-y), calc(100% - var(--meeple-px) * 4 - 8px));
+@media (prefers-reduced-motion: no-preference) {
+  .showcase {
+    /* One screen, plus 40svh to fold the row into the rack, plus 14svh a card. */
+    height: calc(140svh + (var(--n) - 1) * 14svh);
+    padding: 0;
+  }
+
+  .showcase-stage {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100svh;
+    overflow: clip;
+  }
+
+  /* Room above the rack for the lifted card. */
+  .showcase-title {
+    margin-bottom: 24px;
+  }
+
+  .showcase-rack {
+    position: relative;
+    display: block;
+    height: calc(var(--card-w) * 0.75 + 140px);
+    max-width: none;
+    perspective: 1400px;
+    perspective-origin: 50% 40%;
+  }
+
+  .showcase-card {
+    position: absolute;
+    top: 80px;
+    left: calc(50% - var(--card-w) / 2);
+    width: var(--card-w);
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  .showcase:not([data-ready]) .showcase-card {
+    opacity: 0;
+  }
+
+  .showcase-card .showcase-image {
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.08),
+      0 24px 48px -16px rgb(0 0 0 / 0.28);
+  }
+
+  /* Cards away from the lifted one dim a little, like the stack's depth. */
+  .showcase-card .showcase-image img {
+    transition: filter 300ms;
+  }
+  .showcase-card:not([data-active]) .showcase-image img {
+    filter: saturate(0.85) brightness(0.97);
+  }
+
+  .showcase-text {
+    display: none;
+  }
+
+  .showcase-caption {
+    display: block;
+    min-height: 92px;
+    padding: 0 24px;
+    text-align: center;
+    opacity: var(--fold, 0);
+  }
+
+  .showcase-caption-inner {
+    display: block;
+    animation: showcase-caption 400ms ease-out;
+  }
+
+  .showcase-caption .showcase-name {
+    display: inline-block;
+    font-size: clamp(20px, 2.2vw, 28px);
+  }
 }
 
-@media not all and (min-width: 720px) and (min-height: 520px) {
-  .static-meeple {
-    left: min(var(--phone-home-x), calc(100% - var(--meeple-px) * 3 - 8px));
-    top: min(var(--phone-home-y), calc(100% - var(--meeple-px) * 4 - 8px));
+@keyframes showcase-caption {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
 }
 
@@ -346,182 +331,6 @@ body {
   background-color: var(--color-accent);
   color: var(--color-bg) !important;
 }
-
-/*
- * The case-study cards (components/CaseDeck.tsx). Card size is shared with
- * the meeples' keep-out zone in the landing page, so it lives on :root.
- * One row of four from 860px up; two by two below.
- */
-:root {
-  --card-w: min(180px, (100vw - 44px) / 2);
-  --card-h: calc(var(--card-w) * 1.5);
-  --card-image-h: calc(var(--card-w) * 0.7);
-}
-
-@media (min-width: 860px) {
-  :root {
-    --card-w: min(280px, (100vw - 168px) / 4);
-    --card-h: calc(var(--card-w) * 1.34);
-    --card-image-h: calc(var(--card-w) * 0.75);
-  }
-}
-
-/*
- * Without the fan (no JavaScript, or reduced motion): the cards sit straight,
- * side by side, with their top 40% peeking over the fold, and scroll with the
- * page.
- */
-.case-deck {
-  position: relative;
-  z-index: 20;
-  margin-top: calc(var(--card-h) * -0.4);
-  padding: 0 16px 48px;
-}
-
-.case-deck-stage {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
-}
-
-@media (min-width: 860px) {
-  .case-deck-stage {
-    gap: 24px;
-  }
-}
-
-/*
- * The fan. The deck starts at the top of the page, over the landing screen,
- * and is taller than the screen by the scroll it takes to deal the cards out.
- * Its stage sticks to the screen meanwhile; the script places each card.
- * This is in the CSS rather than switched on by the script so the server
- * renders it too: the deck never moves after load (no layout shift). The
- * cards stay hidden until the script has fanned them, so they don't jump.
- * CaseDeck's <noscript> undoes it when there's no JavaScript.
- */
-@media (prefers-reduced-motion: no-preference) {
-  .case-deck {
-    margin-top: -100svh;
-    height: 190svh;
-    padding: 0;
-    pointer-events: none;
-  }
-
-  .case-deck .case-deck-stage {
-    display: block;
-    position: sticky;
-    top: 0;
-    height: 100svh;
-    overflow: clip;
-  }
-
-  .case-deck .case-card {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: var(--z, 1);
-    pointer-events: auto;
-    transition: opacity 400ms;
-  }
-
-  .case-deck:not([data-ready]) .case-card {
-    opacity: 0;
-  }
-}
-
-.case-card {
-  width: var(--card-w);
-  height: var(--card-h);
-}
-
-.case-card:hover,
-.case-card:focus-within {
-  z-index: 50;
-}
-
-.case-card-link {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-  background: var(--color-bg);
-  border: 1px solid rgb(34 31 32 / 0.12);
-  box-shadow:
-    0 1px 2px rgb(0 0 0 / 0.06),
-    0 10px 30px -8px rgb(0 0 0 / 0.18);
-  transition:
-    transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    border-color 200ms;
-}
-
-.case-card:hover .case-card-link,
-.case-card-link:focus-visible {
-  transform: translateY(calc(var(--lift, 6px) * -1));
-  border-color: var(--color-accent);
-}
-
-/* Full bleed: the image runs to the card's edges. */
-.case-card-image {
-  position: relative;
-  flex: none;
-  height: var(--card-image-h);
-  background: var(--color-grid);
-}
-
-.case-card-image img {
-  object-fit: cover;
-}
-
-.case-card-text {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 14px 16px 16px;
-}
-
-.case-card-label {
-  font-family: var(--font-pixel);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  color: var(--color-accent);
-}
-
-.case-card-title {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--color-ink);
-}
-
-.case-card-summary {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--color-ink-soft);
-}
-
-@media not all and (min-width: 860px) {
-  .case-card-text {
-    gap: 4px;
-    padding: 10px 10px 12px;
-  }
-  .case-card-title {
-    font-size: 13px;
-  }
-  .case-card-summary {
-    font-size: 11.5px;
-    line-height: 1.35;
-  }
-}
-
 
 /*
  * The landing page footer (components/SiteFooter.tsx): pixel grass, then

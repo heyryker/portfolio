@@ -21,7 +21,7 @@ export function GET() {
     `- [About and contact](${absoluteUrl("/about")}): bio, experience, education and contact details`,
     `- [Resume (PDF)](${absoluteUrl(RESUME)})`,
     `- [Blog](${absoluteUrl("/blog")}): process notes and side projects`,
-    `- [Village](${absoluteUrl("/village")}): a playful pixel town where the homepage's five meeples live`,
+    `- [Village](${absoluteUrl("/village")}): a playful pixel town where the site's five meeples live`,
     "",
     ...(caseStudies.length
       ? [

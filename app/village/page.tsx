@@ -6,7 +6,7 @@ import { VillageField } from "@/components/VillageField";
 export const metadata: Metadata = pageMetadata({
   title: "Village",
   description:
-    "Where the five meeples from Ryker Marble's homepage live: a little pixel town with houses, a community garden, a Town Hall, a courthouse, a post office and a church.",
+    "Where Ryker Marble's five meeples live: a little pixel town with houses, a community garden, a Town Hall, a courthouse, a post office and a church.",
   path: "/village",
 });
 

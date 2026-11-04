@@ -1,7 +1,7 @@
 /**
  * A strip of pixel grass with a few flowers along the bottom of the About and
  * blog headers. Same pixel size, patterns and colors as the garden the meeples
- * plant on the landing page (lib/meeple-engine.ts), but static. Decorative only.
+ * plant in the village (lib/village-engine.ts), but static. Decorative only.
  */
 
 // Half a meeple pixel, like the landing page's flowers.
