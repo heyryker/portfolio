@@ -127,13 +127,14 @@ body {
 }
 
 /*
- * The showcase rack (components/Showcase.tsx). By default, which is what
- * reduced motion and no-JS get, it's a still grid of tiles with titles.
+ * The showcase (components/Showcase.tsx): the intro, then every case study
+ * and blog post. By default, which is what reduced motion and no-JS get,
+ * it's the intro followed by a still grid of tiles with titles.
  */
 .showcase {
   --card-w: min(420px, 32vw);
+  --card-h: calc(var(--card-w) * 0.75);
   position: relative;
-  padding: 0 16px 64px;
 }
 
 @media not all and (min-width: 860px) {
@@ -155,13 +156,15 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(280px, 40vw), 1fr));
   gap: 32px 24px;
-  max-width: 1280px;
+  max-width: 1312px;
   margin-inline: auto;
+  padding: 0 16px 64px;
 }
 
 .showcase-tile {
   display: block;
   border-radius: 16px;
+  -webkit-user-drag: none;
 }
 
 .showcase-image {
@@ -211,45 +214,71 @@ body {
 }
 
 /*
- * The rack. The section is taller than the screen by the scroll it takes to
- * flip through every card; its stage sticks meanwhile and the script places
- * each card. In the CSS rather than switched on by the script so the server
- * renders the same frame (no layout shift). Cards stay hidden until placed.
+ * The motion. The section starts at the top of the page and is two screens
+ * tall: its stage sticks to the screen while the first 75% of a screen of
+ * scroll condenses the floating cards into the rack (CONDENSE in the
+ * component), holds the rack a moment, then scrolls away with the page.
+ * In the CSS rather than switched on by the script so the server renders the
+ * same frame (no layout shift). Cards stay hidden until placed.
+ * Every card is centred on the stage; the script moves it from there.
  */
 @media (prefers-reduced-motion: no-preference) {
   .showcase {
-    /* One screen, plus 40svh to fold the row into the rack, plus 14svh a card. */
-    height: calc(140svh + (var(--n) - 1) * 14svh);
-    padding: 0;
+    height: 200svh;
   }
 
   .showcase-stage {
     position: sticky;
     top: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
     height: 100svh;
     overflow: clip;
   }
 
-  /* Room above the rack for the lifted card. */
+  /* Above the floating cards, fading out as they condense. */
+  .showcase-intro {
+    position: absolute;
+    inset: 0;
+    z-index: 2000;
+    display: grid;
+    place-items: center;
+    opacity: calc(1 - var(--fold, 0) * 1.8);
+    transform: translateY(calc(var(--fold, 0) * -60px));
+    pointer-events: none;
+  }
+
+  .showcase-intro .landing-intro {
+    min-height: 0;
+    padding: 0 24px;
+    pointer-events: auto;
+  }
+
+  .showcase[data-racked] .showcase-intro .landing-intro {
+    pointer-events: none;
+  }
+
   .showcase-title {
-    margin-bottom: 24px;
+    position: absolute;
+    inset-inline: 0;
+    bottom: calc(50% + var(--card-h) / 2 + 72px);
+    margin: 0;
+    opacity: calc(var(--fold, 0) * 2 - 1);
   }
 
   .showcase-rack {
-    position: relative;
+    position: absolute;
+    inset: 0;
     display: block;
-    height: calc(var(--card-w) * 0.75 + 140px);
     max-width: none;
+    padding: 0;
     perspective: 1400px;
-    perspective-origin: 50% 40%;
+    perspective-origin: 50% 45%;
+    /* Sideways swipes flip the rack; up and down still scroll the page. */
+    touch-action: pan-y;
   }
 
   .showcase-card {
     position: absolute;
-    top: 80px;
+    top: calc(50% - var(--card-h) / 2);
     left: calc(50% - var(--card-w) / 2);
     width: var(--card-w);
     transform-style: preserve-3d;
@@ -266,11 +295,11 @@ body {
       0 24px 48px -16px rgb(0 0 0 / 0.28);
   }
 
-  /* Cards away from the lifted one dim a little, like the stack's depth. */
+  /* In the rack, cards away from the lifted one dim a little. */
   .showcase-card .showcase-image img {
     transition: filter 300ms;
   }
-  .showcase-card:not([data-active]) .showcase-image img {
+  .showcase[data-racked] .showcase-card:not([data-active]) .showcase-image img {
     filter: saturate(0.85) brightness(0.97);
   }
 
@@ -279,11 +308,13 @@ body {
   }
 
   .showcase-caption {
+    position: absolute;
+    inset-inline: 0;
+    top: calc(50% + var(--card-h) / 2 + 40px);
     display: block;
-    min-height: 92px;
     padding: 0 24px;
     text-align: center;
-    opacity: var(--fold, 0);
+    opacity: calc(var(--fold, 0) * 2 - 1);
   }
 
   .showcase-caption-inner {

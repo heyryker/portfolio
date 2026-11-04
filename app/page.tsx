@@ -61,8 +61,8 @@ export default async function Home() {
       />
       <SiteHeader />
       <main>
-        <LandingIntro />
-        <Showcase items={[...cases, ...posts]} />
+        {/* The cards float around the intro before condensing into the rack. */}
+        <Showcase intro={<LandingIntro />} items={[...cases, ...posts]} />
       </main>
       <LandingMarker />
       <SiteFooter />
