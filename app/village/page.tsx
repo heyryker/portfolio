@@ -29,8 +29,8 @@ export default function VillagePage() {
         A pixel town where the five meeples live. Each has a house in its own color around a community garden, with
         the Town Hall at the top and the courthouse at the bottom. They plant, water and harvest the garden, carry the
         harvest to each other&apos;s doors, visit, nap, and gather when the bell rings for a town meeting. They post
-        letters to each other at the post office and sing at choir practice in the church. A monument holds the two
-        blue squares from the homepage headline, which the meeples like to knock loose and lasso back. Cows, sheep
+        letters to each other at the post office and sing at choir practice in the church, which ends with a big gold
+        flower growing on the church steps and everyone celebrating round it. Cows, sheep
         and bunnies roam the grass around town.
       </p>
     </div>

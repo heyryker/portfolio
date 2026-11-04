@@ -4,8 +4,8 @@
  * A pale green field with a house for each meeple (roof in its color), a
  * fenced community garden in the middle, the Town Hall at the top and the
  * courthouse at the bottom, all joined by sand paths. The layout is rolled
- * fresh on every visit: which houses go where, the trees, rocks, flowers and
- * the odd pond.
+ * fresh on every visit: which houses go where, the trees, rocks and the odd
+ * pond.
  *
  * The meeples live their lives on the paths: they garden (plant, water and
  * harvest), carry the harvest to a friend's door, knock and visit, go home
@@ -26,18 +26,18 @@
  *
  * The post office and the church sit on house plots. Meeples post letters to
  * each other and pick up their own mail (tap the post office and a letter
- * arrives); tap the church, or wait, for choir practice on its steps.
+ * arrives); tap the church, or wait, for choir practice on its steps, which
+ * ends with the gold flower (below).
  *
  * Everything the meeples do on the homepage (lib/meeple-engine.ts) works here
  * too, so they keep their tricks if the homepage changes: the Curious One
  * follows the cursor and lassos it, the Chaotic One rushes it, they plant
- * flowers, grass and carrots out on the grass (which the Chaotic One
- * tramples), the Sleepy One sleepwalks, and the whistle calls a dance break.
- * The two blue squares from the homepage headline stand on a monument near
- * the Town Hall: fast meeples knock them loose, the Curious One lassos them
- * home, and they can be thrown. Click HEY's square and it bursts and
- * reassembles; click the period and it squashes flat, a gold flower pops up
- * and the whole town gathers round to hop in praise.
+ * tufts of grass out on the grass (which the Chaotic One tramples), the
+ * Sleepy One sleepwalks, and the whistle calls a dance break.
+ * The homepage's gold flower ends choir practice: once the song is over a big
+ * gold flower grows in front of the church, a meadow of little flowers pops
+ * up all round (the only flowers outside the garden),
+ * and the whole town gathers round it to hop and celebrate.
  *
  * As on the landing page (lib/meeple-engine.ts, whose look and physics this
  * shares), meeples can be dragged, thrown and clicked to explode, and it's one
@@ -122,24 +122,12 @@ const MEEPLE_HEXES = MEEPLES.map((m) => m.hex);
 // ---- Brought over from the landing page (lib/meeple-engine.ts), so the
 // meeples keep all their tricks here even if the homepage changes.
 
-// The founders' monument: the two blue squares from the homepage headline
-// (HEY's mark and RYKER's period) on a stone plinth. Fast meeples knock them
-// loose, the Curious One lassos them home, and they can be thrown. Click
-// HEY's square and it bursts and reassembles; click the period and it
-// squashes flat, a gold flower pops up and the whole town gathers round to
-// hop in praise.
-const SQ = 2 * P; // a square's side
-const PLINTH = { w: 8 * P, h: 1.5 * P };
-const PUSH_SPEED = 100;
-const SQUARE_FRICTION = 2.6;
-const SQUARE_REST = 1.2; // seconds at rest before the lasso goes after it
-const SQUARE_GIVE_UP = 10; // seconds loose before it glides home by itself
-const SQUARE_SHAKE = 0.35;
-const SQUARE_SPLIT = 4;
-const FLATTEN_TIME = 0.14;
-const GOLD_LIFE = 9;
+// The gold flower that ends choir practice. It grows from a seed to full size
+// (GOLD_PX per flower pixel), everyone gathers round to hop, then it fades.
+const GOLD_PX = 1.2 * P;
+const GOLD_GROW = 1.8;
+const GOLD_LIFE = 10;
 const GOLD_FADE = 0.6;
-const SPRING_BACK = 0.6;
 const SHOCKWAVE_SPEED = 900; // px/s, so far meeples hop a beat later
 const GOLD_BLOOM = [".HPP.", "HPCPP", ".PPP.", "..S..", ".LS..", "..SL.", "..S.."];
 const GOLD_COLORS: Record<string, string> = { H: "#FFF1A8", P: "#F5C518", C: "#E0860B", S: "#5FCC8A", L: "#5FCC8A" };
@@ -160,9 +148,9 @@ const LASSO_PULL = 2.4; // how long a roped cursor can drag the Curious One arou
 const ROPE_SNAP = 160; // a cursor that jumps further than this in a frame slips the loop
 const LASSO_REEL = 0.3;
 
-// Wild planting: out on the grass, away from the community garden, they plant
-// flowers most, then grass; only the Shy One adds carrots. The Chaotic One
-// tramples them.
+// Out on the grass the meeples plant tufts of grass (flowers stay in the
+// community garden, except for the ones the church's gold flower sets off).
+// The Chaotic One tramples them.
 const PLANT_TIME = 0.9;
 const MAX_WILD = 24;
 const WILD_LIFE = 120;
@@ -170,8 +158,6 @@ const WILT_TIME = 2;
 const TRAMPLED_TIME = 3;
 const GRASS = ["..L..", "L.L.L", "LLLLL"];
 const GRASS_FLAT = ["LLLLL"];
-const PLANTS: WildKind[] = ["flower", "grass", "flower"];
-const SHY_PLANTS: WildKind[] = ["flower", "grass", "flower", "grass", "flower", "carrot"];
 
 // The whistle's dance break (and the choir's music notes).
 const DANCE_TIME = 5;
@@ -389,7 +375,7 @@ type Block = Vec & { vx: number; vy: number; delay: number };
 
 type Mode = "walk" | "drag" | "shake" | "exploded" | "reassemble";
 
-type WildKind = "flower" | "grass" | "carrot";
+type WildKind = "flower" | "grass";
 type Wild = {
   /** Middle and baseline. */
   x: number;
@@ -404,29 +390,9 @@ type Wild = {
   trampled: boolean;
 };
 
-type Square = {
-  click: "burst" | "squash";
-  /** Top-left in its socket on the plinth. */
-  home: Vec;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  state: "home" | "loose" | "towed" | "gliding" | "burst" | "held" | "gone";
-  looseFor: number;
-  restFor: number;
-  /** Seconds into a burst (-1 when not), and its pieces. */
-  clickT: number;
-  blocks: Block[];
-  /** The period: seconds since it was squashed (-1 when not), through the gold flower and springing back. */
-  bloomT: number;
-};
-
 type Lasso = {
-  phase: "twirl" | "throw" | "hold" | "tow" | "reel";
+  phase: "twirl" | "throw" | "hold" | "reel";
   t: number;
-  /** A loose square to rope back, or null to rope the cursor. */
-  square: Square | null;
   loop: Vec;
   rope: number;
   pull: number;
@@ -502,10 +468,9 @@ type Meeple = {
   tagWidth: number;
   lasso: Lasso | null;
   lassoCooldown: number;
-  /** Wild planting: seconds until it next plants, digging progress (-1 when not), and how many so far. */
+  /** Planting grass: seconds until it next plants, and digging progress (-1 when not). */
   plantIn: number;
   planting: number;
-  planted: number;
   /** The Chaotic One charging the cursor. */
   rush: boolean;
   rushCooldown: number;
@@ -537,7 +502,6 @@ type Drag = {
 
 type Press = { pointerId: number; start: Vec; t0: number; moved: number };
 
-type SquareDrag = Omit<Drag, "m"> & { sq: Square };
 
 type Node = Vec & { links: number[] };
 type Edge = { a: number; b: number; w: number };
@@ -620,12 +584,10 @@ export class VillageEngine {
   private post: Building | null = null;
   private church: Building | null = null;
   private mailIn = rand(30, 60);
-  private plinth: Box | null = null;
-  private squares: Square[] = [];
-  private squareDrag: SquareDrag | null = null;
-  private nextShove = rand(10, 20);
+  /** The gold flower after choir practice: where it stands (base) and how old it is. */
+  private gold: (Vec & { t: number }) | null = null;
   private wild: Wild[] = [];
-  private praise: { sq: Square; head: Vec } | null = null;
+  private praise: { head: Vec } | null = null;
   private dance: Dance | null = null;
   private notes: Note[] = [];
   private bar = 0;
@@ -779,7 +741,7 @@ export class VillageEngine {
 
   /** A meeting, court, choir, dance or the gold flower: something everyone's at. */
   private busy() {
-    return !!(this.event || this.dance || this.praise);
+    return !!(this.event || this.dance || this.praise || this.gold);
   }
 
   // ---------------------------------------------------------------- setup
@@ -817,7 +779,7 @@ export class VillageEngine {
     this.signs = [];
     this.drag = null;
     this.press = null;
-    this.squareDrag = null;
+    this.gold = null;
     this.wild = [];
     this.praise = null;
     this.dance = null;
@@ -887,7 +849,6 @@ export class VillageEngine {
       lassoCooldown: rand(3, 6),
       plantIn: rand(0.5, 3),
       planting: -1,
-      planted: 0,
       rush: false,
       rushCooldown: rand(2, 5),
     };
@@ -1106,7 +1067,7 @@ export class VillageEngine {
     };
   }
 
-  /** Trees, bushes, rocks, wildflowers and maybe a pond, on whatever grass is free. */
+  /** Trees, bushes, rocks and maybe a pond, on whatever grass is free. */
   private scatter(phone: boolean, bar: number, label: number) {
     const vw = this.vw;
     const taken: Box[] = [
@@ -1133,7 +1094,6 @@ export class VillageEngine {
     this.pond = null;
     if (!phone && Math.random() < 0.75) this.pond = place(10 * P, 5 * P, 80, P);
     this.bar = bar;
-    this.placeMonument(fits, taken);
 
     const area = vw * this.worldH;
     this.trees = [];
@@ -1172,11 +1132,6 @@ export class VillageEngine {
     for (let i = 0; i < Math.round(treeCount * 0.5); i++) {
       const b = place(ROCK[0].length * U, ROCK.length * U, 30);
       if (b) this.rocks.push(b);
-    }
-    this.wildflowers = [];
-    for (let i = 0; i < treeCount * 1.5; i++) {
-      const b = place(3 * U, BLOOM.length * U, 20);
-      if (b) this.wildflowers.push({ x: b.x, y: b.y + b.h, petal: pick(PETALS) });
     }
     this.spawnAnimals(phone, bar);
   }
@@ -1530,7 +1485,6 @@ export class VillageEngine {
 
   private bushes: Tree[] = [];
   private rocks: Box[] = [];
-  private wildflowers: (Vec & { petal: string })[] = [];
 
   private edgeBox(e: Edge): Box {
     const a = this.nodes[e.a];
@@ -1625,7 +1579,6 @@ export class VillageEngine {
     else {
       this.pause();
       if (this.drag) this.release(this.drag, performance.now(), false);
-      if (this.squareDrag) this.releaseSquare(this.squareDrag, performance.now(), false);
     }
   };
 
@@ -1641,7 +1594,7 @@ export class VillageEngine {
   private update(dt: number) {
     this.updateEvent(dt);
     this.updateDance(dt);
-    this.updatePraise();
+    this.updateGold(dt);
     this.courtCooldown -= dt;
     if (this.pendingCourt > 0) {
       this.pendingCourt -= dt;
@@ -1709,8 +1662,6 @@ export class VillageEngine {
     }
     this.collide();
     this.greetings();
-    this.shoveSquares();
-    this.updateSquares(dt);
     this.updateWild(dt);
 
     for (const s of this.slots) {
@@ -1821,16 +1772,9 @@ export class VillageEngine {
     return { kind: "stroll", phase: "go", t: 0, rest: rand(2, 5), to };
   }
 
-  /** The Chaotic One's next dash: somewhere on the paths, straight through the garden, or the monument. */
+  /** The Chaotic One's next dash: somewhere on the paths, or straight through the garden. */
   private zoomTarget(): Vec {
     const g = this.garden;
-    const home = this.squares.filter((s) => s.state === "home");
-    if (home.length && this.time > this.nextShove && Math.random() < 0.5) {
-      // Charge straight through one of the founders' squares.
-      this.nextShove = this.time + rand(18, 30);
-      const s = pick(home);
-      return { x: s.x + SQ / 2, y: s.y + SQ + 6 };
-    }
     if (Math.random() < 0.35 && g.w > 4 * P) {
       return { x: rand(g.x + P, g.x + g.w - P), y: rand(g.y + 2 * P, g.y + g.h - U) };
     }
@@ -2300,7 +2244,7 @@ export class VillageEngine {
     this.meetingIn = rand(80, 130);
     for (const m of this.meeples) if (m.task?.kind === "spot") this.setTask(m, null);
     if (ev.kind === "choir") {
-      for (const m of this.meeples) m.hop = rand(-0.3, 0);
+      this.growGold();
       return;
     }
     if (ev.kind === "court") {
@@ -2640,7 +2584,7 @@ export class VillageEngine {
     const t = e.touches[0];
     if (!t || e.touches.length > 1 || this.isInteractive(e.target)) return;
     const p = this.toLocal(t);
-    if (this.hit(p, 10) || this.hitSquare(p, 8)) e.preventDefault();
+    if (this.hit(p, 10)) e.preventDefault();
   };
 
   private onPointerDown = (e: PointerEvent) => {
@@ -2649,12 +2593,6 @@ export class VillageEngine {
     if (this.isInteractive(e.target)) return;
     const p = this.toLocal(e);
     const m = this.hit(p, e.pointerType === "mouse" ? 3 : 10);
-    const sq = m ? null : this.hitSquare(p, e.pointerType === "mouse" ? 2 : 8);
-    if (sq) {
-      e.preventDefault();
-      this.grabSquare(sq, e, p);
-      return;
-    }
     if (!m) {
       // A tap on a building, a tree or the garden. Left alone so touch can still scroll.
       this.press = { pointerId: e.pointerId, start: p, t0: e.timeStamp, moved: 0 };
@@ -2683,15 +2621,6 @@ export class VillageEngine {
     if (this.press && e.pointerId === this.press.pointerId) {
       this.press.moved = Math.max(this.press.moved, dist(p, this.press.start));
     }
-    const sd = this.squareDrag;
-    if (sd && e.pointerId === sd.pointerId) {
-      sd.sq.x = clamp(p.x - sd.offX, 0, this.vw - SQ);
-      sd.sq.y = clamp(p.y - sd.offY, 0, this.worldH - SQ);
-      sd.moved = Math.max(sd.moved, dist(p, sd.start));
-      sd.samples.push({ t: e.timeStamp, ...p });
-      while (sd.samples.length > 2 && e.timeStamp - sd.samples[0].t > 100) sd.samples.shift();
-      return;
-    }
     const drag = this.drag;
     if (drag && e.pointerId === drag.pointerId) {
       drag.m.x = clamp(p.x - drag.offX, 0, this.vw - W);
@@ -2703,7 +2632,7 @@ export class VillageEngine {
     }
     if (e.pointerType === "mouse") {
       const free = !this.isInteractive(e.target);
-      this.root.style.cursor = !free ? "" : this.hit(p, 3) || this.hitSquare(p, 2) ? "grab" : this.tappable(p) ? "pointer" : "";
+      this.root.style.cursor = !free ? "" : this.hit(p, 3) ? "grab" : this.tappable(p) ? "pointer" : "";
     }
   };
 
@@ -2715,8 +2644,6 @@ export class VillageEngine {
         this.tap(press.start, e.pointerType === "mouse" ? 2 : 8);
       }
     }
-    const sd = this.squareDrag;
-    if (sd && e.pointerId === sd.pointerId) this.releaseSquare(sd, e.timeStamp, e.type === "pointerup");
     const drag = this.drag;
     if (!drag || e.pointerId !== drag.pointerId) return;
     this.release(drag, e.timeStamp, e.type === "pointerup");
@@ -2870,8 +2797,7 @@ export class VillageEngine {
 
   /**
    * The cursor games from the homepage. The Curious One follows the cursor at
-   * a polite distance, lassos it, and ropes any square knocked off the
-   * monument; the Chaotic One rushes the cursor and swerves off at the last
+   * a polite distance and lassos it; the Chaotic One rushes the cursor and swerves off at the last
    * moment. (The Shy One's scoot and the Watcher's eyes are in think() and
    * updateFace().) True while it's playing instead of getting on with its day.
    */
@@ -2887,18 +2813,9 @@ export class VillageEngine {
     const d = Math.hypot(dx, dy) || 1;
 
     if (m.cfg.id === "yellow") {
-      const strays = this.squares.filter((s) => s.state === "loose" && s.restFor > SQUARE_REST);
-      const stray = strays.sort((a, b) => dist(sqCenter(a), c) - dist(sqCenter(b), c))[0];
-      if (stray) {
-        const sc = sqCenter(stray);
-        const ds = dist(sc, c) || 1;
-        if (ds > 180) this.walkTo(m, sc.x - ((sc.x - c.x) / ds) * 120 - W / 2, sc.y - ((sc.y - c.y) / ds) * 120 - H / 2, 90, dt);
-        else this.startLasso(m, stray);
-        return true;
-      }
       if (!active || d > 280) return false;
       if (d <= 150 && m.lassoCooldown <= 0 && Math.random() < dt * 0.8) {
-        this.startLasso(m, null);
+        this.startLasso(m);
         return true;
       }
       if (d > 130) {
@@ -2937,18 +2854,13 @@ export class VillageEngine {
     return { x: Math.round(m.x) + 2.5 * P, y: Math.round(m.y) - hopHeight(m) + 1.5 * P };
   }
 
-  private startLasso(m: Meeple, square: Square | null) {
+  private startLasso(m: Meeple) {
     const loop = this.hand(m);
-    m.lasso = { phase: "twirl", t: 0, square, loop, rope: ROPE, pull: 0, tugging: false, last: loop };
+    m.lasso = { phase: "twirl", t: 0, loop, rope: ROPE, pull: 0, tugging: false, last: loop };
     m.face = null;
   }
 
   private cancelLasso(m: Meeple) {
-    const sq = m.lasso?.square;
-    if (sq && sq.state === "towed") {
-      sq.state = "loose";
-      sq.restFor = 0;
-    }
     if (m.lasso) m.lassoCooldown = rand(4, 8);
     m.lasso = null;
   }
@@ -2957,8 +2869,7 @@ export class VillageEngine {
     const l = m.lasso!;
     l.t += dt;
     const hand = this.hand(m);
-    const sq = l.square;
-    const goal = sq ? sqCenter(sq) : { x: this.cursor.x, y: this.cursor.y };
+    const goal = { x: this.cursor.x, y: this.cursor.y };
     const next = (phase: Lasso["phase"]) => {
       l.phase = phase;
       l.t = 0;
@@ -2968,24 +2879,16 @@ export class VillageEngine {
     switch (l.phase) {
       case "twirl":
         l.loop = hand;
-        // Someone else got there first.
-        if (sq && sq.state !== "loose") next("reel");
-        else if (l.t > LASSO_TWIRL) next("throw");
+        if (l.t > LASSO_TWIRL) next("throw");
         break;
       case "throw": {
         const k = Math.min(1, l.t / LASSO_THROW);
         l.loop = { x: hand.x + (goal.x - hand.x) * k, y: hand.y + (goal.y - hand.y) * k };
         if (k < 1) break;
-        if (!sq) {
-          // The rope is as long as the throw, so the cursor only drags it once it pulls away.
-          l.rope = Math.max(ROPE, dist(goal, hand));
-          l.last = goal;
-          next("hold");
-        } else if (sq.state === "loose") {
-          sq.state = "towed";
-          l.rope = Math.max(ROPE, dist(goal, hand));
-          next("tow");
-        } else next("reel");
+        // The rope is as long as the throw, so the cursor only drags it once it pulls away.
+        l.rope = Math.max(ROPE, dist(goal, hand));
+        l.last = goal;
+        next("hold");
         break;
       }
       case "hold": {
@@ -3016,27 +2919,6 @@ export class VillageEngine {
         l.last = goal;
         break;
       }
-      case "tow": {
-        if (!sq || sq.state !== "towed") {
-          next("reel");
-          break;
-        }
-        // Walk past the socket so the square, trailing on the rope, lands in it.
-        const home = { x: sq.home.x + SQ / 2, y: sq.home.y + SQ / 2 };
-        const dx = home.x - goal.x;
-        const dy = home.y - goal.y;
-        const d = Math.hypot(dx, dy);
-        l.loop = goal;
-        l.rope = Math.max(ROPE, l.rope - 160 * dt);
-        if (d < 30 || l.t > 9) {
-          sq.state = "gliding";
-          this.say(m, { text: "YEEHAW", life: 1.2 });
-          next("reel");
-          break;
-        }
-        this.walkTo(m, home.x + (dx / d) * (ROPE + 24) - W / 2, home.y + (dy / d) * (ROPE + 24) - H / 2, 80, dt);
-        break;
-      }
       case "reel": {
         const k = 1 - Math.exp(-18 * dt);
         l.loop = { x: l.loop.x + (hand.x - l.loop.x) * k, y: l.loop.y + (hand.y - l.loop.y) * k };
@@ -3050,326 +2932,35 @@ export class VillageEngine {
     }
   }
 
-  // --------------------------------------------------------- the monument
-
-  /** The founders' monument goes as close to the Town Hall's street as there's room. */
-  private placeMonument(fits: (b: Box) => boolean, taken: Box[]) {
-    this.plinth = null;
-    this.squares = [];
-    const h = PLINTH.h + SQ + P;
-    const near = { x: this.hall.box.x + this.hall.box.w / 2, y: this.hall.box.y + this.hall.box.h + 4 * P };
-    let best: Box | null = null;
-    // A narrower plinth, then a tighter squeeze, where there isn't room (phones).
-    for (const [w, gap] of [[PLINTH.w, U], [6 * P, U], [6 * P, 0]]) {
-      for (let i = 0; i < 500; i++) {
-        const b = { x: snap(rand(0, this.vw - w)), y: snap(rand(0, this.worldH - h)), w, h };
-        if (!fits(pad(b, gap))) continue;
-        if (!best || dist({ x: b.x + w / 2, y: b.y + h }, near) < dist({ x: best.x + w / 2, y: best.y + h }, near)) best = b;
-      }
-      if (best) break;
-    }
-    if (!best) return;
-    taken.push(pad(best, U));
-    const plinth = { x: best.x, y: best.y + h - PLINTH.h, w: best.w, h: PLINTH.h };
-    this.plinth = plinth;
-    const square = (click: Square["click"], x: number): Square => ({
-      click,
-      home: { x, y: plinth.y - SQ },
-      x,
-      y: plinth.y - SQ,
-      vx: 0,
-      vy: 0,
-      state: "home",
-      looseFor: 0,
-      restFor: 0,
-      clickT: -1,
-      blocks: [],
-      bloomT: -1,
-    });
-    const inset = plinth.w > 6 * P ? P : U;
-    this.squares = [square("burst", plinth.x + inset), square("squash", plinth.x + plinth.w - inset - SQ)];
-  }
-
-  private updateSquares(dt: number) {
-    for (const s of this.squares) {
-      switch (s.state) {
-        case "loose": {
-          s.looseFor += dt;
-          s.x += s.vx * dt;
-          s.y += s.vy * dt;
-          const f = Math.exp(-SQUARE_FRICTION * dt);
-          s.vx *= f;
-          s.vy *= f;
-          if (s.x < 0 || s.x > this.vw - SQ) {
-            s.x = clamp(s.x, 0, this.vw - SQ);
-            s.vx = -s.vx * BOUNCE;
-          }
-          if (s.y < 0 || s.y > this.worldH - SQ) {
-            s.y = clamp(s.y, 0, this.worldH - SQ);
-            s.vy = -s.vy * BOUNCE;
-          }
-          this.bounceOffBuildings(s);
-          s.restFor = Math.hypot(s.vx, s.vy) < 4 ? s.restFor + dt : 0;
-          if (s.looseFor > SQUARE_GIVE_UP) s.state = "gliding";
-          break;
-        }
-        case "towed": {
-          // On the end of the rope: never further than the rope from the hand.
-          const tower = this.meeples.find((m) => m.lasso?.square === s);
-          if (!tower) {
-            s.state = "loose";
-            break;
-          }
-          const hand = this.hand(tower);
-          const rope = tower.lasso!.rope;
-          const c = sqCenter(s);
-          const d = dist(c, hand);
-          if (d > rope) {
-            s.x -= ((c.x - hand.x) / d) * (d - rope);
-            s.y -= ((c.y - hand.y) / d) * (d - rope);
-          }
-          s.vx = s.vy = 0;
-          break;
-        }
-        case "burst":
-          this.updateBurst(s, dt);
-          break;
-        case "gliding": {
-          const k = 1 - Math.exp(-5 * dt);
-          s.x += (s.home.x - s.x) * k;
-          s.y += (s.home.y - s.y) * k;
-          if (dist(s, s.home) < 0.5) {
-            s.state = "home";
-            s.x = s.home.x;
-            s.y = s.home.y;
-          }
-          break;
-        }
-      }
-      if (s.bloomT >= 0) {
-        s.bloomT += dt;
-        if (s.bloomT > GOLD_LIFE + GOLD_FADE + SPRING_BACK) {
-          s.bloomT = -1;
-          s.state = dist(s, s.home) < 0.5 ? "home" : "loose";
-          s.looseFor = s.restFor = 0;
-        }
-      }
-      if (s.state === "loose" && Math.hypot(s.vx, s.vy) > 200) this.squareHits(s);
-    }
-  }
-
-  /** A sliding square skids off the buildings, like a thrown meeple. */
-  private bounceOffBuildings(s: Square) {
-    const f = { x: s.x + SQ / 2, y: s.y + SQ };
-    for (const b of this.buildings) {
-      const fp = this.footprint(b);
-      if (!inBox(f, fp)) continue;
-      const outs = [f.x - fp.x, fp.x + fp.w - f.x, f.y - fp.y, fp.y + fp.h - f.y];
-      const k = outs.indexOf(Math.min(...outs));
-      if (k === 0) {
-        s.x -= outs[0] + 0.5;
-        if (s.vx > 0) s.vx = -s.vx * BOUNCE;
-      } else if (k === 1) {
-        s.x += outs[1] + 0.5;
-        if (s.vx < 0) s.vx = -s.vx * BOUNCE;
-      } else if (k === 2) {
-        s.y -= outs[2] + 0.5;
-        if (s.vy > 0) s.vy = -s.vy * BOUNCE;
-      } else {
-        s.y += outs[3] + 0.5;
-        if (s.vy < 0) s.vy = -s.vy * BOUNCE;
-      }
-    }
-  }
-
-  /** How tall the period stands while it squashes, is gone, and springs back (1 when untouched). */
-  private squashY(s: Square) {
-    if (s.bloomT < 0) return 1;
-    if (s.bloomT < FLATTEN_TIME) return 1 - s.bloomT / FLATTEN_TIME;
-    const back = s.bloomT - GOLD_LIFE - GOLD_FADE;
-    return back < 0 ? 0 : springBack(back);
-  }
-
-  private hitSquare(p: Vec, padding: number): Square | null {
-    for (const s of this.squares) {
-      if (s.state === "burst" || s.state === "held" || s.state === "gone") continue;
-      if (p.x >= s.x - padding && p.x <= s.x + SQ + padding && p.y >= s.y - padding && p.y <= s.y + SQ + padding) return s;
-    }
-    return null;
-  }
-
-  /** Pick up a square, like a meeple. A press without a drag is a click. */
-  private grabSquare(sq: Square, e: PointerEvent, p: Vec) {
-    for (const m of this.meeples) if (m.lasso?.square === sq) this.cancelLasso(m);
-    sq.state = "held";
-    sq.vx = sq.vy = 0;
-    this.squareDrag = {
-      sq,
-      pointerId: e.pointerId,
-      offX: p.x - sq.x,
-      offY: p.y - sq.y,
-      t0: e.timeStamp,
-      start: p,
-      moved: 0,
-      samples: [{ t: e.timeStamp, ...p }],
-    };
-    this.root.style.cursor = "grabbing";
-  }
-
-  private releaseSquare(sd: SquareDrag, now: number, allowClick: boolean) {
-    const { sq } = sd;
-    this.squareDrag = null;
-    this.root.style.cursor = "";
-    sq.state = "loose";
-    sq.looseFor = 0;
-    sq.restFor = 0;
-    if (allowClick && sd.moved < 6 && now - sd.t0 < 400) {
-      if (dist(sq, sq.home) < 0.5) sq.state = "home";
-      this.clickSquare(sq);
-      return;
-    }
-    const first = sd.samples[0];
-    const last = sd.samples[sd.samples.length - 1];
-    const span = (last.t - first.t) / 1000;
-    sq.vx = sq.vy = 0;
-    if (span > 0.008 && now - last.t < 80) {
-      sq.vx = (last.x - first.x) / span;
-      sq.vy = (last.y - first.y) / span;
-      const sp = Math.hypot(sq.vx, sq.vy);
-      if (sp > MAX_THROW) {
-        sq.vx = (sq.vx / sp) * MAX_THROW;
-        sq.vy = (sq.vy / sp) * MAX_THROW;
-      }
-    }
-  }
-
-  /** HEY's square bursts and reassembles; the period squashes and the gold flower pops up. */
-  private clickSquare(sq: Square) {
-    if (sq.click === "burst") {
-      for (const m of this.meeples) if (m.lasso?.square === sq) this.cancelLasso(m);
-      sq.state = "burst";
-      sq.clickT = 0;
-      sq.vx = sq.vy = 0;
-      return;
-    }
-    if (sq.bloomT >= 0) return;
-    sq.bloomT = 0;
-    sq.state = "gone";
-    sq.vx = sq.vy = 0;
-    this.scatterWild(sq);
-    // The thud travels outward, so nearby meeples hop first.
-    const c = sqCenter(sq);
-    for (const m of this.meeples) {
-      if (m.mode !== "walk" || m.inside) continue;
-      m.hop = -dist(center(m), c) / SHOCKWAVE_SPEED;
-      this.wake(m);
-    }
-  }
-
-  /** A thrown square that flies into a meeple knocks it along, and wakes it. */
-  private squareHits(sq: Square) {
-    for (const m of this.meeples) {
-      if (m.mode !== "walk" || m.inside) continue;
-      if (sq.x > m.x + W || sq.x + SQ < m.x || sq.y > m.y + H || sq.y + SQ < m.y) continue;
-      m.vx += sq.vx * 0.7;
-      m.vy += sq.vy * 0.7;
-      sq.vx *= -0.3;
-      sq.vy *= -0.3;
-      this.wake(m);
-      return;
-    }
-  }
-
   /**
-   * A fast meeple (a charge, a throw, a drag) knocks a square off the plinth.
-   * Once a square is loose, anyone walking into it kicks it along.
+   * The finale of choir practice: a big gold flower grows in front of the
+   * church, little wild flowers pop up across the screen in a wave from it,
+   * everyone hops at once, then they gather round it and hop to celebrate
+   * until it fades.
    */
-  private shoveSquares() {
-    for (const sq of this.squares) {
-      if (sq.state !== "home" && sq.state !== "loose") continue;
-      for (const m of this.meeples) {
-        if ((m.mode !== "walk" && m.mode !== "drag") || m.inside || m.alpha < 0.5) continue;
-        const vx = m.wx + m.vx;
-        const vy = m.wy + m.vy;
-        if (m.mode !== "drag" && Math.hypot(vx, vy) < (sq.state === "home" ? PUSH_SPEED : 20)) continue;
-        const ox = Math.min(m.x + W - 3, sq.x + SQ) - Math.max(m.x + 3, sq.x);
-        const oy = Math.min(m.y + H - 3, sq.y + SQ) - Math.max(m.y + 3, sq.y);
-        if (ox <= 0 || oy <= 0) continue;
-        const sc = sqCenter(sq);
-        const mc = center(m);
-        if (ox < oy) {
-          const n = Math.sign(sc.x - mc.x) || 1;
-          sq.x += n * ox;
-          sq.vx = n * Math.max(vx * n * 1.4, 160);
-          sq.vy = vy * 0.6;
-        } else {
-          const n = Math.sign(sc.y - mc.y) || 1;
-          sq.y += n * oy;
-          sq.vy = n * Math.max(vy * n * 1.4, 160);
-          sq.vx = vx * 0.6;
-        }
-        if (sq.state === "home") sq.looseFor = 0;
-        sq.state = "loose";
-        sq.restFor = 0;
-      }
+  private growGold() {
+    const ch = this.church;
+    if (!ch || this.gold) return;
+    const d = ch.doorway;
+    // On the grass in front of the steps, clear of the church.
+    const at = { x: clamp(d.x, W + 66, this.vw - W - 66), y: d.y + 7 * GOLD_PX + 8 };
+    this.gold = { ...at, t: 0 };
+    this.scatterWild(at);
+    for (const m of this.meeples) {
+      if (m.mode !== "walk" || m.inside) continue;
+      m.hop = -dist(center(m), at) / SHOCKWAVE_SPEED;
+      this.wake(m);
     }
   }
 
-  /** HEY's square: shake, burst into pieces, then drift home and reassemble on the plinth. */
-  private updateBurst(sq: Square, dt: number) {
-    const size = SQ / SQUARE_SPLIT;
-    sq.clickT += dt;
-    if (sq.clickT < SQUARE_SHAKE) return;
-    if (!sq.blocks.length) {
-      const c = sqCenter(sq);
-      for (let i = 0; i < SQUARE_SPLIT * SQUARE_SPLIT; i++) {
-        const x = sq.x + (i % SQUARE_SPLIT) * size;
-        const y = sq.y + Math.floor(i / SQUARE_SPLIT) * size;
-        const a = Math.atan2(y + size / 2 - c.y, x + size / 2 - c.x) + rand(-0.6, 0.6);
-        const sp = rand(220, 520);
-        sq.blocks.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, delay: 0 });
-      }
-      sq.x = sq.home.x;
-      sq.y = sq.home.y;
-      return;
+  private updateGold(dt: number) {
+    const g = this.gold;
+    if (g) {
+      g.t += dt;
+      if (g.t > GOLD_LIFE + GOLD_FADE) this.gold = null;
     }
-    this.moveBlocks(sq.blocks, dt);
-    const since = sq.clickT - SQUARE_SHAKE - SCATTER_TIME;
-    if (since < 0) return;
-    if (sq.blocks[0].delay === 0) {
-      const order = sq.blocks.map((_, i) => i).sort(() => Math.random() - 0.5);
-      order.forEach((bi, n) => (sq.blocks[bi].delay = 0.001 + n * 0.05));
-    }
-    const pull = 1 - Math.exp(-2.6 * dt);
-    const damp = Math.exp(-8 * dt);
-    let done = true;
-    sq.blocks.forEach((b, i) => {
-      const tx = sq.home.x + (i % SQUARE_SPLIT) * size;
-      const ty = sq.home.y + Math.floor(i / SQUARE_SPLIT) * size;
-      if (since >= b.delay) {
-        b.vx *= damp;
-        b.vy *= damp;
-        b.x += (tx - b.x) * pull;
-        b.y += (ty - b.y) * pull;
-      }
-      if (Math.abs(tx - b.x) > 0.5 || Math.abs(ty - b.y) > 0.5) done = false;
-    });
-    if (done) {
-      sq.blocks = [];
-      sq.state = "home";
-      sq.clickT = -1;
-    }
-  }
-
-  /** Where the gold flower's head is, for the fan club to face. */
-  private goldHead(sq: Square): Vec {
-    return { x: sq.x + SQ / 2, y: sq.y + SQ - 5.5 * (SQ / 2) };
-  }
-
-  /** Everyone gathers round the gold flower and hops in praise until it fades. */
-  private updatePraise() {
-    const gold = this.squares.find((s) => s.bloomT >= FLATTEN_TIME + 0.35 && s.bloomT < GOLD_LIFE);
-    if (!gold) {
+    const up = g && g.t >= GOLD_GROW * 0.5 && g.t < GOLD_LIFE;
+    if (!up) {
       if (!this.praise) return;
       this.praise = null;
       for (const m of this.meeples) {
@@ -3380,14 +2971,14 @@ export class VillageEngine {
       return;
     }
     if (this.praise || this.event || this.dance) return;
-    const base = { x: gold.x + SQ / 2, y: gold.y + SQ };
-    const ring = this.praiseRing(base);
-    const angle = (p: Vec) => Math.atan2(p.y - base.y, p.x - base.x);
+    const ring = this.praiseRing(g);
+    const angle = (p: Vec) => Math.atan2(p.y - g.y, p.x - g.x);
     const order = [...this.meeples].sort((a, b) => angle(feet(a)) - angle(feet(b)));
     const spots = [...ring].sort((a, b) => angle(a) - angle(b));
-    this.praise = { sq: gold, head: this.goldHead(gold) };
+    const head = { x: g.x, y: g.y - 5.5 * GOLD_PX };
+    this.praise = { head };
     order.forEach((m, i) => {
-      this.gather(m, spots[i], this.praise!.head);
+      this.gather(m, spots[i], head);
       if (m.task?.kind === "spot") m.task.why = "praise";
     });
   }
@@ -3403,13 +2994,13 @@ export class VillageEngine {
     const ok = (p: Vec) =>
       p.x > W && p.x < this.vw - W && p.y > H + 24 && p.y < this.worldH - this.bar && !this.blocked(p) && !this.buildings.some((b) => inBox(p, pad(b.box, 4)));
     const apart = (ps: Vec[]) => ps.every((p, i) => ps.every((q, j) => j <= i || Math.abs(p.x - q.x) > W + 6 || Math.abs(p.y - q.y) > H * 0.6));
-    for (const r of [72, 86, 100, 118, 136]) {
+    for (const r of [96, 110, 124, 140, 160]) {
       for (let k = 0; k < 24; k++) {
         const spots = ring(r, (k * Math.PI * 2) / 24);
         if (spots.every(ok) && apart(spots)) return spots;
       }
     }
-    return ring(86, -Math.PI / 2).map((p) => ({ x: clamp(p.x, W, this.vw - W), y: clamp(p.y, H + 24, this.worldH - this.bar) }));
+    return ring(110, -Math.PI / 2).map((p) => ({ x: clamp(p.x, W, this.vw - W), y: clamp(p.y, H + 24, this.worldH - this.bar) }));
   }
 
   /** The part of the village on screen right now. */
@@ -3428,7 +3019,6 @@ export class VillageEngine {
     if (this.buildings.some((bd) => overlap(pad({ ...bd.box, y: bd.box.y - 1.5 * P, h: bd.box.h + 1.5 * P }, U), b))) return false;
     if (overlap(pad(this.garden, P), b)) return false;
     if (this.pond && overlap(pad(this.pond, U), b)) return false;
-    if (this.plinth && overlap(pad({ ...this.plinth, y: this.plinth.y - SQ, h: this.plinth.h + SQ }, U), b)) return false;
     if (this.trees.some((t) => overlap(this.treeBox(t), b))) return false;
     const x = b.x + b.w / 2;
     const y = b.y + b.h;
@@ -3454,23 +3044,20 @@ export class VillageEngine {
     m.plantIn = rand(3, 7);
   }
 
-  /** Flowers come first, then grass; only the Shy One grows carrots. */
+  /** A tuft of grass beside its foot. */
   private plant(m: Meeple) {
     const spot = this.plantSpot(m);
     if (!spot) return;
-    const cycle = m.cfg.id === "green" ? SHY_PLANTS : PLANTS;
-    const kind = cycle[m.planted % cycle.length];
-    m.planted++;
+    const kind: WildKind = "grass";
     const healthy = this.wild.filter((w) => w.fade < 0 && w.life === WILD_LIFE);
     if (healthy.length >= MAX_WILD) healthy[0].fade = 0;
     this.wild.push({ ...spot, kind, petal: pick(PETALS), age: 0, life: WILD_LIFE, fade: -1, trampled: false });
   }
 
-  /** The gold flower sets off little wild flowers across the screen, popping up in a wave. */
-  private scatterWild(sq: Square) {
-    const c = sqCenter(sq);
+  /** The gold flower sets off a whole meadow of little flowers across the screen, popping up in a wave. */
+  private scatterWild(c: Vec) {
     const v = this.view();
-    const n = clamp(Math.round((this.vw * (v.bottom - v.top)) / 45000), 6, 20);
+    const n = clamp(Math.round((this.vw * (v.bottom - v.top)) / 16000), 16, 60);
     let made = 0;
     for (let tries = 0; made < n && tries < n * 40; tries++) {
       const x = snap(rand(U * 3, this.vw - U * 3));
@@ -3482,8 +3069,8 @@ export class VillageEngine {
         y,
         kind: "flower",
         petal: pick(PETALS),
-        age: -(FLATTEN_TIME + 0.3 + Math.hypot(x - c.x, y - c.y) / SHOCKWAVE_SPEED + rand(0, 0.3)),
-        life: rand(14, 20),
+        age: -(0.3 + Math.hypot(x - c.x, y - c.y) / SHOCKWAVE_SPEED + rand(0, 0.3)),
+        life: rand(18, 28),
         fade: -1,
         trampled: false,
       });
@@ -3537,8 +3124,7 @@ export class VillageEngine {
       Array.from({ length: n }, (_, i) => ({ x: Math.round(left + i * spacing), y: Math.round(y - (i % 2 ? P : 0)) }));
     const ok = (p: Vec) =>
       !this.blocked(p) &&
-      !this.buildings.some((b) => inBox(p, pad({ ...b.box, h: b.box.h + H }, 8))) &&
-      !(this.plinth && inBox(p, pad(this.plinth, 2 * P)));
+      !this.buildings.some((b) => inBox(p, pad({ ...b.box, h: b.box.h + H }, 8)));
     const mid = (v.top + v.bottom) / 2 + 20;
     for (let k = 0; k < 120; k++) {
       const y = mid + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * U;
@@ -3777,10 +3363,6 @@ export class VillageEngine {
 
     for (const b of this.rocks) this.pattern(ROCK, b.x, b.y, U, (ch) => (ch === "H" ? C.rockLight : C.rock), g);
     for (const b of this.bushes) this.pattern(b.rows, b.x, b.y - b.rows.length * U, U, (ch) => TREE_COLORS[ch], g);
-    for (const f of this.wildflowers) {
-      const mid = f.petal === C.yellow ? C.red : C.yellow;
-      this.pattern(BLOOM, f.x, f.y - BLOOM.length * U, U, (ch) => (ch === "P" ? f.petal : ch === "C" ? mid : C.leaf), g);
-    }
   }
 
   /** A low wooden fence round the garden, open where the paths come in. */
@@ -3829,11 +3411,8 @@ export class VillageEngine {
     for (const b of this.buildings) items.push({ y: b.box.y + b.box.h, draw: () => this.drawBuilding(b) });
     for (const t of this.trees) items.push({ y: t.y, draw: () => this.drawTree(t) });
     for (const a of this.animals) items.push({ y: a.y, draw: () => this.drawAnimal(a) });
-    const plinth = this.plinth;
-    if (plinth) items.push({ y: plinth.y + plinth.h, draw: () => this.drawPlinth(plinth) });
-    for (const s of this.squares) {
-      items.push({ y: s.y + SQ + (s.state === "held" ? 1000 : 0.5), draw: () => this.drawSquare(s) });
-    }
+    const gold = this.gold;
+    if (gold) items.push({ y: gold.y, draw: () => this.drawGold(gold) });
     for (const m of this.meeples) {
       if (m.inside || m.mode === "exploded" || m.mode === "reassemble") continue;
       items.push({ y: m.y + H + (m.mode === "drag" ? 1000 : 0), draw: () => this.drawMeeple(m) });
@@ -3842,7 +3421,6 @@ export class VillageEngine {
     for (const it of items) it.draw();
 
     for (const m of this.meeples) if (m.mode === "exploded" || m.mode === "reassemble") this.drawBlocks(m);
-    for (const s of this.squares) for (const b of s.blocks) this.rect(Math.round(b.x), Math.round(b.y), SQ / SQUARE_SPLIT, SQ / SQUARE_SPLIT, C.accent);
     this.drawParticles();
     this.drawNotes();
     this.drawLabels();
@@ -4057,56 +3635,26 @@ export class VillageEngine {
     this.text("JUSTICE", b.box.x + 15 * U, b.box.y + 7.6 * U, C.ink);
   }
 
-  /** The founders' plinth, engraved with the homepage headline. */
-  private drawPlinth(b: Box) {
-    this.rect(b.x, b.y, b.w, b.h, C.stoneShade);
-    this.rect(b.x, b.y, b.w, 3, C.stone);
-    this.rect(b.x, b.y + b.h - 2, b.w, 2, C.stoneDark);
-    this.text("HEY RYKER", b.x + b.w / 2, b.y + b.h - 4, C.muted);
-  }
-
-  private drawSquare(s: Square) {
-    this.drawGold(s);
-    if (s.state === "burst" && s.blocks.length) return;
-    const sy = this.squashY(s);
-    if (sy <= 0) return;
-    let x = s.x;
-    let y = s.y;
-    if (s.state === "burst" && s.clickT < SQUARE_SHAKE) {
-      x += Math.round(rand(-2, 2));
-      y += Math.round(rand(-2, 2));
-    }
-    // Spreads out as it flattens, planted on its bottom edge.
-    const w = SQ * (1 + (1 - Math.min(sy, 1)) * 0.6);
-    const h = SQ * sy;
-    this.rect(Math.round(x + SQ / 2 - w / 2), Math.round(y + SQ - h), Math.round(w), Math.round(h), C.accent);
-  }
-
   /**
-   * The gold flower that pops up where the period was, grown through the
-   * garden's seed and sprout stages at twice their pixel size, with pixel
-   * sparkles twinkling round its head.
+   * The big gold flower from the homepage, growing from a seed through the
+   * garden's sprout to full bloom, with pixel sparkles twinkling round its head.
    */
-  private drawGold(s: Square) {
-    if (s.bloomT < 0) return;
-    const age = s.bloomT - FLATTEN_TIME;
-    if (age < 0 || age > GOLD_LIFE - FLATTEN_TIME + GOLD_FADE) return;
+  private drawGold(gold: Vec & { t: number }) {
+    const age = gold.t;
     const { ctx } = this;
-    const fading = age - (GOLD_LIFE - FLATTEN_TIME);
+    const fading = age - GOLD_LIFE;
     ctx.globalAlpha = fading > 0 ? Math.max(0, 1 - fading / GOLD_FADE) : 1;
-    const g = SQ / 2;
-    const cx = s.x + SQ / 2;
-    const base = s.y + SQ;
-    const rows = age < 0.35 ? SEED : age < 1 ? SPROUT : GOLD_BLOOM;
-    const left = cx - (rows[0].length * g) / 2;
-    const top = base - rows.length * g;
+    const g = Math.round(GOLD_PX * Math.min(1, 0.35 + (0.65 * age) / GOLD_GROW));
+    const rows = age < 0.4 ? SEED : age < GOLD_GROW * 0.5 ? SPROUT : GOLD_BLOOM;
+    const left = gold.x - (rows[0].length * g) / 2;
+    const top = gold.y - rows.length * g;
     this.pattern(rows, left, top, g, (ch) => GOLD_COLORS[ch] ?? (ch === "D" ? C.wet : null));
     if (rows === GOLD_BLOOM) {
       GOLD_SPARKLES.forEach(([sx, sy, phase], i) => {
         const k = Math.sin((age * 2.2 + phase) * Math.PI * 2);
         if (k <= 0) return;
-        const arm = Math.round(k * g * 0.5);
-        const x = Math.round(cx + sx * g);
+        const arm = Math.round(k * g * 0.4);
+        const x = Math.round(gold.x + sx * g);
         const y = Math.round(top + sy * g);
         const c = i % 2 ? GOLD_COLORS.H : GOLD_COLORS.P;
         this.rect(x - 1, y - 1, 2, 2, c);
@@ -4126,8 +3674,8 @@ export class VillageEngine {
     for (const w of this.wild) {
       if (w.age < 0) continue;
       ctx.globalAlpha = w.fade < 0 ? 1 : Math.max(0, 1 - w.fade / (w.trampled ? TRAMPLED_TIME : WILT_TIME));
-      const grown = w.kind === "grass" ? GRASS : w.kind === "carrot" ? CARROT : BLOOM;
-      const flat = w.kind === "grass" ? GRASS_FLAT : w.kind === "carrot" ? CARROT_FLAT : BLOOM_FLAT;
+      const grown = w.kind === "grass" ? GRASS : BLOOM;
+      const flat = w.kind === "grass" ? GRASS_FLAT : BLOOM_FLAT;
       const rows = w.trampled ? flat : w.age < 0.5 ? SEED : w.age < 1.8 ? SPROUT : grown;
       this.drawItemRows(rows, { kind: "flower", petal: w.petal }, w.x, w.y, U);
     }
@@ -4156,9 +3704,8 @@ export class VillageEngine {
       this.line(hand.x, hand.y, c.x + Math.cos(a) * 15, c.y + Math.sin(a) * 5);
       return;
     }
-    const r = l.square && l.phase !== "throw" ? SQ / 2 + 3 : 7;
     this.line(hand.x, hand.y, l.loop.x, l.loop.y);
-    this.ring(l.loop.x, l.loop.y, r, r);
+    this.ring(l.loop.x, l.loop.y, 7, 7);
   }
 
   /** A 2px pixel line, in ink. */
@@ -4393,15 +3940,6 @@ function feet(m: Meeple): Vec {
 
 function center(m: Meeple): Vec {
   return { x: m.x + W / 2, y: m.y + H / 2 };
-}
-
-function sqCenter(s: Square): Vec {
-  return { x: s.x + SQ / 2, y: s.y + SQ / 2 };
-}
-
-/** The period's height as it springs back up from flat, overshooting a little. */
-function springBack(u: number) {
-  return 1 - Math.exp(-7 * u) * Math.cos(14 * u);
 }
 
 function hopHeight(m: Meeple) {
