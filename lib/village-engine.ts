@@ -1,11 +1,13 @@
 /**
  * The village (/village): the meeples' own town.
  *
- * A pale green field with a house for each meeple (roof in its color), a
- * fenced community garden in the middle, the Town Hall at the top and the
- * courthouse at the bottom, all joined by sand paths. The layout is rolled
- * fresh on every visit: which houses go where, the trees, rocks and the odd
- * pond.
+ * A pale green field with a fenced community garden in the middle, the Town
+ * Hall above it and the courthouse below, the post office and the church on
+ * either side (stacked on one side on phones, where there's only room for
+ * one column), and a house for each meeple (roof in its color) wrapped round
+ * the garden in the remaining plots, all joined by sand paths. Forests line
+ * the edges of the screen. The layout is rolled fresh on every visit: which
+ * houses go where, the trees, rocks and the odd pond.
  *
  * The meeples live their lives on the paths: they garden (plant, water and
  * harvest), carry the harvest to a friend's door, knock and visit, go home
@@ -24,7 +26,7 @@
  * cows moo in a chorus, a sheep loses its wool (it grows back) and a bunny
  * has a baby bunny.
  *
- * The post office and the church sit on house plots. Meeples post letters to
+ * Meeples post letters to
  * each other and pick up their own mail (tap the post office and a letter
  * arrives); tap the church, or wait, for choir practice on its steps, which
  * ends with the gold flower (below).
@@ -893,10 +895,13 @@ export class VillageEngine {
     type HouseSpot = { box: Box; side: -1 | 0 | 1; spurY: number; row: number };
     const spots: HouseSpot[] = [];
 
-    // Along the street, either side of the Town Hall.
+    // Along the street, either side of the Town Hall, no further out than a
+    // couple of houses past the garden, so the houses wrap round it and the
+    // screen's edges are left for the forest.
+    const reach = road / 2 + 2 * sw + 4 * P;
     for (const side of [-1, 1] as const) {
-      const a = side < 0 ? margin : hallBox.x + hw + P;
-      const b = side < 0 ? hallBox.x - P : vw - margin;
+      const a = side < 0 ? Math.max(margin, ringL - reach) : hallBox.x + hw + P;
+      const b = side < 0 ? hallBox.x - P : Math.min(vw - margin, ringR + reach);
       const n = Math.floor((b - a + 2 * P) / (sw + 2 * P));
       for (let i = 0; i < n; i++) {
         const cell = (b - a) / n;
@@ -922,15 +927,36 @@ export class VillageEngine {
     while (sides.length && below(rows) <= Math.max(this.viewH - S, yBotMin)) rows++;
     // Five houses, the post office and the church.
     while (sides.length && spots.length + sides.length * rows < 7) rows++;
+    // With room on one side only (narrow phones), the post office and church stack there.
+    if (sides.length === 1) rows = Math.max(rows, 2);
     for (let k = 0; k < rows; k++) {
       for (const side of sides) {
+        // Hugging the ring road, so they sit round the garden.
         const [a, b] = sideX(side);
-        spots.push({ box: { x: snap(rand(a, b)), y: firstY + k * band, w: sw, h: sh }, side, spurY: spurOf(k), row: k });
+        const x = side < 0 ? Math.max(a, b - rand(0, 2 * P)) : Math.min(b, a + rand(0, 2 * P));
+        spots.push({ box: { x: snap(x), y: firstY + k * band, w: sw, h: sh }, side, spurY: spurOf(k), row: k });
       }
     }
 
-    const chosen = shuffle(spots).slice(0, 7);
-    const yBotNeed = Math.max(yBotMin, ...chosen.filter((s) => s.row >= 0).map((s) => below(s.row)));
+    // The post office and the church face each other across the garden, in
+    // the middle row; the five houses go round the rest, taking turns
+    // between the street either side of the Town Hall and the two sides.
+    const mid = Math.floor((rows - 1) / 2);
+    const civic = spots.filter((s) => s.side !== 0 && (s.row === mid || (sides.length === 1 && s.row === mid + 1)));
+    const groups = shuffle([
+      spots.filter((s) => s.side === 0 && s.box.x < cx),
+      spots.filter((s) => s.side === 0 && s.box.x > cx),
+      spots.filter((s) => s.side < 0 && !civic.includes(s)),
+      spots.filter((s) => s.side > 0 && !civic.includes(s)),
+    ]).map((g) => shuffle(g));
+    const homes: HouseSpot[] = [];
+    for (let i = 0; homes.length < 5 && groups.some((g) => g.length); i++) {
+      const g = groups[i % groups.length];
+      if (g.length) homes.push(g.shift()!);
+    }
+    const chosen = [...homes, ...civic];
+    // The garden runs the whole height of the side rows, so the middle row is its middle.
+    const yBotNeed = Math.max(yBotMin, ...(rows ? [below(rows - 1)] : []), ...chosen.filter((s) => s.row >= 0).map((s) => below(s.row)));
     this.worldH = Math.ceil(Math.max(this.viewH, yBotNeed + S));
     const yBot = snap(this.worldH - S);
 
@@ -984,7 +1010,9 @@ export class VillageEngine {
       }
       return { box: s.box, door };
     });
-    const kinds = ["house", "house", "house", "house", "house", "post", "church"] as const;
+    // Post office on the left of the garden, church on the right (by position, so a phone's single side still gets both).
+    const civicKinds = civic.length === 2 ? (civic[0].side < civic[1].side ? ["post", "church"] : ["church", "post"]) : ["post", "church"];
+    const kinds = [...homes.map(() => "house" as const), ...(civicKinds as ("post" | "church")[])];
     const lots = plots.map((pl, i) => this.makeBuilding(kinds[i], pl.box, pl.door));
     this.houses = lots.filter((b) => b.kind === "house");
     this.post = lots.find((b) => b.kind === "post") ?? null;
@@ -1098,6 +1126,7 @@ export class VillageEngine {
     const area = vw * this.worldH;
     this.trees = [];
     this.restSpots = [];
+    this.growForests(phone, fits, taken);
     const treeCount = clamp(Math.round(area / (phone ? 24000 : 30000)), 6, 44);
     // About half as many trees as there's room for, so the animals have
     // open pasture.
@@ -1134,6 +1163,47 @@ export class VillageEngine {
       if (b) this.rocks.push(b);
     }
     this.spawnAnimals(phone, bar);
+  }
+
+  /**
+   * Forests round the edges of the screen: down both sides and along the
+   * bottom, thick at the edge and thinning out toward town, wherever the
+   * grass is free. Forest trees may overlap each other, like a canopy.
+   */
+  private growForests(phone: boolean, fits: (b: Box) => boolean, taken: Box[]) {
+    const vw = this.vw;
+    const depth = phone ? 5 * P : 14 * P;
+    const grown: Box[] = [];
+    const tryTree = (x: number, y: number, inward: number) => {
+      // Thick at the edge, thinning toward town.
+      if (Math.random() > 0.85 - 0.75 * (inward / depth)) return;
+      const rows = pick([TREE_PINE, TREE_PINE, TREE_BIG, TREE_BIG, TREE_SMALL]);
+      const w = rows[0].length * U;
+      const h = rows.length * U;
+      const b = { x: snap(clamp(x - w / 2, U, vw - w - U)), y: snap(y - h), w, h };
+      if (!fits(b)) return;
+      grown.push(b);
+      const r = rows === TREE_BIG && Math.random() < 0.25 ? rows.map((row, ry) => (ry === 2 || ry === 3 ? row.replace(/L(?=LL)/, "A") : row)) : rows;
+      this.trees.push({ x: b.x, y: b.y + b.h, rows: r, shake: 0 });
+    };
+    const stepX = 3.5 * U;
+    const stepY = 3 * U;
+    for (let y = 100; y < this.worldH; y += stepY) {
+      for (let d = 0; d < depth; d += stepX) {
+        tryTree(d + rand(-U, U), y + rand(-U, U), d);
+        tryTree(vw - d + rand(-U, U), y + rand(-U, U), d);
+      }
+    }
+    // Along the top, between the header's corners, wherever the street leaves room.
+    for (let x = depth; x < vw - depth; x += stepX) {
+      for (let d = 0; d < depth * 0.35; d += stepY) tryTree(x + rand(-U, U), 9 * P + d + rand(-U, U), d / 0.35);
+    }
+    // Along the bottom, just above the caption.
+    const floor = this.worldH - this.bar;
+    for (let x = depth; x < vw - depth; x += stepX) {
+      for (let d = 0; d < depth * 0.6; d += stepY) tryTree(x + rand(-U, U), floor - d + rand(-U, U), d / 0.6);
+    }
+    taken.push(...grown.map((b) => pad(b, U)));
   }
 
   // -------------------------------------------------------------- animals
