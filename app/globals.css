@@ -145,7 +145,8 @@ body {
   --step: calc(var(--h) * 0.22);
   --reveal: calc(var(--h) * 0.55);
   --count: 4;
-  --tilt: 26deg;
+  /* Negative tips the tops toward the viewer, so the cards come forward. */
+  --tilt: -26deg;
   position: relative;
   width: var(--w);
   height: calc(var(--h) + (var(--count) - 1) * var(--step) + var(--reveal));

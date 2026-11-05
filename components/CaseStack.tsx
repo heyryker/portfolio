@@ -7,7 +7,7 @@ import type { ShowcaseItem } from "./Showcase";
 
 /**
  * The four case studies as records in a crate, after Ryker's reference:
- * image cards lean back in a stack that runs down the page, each showing a
+ * image cards tip forward, toward the viewer, in a stack that runs down the page, each showing a
  * strip with its title over the image. As the cursor moves over the stack,
  * the card under it flips upright and the cards in front drop back to show
  * it. On touch screens, scrolling the stack past the middle of the screen
