@@ -460,6 +460,15 @@ body {
     touch-action: pan-y;
   }
 
+  /* Once the cards are in, they share one 3D space, so the browser layers
+     them by how near they really are. (Layering by z-index swapped
+     neighbours in a single frame halfway through each step, which read as a
+     glitch.) While they fly in they're layered by z-index, so cards on
+     different paths don't cut through each other. */
+  .showcase:not([data-entering]) .showcase-rack {
+    transform-style: preserve-3d;
+  }
+
   .showcase-card {
     position: absolute;
     top: calc(50% - var(--card-h) / 2);

@@ -115,7 +115,11 @@ export function Showcase({
     const entering = (i: number, now: number) => {
       if (!from) return 1;
       const r = i < from.length;
-      return clamp((now - start - (r ? i * 120 : restDelay(i))) / (r ? CASE_MS : REST_MS), 0, 1);
+      // The case studies leave from the back of the stack first, so each one
+      // lands on top of the ones already down (as they stack in the rack) and
+      // nothing swaps places once they've landed.
+      const delay = r ? (from.length - 1 - i) * 120 : restDelay(i);
+      return clamp((now - start - delay) / (r ? CASE_MS : REST_MS), 0, 1);
     };
     const arrival = from ? Math.max((from.length - 1) * 120 + CASE_MS, restDelay(n - 1) + REST_MS) : 0;
 
