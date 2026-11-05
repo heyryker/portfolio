@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, type RefObject } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import type { ShowcaseItem } from "./Showcase";
 
 /**
@@ -29,6 +30,9 @@ export function CaseStack({
   // The upright card, or -1 for none (the resting stack).
   const [up, setUp] = useState(-1);
   const n = items.length;
+  const router = useRouter();
+  // How the last press came in, so a click knows if it was a mouse.
+  const pointer = useRef("mouse");
 
   // Without a cursor, the stack flips through as it scrolls past the middle
   // of the screen.
@@ -57,6 +61,19 @@ export function CaseStack({
     <ul
       ref={stackRef}
       className="case-stack"
+      data-up={up >= 0 ? "" : undefined}
+      // The cursor's height over the stack picks the card, in even bands from
+      // the back (top) to the front (bottom). Going by position rather than by
+      // which card is under the cursor keeps it steady: the cards move as one
+      // flips up, and picking by element made them flicker back and forth.
+      onPointerMove={(e) => {
+        if (e.pointerType !== "mouse") return;
+        const r = e.currentTarget.getBoundingClientRect();
+        setUp(Math.max(0, Math.min(n - 1, Math.floor(((e.clientY - r.top) / r.height) * n))));
+      }}
+      onPointerDown={(e) => {
+        pointer.current = e.pointerType;
+      }}
       onPointerLeave={(e) => {
         if (e.pointerType === "mouse") {
           setUp(-1);
@@ -69,22 +86,19 @@ export function CaseStack({
           className="case-stack-card"
           data-upright={i === up ? "" : undefined}
           style={{ "--i": i, "--after": up >= 0 && i > up ? 1 : 0 } as React.CSSProperties}
-          onPointerEnter={(e) => {
-            if (e.pointerType === "mouse") {
-              setUp(i);
-            }
-          }}
         >
           <Link
             href={item.href}
             className="case-stack-link"
             draggable={false}
             onClick={(e) => {
-              // A leaning card flips up first; the upright one opens.
-              if (i !== up) {
-                e.preventDefault();
-                setUp(i);
-              }
+              if (i === up) return;
+              e.preventDefault();
+              // With a mouse, a click opens the card that's up, whichever card
+              // edge happens to be under the cursor. A tap on a card that's
+              // still tipped flips it up first.
+              if (pointer.current === "mouse" && up >= 0) router.push(items[up].href);
+              else setUp(i);
             }}
             onFocus={(e) => {
               if (e.currentTarget.matches(":focus-visible")) setUp(i);

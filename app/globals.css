@@ -172,21 +172,15 @@ body {
   --tilt: -40deg;
   position: relative;
   width: var(--w);
-  /* Just the resting stack: the tipped front card shows about half its
-     height. A card flipped upright hangs over the toggle for a moment; the
-     toggle sits above it, and pointing at it lets the stack rest. */
-  height: calc(var(--h) * 0.48 + (var(--count) - 1) * var(--step));
+  /* Tall enough for the front card standing upright, so a flipped card never
+     hangs over the toggle or the footer. At rest the cards spread out to fill
+     it (--rest-step), showing more of each image; with one up they close to
+     --step and the ones in front drop by --reveal. */
+  --rest-step: calc(var(--step) + var(--h) * 0.19);
+  height: calc(var(--h) * 1.04 + (var(--count) - 1) * var(--step));
   margin: 0 auto;
   perspective: 1100px;
   perspective-origin: 50% 0;
-}
-
-/* Without a cursor, scrolling flips the front card upright on its way past,
-   and there's no pointing at the toggle to put it back, so leave room for it. */
-@media (hover: none) {
-  .case-stack {
-    height: calc(var(--h) + (var(--count) - 1) * var(--step));
-  }
 }
 
 .case-stack-card {
@@ -197,9 +191,13 @@ body {
   z-index: var(--i);
   /* Hinged at the top, so each title strip stays put and the stack hangs right under its heading. */
   transform-origin: 50% 0;
-  transform: translateY(calc(var(--i) * var(--step) + var(--after) * var(--reveal)))
+  transform: translateY(calc(var(--i) * var(--gap, var(--rest-step)) + var(--after) * var(--reveal)))
     rotateX(var(--lean, var(--tilt)));
   transition: transform 650ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.case-stack[data-up] .case-stack-card {
+  --gap: var(--step);
 }
 
 .case-stack-card[data-upright] {
@@ -749,34 +747,16 @@ html:has(.site-menu[open]) {
   margin-top: -0.22em;
 }
 
-/* A yellow square marks the hovered, focused or current item. It's one
-   meeple pixel, centered on the grid line a cell to the item's left. */
-.menu-link::before {
-  content: "";
-  position: absolute;
-  top: calc(var(--grid-cell) / 2 + (var(--menu-cap) - var(--meeple-px)) / 2);
-  left: calc(var(--grid-cell) * -1 - var(--meeple-px) / 2);
-  width: var(--meeple-px);
-  height: var(--meeple-px);
-  background: var(--color-accent);
-  scale: 0;
-  transition: scale 0.16s steps(2, end);
-}
-
+/* The hovered, focused or current item gets the yellow highlighter. */
 .menu-link:hover,
-.menu-link:focus-visible {
+.menu-link:focus-visible,
+.menu-link[aria-current="page"] {
   color: var(--color-ink);
   text-decoration-line: underline;
   text-decoration-color: var(--color-accent);
   text-decoration-thickness: 0.32em;
   text-underline-offset: -0.14em;
   text-decoration-skip-ink: none;
-}
-
-.menu-link:hover::before,
-.menu-link:focus-visible::before,
-.menu-link[aria-current="page"]::before {
-  scale: 1;
 }
 
 /* The arrow's top sits on the cap height, its bottom above the baseline. */
