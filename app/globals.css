@@ -149,7 +149,7 @@ body {
   --tilt: -40deg;
   position: relative;
   width: var(--w);
-  /* Just the resting stack: the tipped front card shows a little over half
+  /* Just the resting stack: the tipped front card shows about half
      its height. A card flipped upright hangs over the All work button for a
      moment; the button sits above it, and pointing at it lets the stack rest. */
   height: calc(var(--h) * 0.48 + (var(--count) - 1) * var(--step));
