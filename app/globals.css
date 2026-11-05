@@ -149,7 +149,10 @@ body {
   --tilt: -40deg;
   position: relative;
   width: var(--w);
-  height: calc(var(--h) + (var(--count) - 1) * var(--step) + var(--reveal));
+  /* Just the resting stack: the tipped front card shows a little over half
+     its height. A card flipped upright hangs over the All work button for a
+     moment; the button sits above it, and pointing at it lets the stack rest. */
+  height: calc(var(--h) * 0.48 + (var(--count) - 1) * var(--step));
   margin: 0 auto;
   perspective: 1100px;
   perspective-origin: 50% 0;
@@ -227,7 +230,9 @@ body {
 
 /* The "all work" button under the stack (components/AllWork.tsx). */
 .all-work {
-  padding: 32px 0 72px;
+  position: relative;
+  z-index: 10;
+  padding: 24px 0 72px;
   text-align: center;
 }
 
@@ -301,7 +306,6 @@ body {
 
 .showcase-tile {
   display: block;
-  border-radius: 16px;
   -webkit-user-drag: none;
 }
 
@@ -310,8 +314,12 @@ body {
   display: block;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  border-radius: 16px;
   background: #f5f5f7;
+}
+
+/* Square, like the case study cards. Only shown with the moving rack. */
+.showcase-arrow {
+  display: none;
 }
 
 .showcase-image img {
@@ -422,6 +430,51 @@ body {
     display: block;
     padding: 0 24px;
     text-align: center;
+  }
+
+  .showcase-arrow {
+    position: absolute;
+    z-index: 1;
+    top: calc(50% - 24px);
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border: 1px solid rgb(0 0 0 / 0.12);
+    background: rgb(255 255 255 / 0.9);
+    color: var(--color-ink);
+    cursor: pointer;
+    transition:
+      opacity 200ms,
+      color 200ms,
+      border-color 200ms;
+  }
+
+  .showcase-arrow[data-step="-1"] {
+    left: max(16px, 4vw);
+  }
+
+  .showcase-arrow[data-step="1"] {
+    right: max(16px, 4vw);
+  }
+
+  .showcase-arrow svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+  }
+
+  .showcase-arrow:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .showcase-arrow:disabled {
+    opacity: 0.3;
+    cursor: default;
+    pointer-events: none;
   }
 
   .showcase-caption-inner {

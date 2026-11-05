@@ -37,9 +37,11 @@ const ease = (t: number) => 1 - (1 - t) ** 3;
 
 /**
  * Every case study and blog post as one angled rack of cards, like a card
- * file, after Ryker's reference recordings. The cursor scrubs across it (or a
- * sideways swipe on phones, the arrow keys and Tab) and lifts one card at a
- * time: it rises, turns to face the viewer and its title shows underneath.
+ * file, after Ryker's reference recordings. Arrow buttons at the sides (or a
+ * sideways swipe or trackpad scroll, the arrow keys and Tab) step through it,
+ * lifting one card at a time: it rises, turns to face the viewer and its title
+ * shows underneath. The cursor used to scrub across the rack; that fought with
+ * the side buttons, so it's gone.
  * Clicking the lifted card opens it; clicking any other card lifts that one
  * first. Page scrolling is left alone.
  *
@@ -65,6 +67,7 @@ export function Showcase({ items, from }: { items: ShowcaseItem[]; from?: DOMRec
     let shown = -1;
     let swipe: { x: number; from: number; moved: boolean } | undefined;
     let swiped = false;
+    let settle = 0;
 
     // The entrance, when opened from the case study stack (`from` holds where
     // those cards were on screen): they drop from there into the rack, then
@@ -137,11 +140,7 @@ export function Showcase({ items, from }: { items: ShowcaseItem[]; from?: DOMRec
       el instanceof Node ? cardRefs.current.findIndex((c) => c?.contains(el)) : -1;
 
     const onPointerMove = (e: PointerEvent) => {
-      if (e.pointerType === "mouse") {
-        // The cursor's position across the rack picks the card.
-        const r = section.getBoundingClientRect();
-        target = clamp(((e.clientX - r.left) / r.width - 0.1) / 0.8, 0, 1) * (n - 1);
-      } else if (swipe) {
+      if (swipe) {
         // A sideways swipe flips through the rack; vertical scrolling is left alone.
         const dx = e.clientX - swipe.x;
         if (Math.abs(dx) > 8) swipe.moved = true;
@@ -165,6 +164,13 @@ export function Showcase({ items, from }: { items: ShowcaseItem[]; from?: DOMRec
 
     // A click opens the lifted card; on any other card it lifts that one first.
     const onClick = (e: MouseEvent) => {
+      // The side buttons step one card either way.
+      const arrow = e.target instanceof Element ? e.target.closest<HTMLElement>("[data-step]") : null;
+      if (arrow) {
+        target = clamp(Math.round(target) + Number(arrow.dataset.step), 0, n - 1);
+        schedule();
+        return;
+      }
       const i = cardAt(e.target);
       if (i < 0) return;
       if (swiped || i !== Math.round(focus)) {
@@ -173,6 +179,20 @@ export function Showcase({ items, from }: { items: ShowcaseItem[]; from?: DOMRec
         swiped = false;
         schedule();
       }
+    };
+
+    // A sideways trackpad scroll flips through too, settling on a card when it
+    // stops. Up and down scrolling is left to the page.
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+      e.preventDefault();
+      target = clamp(target + e.deltaX / 160, 0, n - 1);
+      clearTimeout(settle);
+      settle = window.setTimeout(() => {
+        target = Math.round(target);
+        schedule();
+      }, 140);
+      schedule();
     };
 
     const onFocus = (e: FocusEvent) => {
@@ -208,8 +228,11 @@ export function Showcase({ items, from }: { items: ShowcaseItem[]; from?: DOMRec
     section.addEventListener("click", onClick);
     section.addEventListener("focusin", onFocus);
     section.addEventListener("keydown", onKey);
+    section.addEventListener("wheel", onWheel, { passive: false });
     return () => {
       cancelAnimationFrame(raf);
+      clearTimeout(settle);
+      section.removeEventListener("wheel", onWheel);
       io.disconnect();
       window.removeEventListener("resize", schedule);
       document.removeEventListener("visibilitychange", schedule);
@@ -263,6 +286,32 @@ export function Showcase({ items, from }: { items: ShowcaseItem[]; from?: DOMRec
             </li>
           ))}
         </ul>
+        {/* The side buttons. Keyboard users have the arrow keys on the cards,
+            so these stay out of the tab order. */}
+        <button
+          type="button"
+          className="showcase-arrow"
+          data-step="-1"
+          aria-label="Previous"
+          tabIndex={-1}
+          disabled={active === 0}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 5 8 12l7 7" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          className="showcase-arrow"
+          data-step="1"
+          aria-label="Next"
+          tabIndex={-1}
+          disabled={active === n - 1}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m9 5 7 7-7 7" />
+          </svg>
+        </button>
         {/* The lifted card's title. The links above carry the same text for
             screen readers, so this is only for sighted visitors. */}
         <p className="showcase-caption" aria-hidden="true">
