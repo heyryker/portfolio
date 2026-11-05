@@ -9,7 +9,7 @@ import { EMAIL, RESUME } from "@/lib/site";
 export function LandingIntro() {
   return (
     <div className="landing-intro">
-      <h1 className="landing-intro-title">Hi, I’m Ryker</h1>
+      <h1 id="landing-intro-title" className="landing-intro-title">Hi, I’m Ryker</h1>
       {/* TODO(ryker): approve line */}
       <p className="landing-intro-blurb">
         Brand designer and art director.

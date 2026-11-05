@@ -21,12 +21,12 @@ export function CopyEmail({ email }: { email: string }) {
           navigator.clipboard?.writeText(email).then(() => setCopied(true), () => {});
           trackEvent("Email copy", { from: window.location.pathname });
         }}
-        className="cursor-pointer text-sm tracking-[0.08em] text-muted uppercase transition-colors hover:text-accent focus-visible:text-accent"
+        className="cursor-pointer text-sm tracking-[0.08em] text-muted uppercase transition-colors hover:marker focus-visible:marker"
       >
         [COPY]
       </button>
       {/* TODO(ryker): approve line */}
-      <span aria-live="polite" className="font-pixel text-xs text-accent">
+      <span aria-live="polite" className="font-pixel text-xs text-ink">
         {copied ? "Copied. Your move." : ""}
       </span>
     </span>

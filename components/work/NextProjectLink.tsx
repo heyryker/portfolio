@@ -15,7 +15,7 @@ export function NextProjectLink({ slug, label }: { slug: string; label: string }
       className="group inline-flex items-baseline gap-4 bg-bg pr-2 text-[clamp(32px,5.2vw,56px)] leading-[1.1] font-extrabold tracking-[-0.015em]"
     >
       <span>Next:</span>
-      <span className="text-muted transition-colors group-hover:text-accent group-focus-visible:text-accent">
+      <span className="text-muted transition-colors group-hover:marker group-focus-visible:marker">
         [{label}]
       </span>
     </Link>

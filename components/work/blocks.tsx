@@ -132,7 +132,7 @@ export function SectionLabel({ children }: { children?: React.ReactNode }) {
 /** A note for Ryker that shows on the page until it's filled in. */
 export function Todo({ children }: { children: React.ReactNode }) {
   return (
-    <p className="case-col my-4 font-pixel text-xs leading-[22px] text-accent uppercase">
+    <p className="case-col my-4 font-pixel text-xs leading-[22px] text-ink uppercase">
       TODO(ryker): {children}
     </p>
   );

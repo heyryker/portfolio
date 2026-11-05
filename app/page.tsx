@@ -59,7 +59,7 @@ export default async function Home() {
           ],
         }}
       />
-      <SiteHeader />
+      <SiteHeader sticky />
       <main>
         <LandingIntro />
         <WorkSection cases={cases} all={[...cases, ...posts]} />

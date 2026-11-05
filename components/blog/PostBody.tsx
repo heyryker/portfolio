@@ -13,7 +13,7 @@ import { PixelSquare } from "@/components/PixelSquare";
  */
 
 const link =
-  "underline decoration-grid underline-offset-4 transition-colors hover:text-accent hover:decoration-accent focus-visible:text-accent";
+  "underline decoration-grid underline-offset-4 transition-colors hover:marker focus-visible:marker";
 
 type FigureProps = {
   /** Path under /public. */

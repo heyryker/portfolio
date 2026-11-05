@@ -24,7 +24,7 @@ export function AiSummary({ points }: { points: string[] }) {
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((o) => !o)}
-        className="landing-button cursor-pointer gap-2 text-accent"
+        className="landing-button cursor-pointer gap-2 text-ink"
       >
         <Sparkle />
         {open ? "Hide summary" : "AI summary"}

@@ -94,7 +94,7 @@ export function CaseStack({
               src={item.image}
               alt={item.alt}
               fill
-              sizes="(min-width: 920px) 880px, 100vw"
+              sizes="(min-width: 1104px) 1080px, 100vw"
               priority={i === n - 1}
               draggable={false}
             />

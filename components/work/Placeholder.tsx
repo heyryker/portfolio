@@ -17,7 +17,7 @@ export function Placeholder({ label, className }: { label: string; className?: s
       {/* The Sleepy One, napping on the job. */}
       <span aria-hidden="true" className="absolute bottom-0 left-[44px] flex items-end gap-1">
         <Meeple color="var(--color-meeple-blue)" />
-        <span className="mb-[46px] font-pixel text-[10px] leading-none text-accent">z</span>
+        <span className="mb-[46px] font-pixel text-[10px] leading-none text-ink">z</span>
       </span>
     </div>
   );

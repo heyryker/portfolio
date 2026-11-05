@@ -35,7 +35,7 @@ export default function BlogIndex() {
       <BlogHeader back={{ href: "/", label: "BACK" }} />
 
       <main className="mx-auto max-w-[968px] px-[22px] pt-11 pb-22 md:px-11">
-        <p className="text-sm tracking-[0.08em] text-accent uppercase">[BLOG]</p>
+        <p className="text-sm tracking-[0.08em] text-ink uppercase">[BLOG]</p>
         <h1 className="mt-5 text-[clamp(32px,5.2vw,56px)] leading-[1.05] font-extrabold tracking-[-0.015em] text-balance">
           {/* TODO(ryker): approve line */}
           Process, side projects and the occasional food truck.
@@ -65,11 +65,11 @@ export default function BlogIndex() {
                       <span key={tag}>[{tag.toUpperCase()}]</span>
                     ))}
                   </p>
-                  <h2 className="mt-2 text-2xl leading-tight font-extrabold tracking-[-0.01em] text-balance transition-colors group-hover:text-accent group-focus-visible:text-accent">
+                  <h2 className="mt-2 text-2xl leading-tight font-extrabold tracking-[-0.01em] text-balance transition-colors group-hover:marker group-focus-visible:marker">
                     {post.title}
                   </h2>
                   <p className="mt-2 text-lg leading-relaxed">{post.summary}</p>
-                  <p aria-hidden="true" className="mt-3 text-sm tracking-[0.08em] text-muted uppercase transition-colors group-hover:text-accent">
+                  <p aria-hidden="true" className="mt-3 text-sm tracking-[0.08em] text-muted uppercase transition-colors group-hover:marker">
                     [READ &rarr;]
                   </p>
                 </div>

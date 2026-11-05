@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CopyEmail } from "@/components/CopyEmail";
 import { JsonLd } from "@/components/JsonLd";
-import { Meeple } from "@/components/Meeple";
-import { PixelGarden } from "@/components/PixelGarden";
 import { PixelPortrait } from "@/components/PixelPortrait";
 import { PixelSquare } from "@/components/PixelSquare";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -50,20 +48,14 @@ export default function AboutPage() {
         <SiteHeader />
         <Link
           href="/"
-          className="absolute -mx-2 -my-1 bg-bg px-2 py-1 top-[34px] left-[66px] text-sm tracking-[0.08em] text-muted uppercase transition-colors hover:text-ink focus-visible:text-ink md:top-[33px] md:left-[88px]"
+          className="absolute -mx-2 -my-1 bg-bg px-2 py-1 top-[34px] left-[164px] text-sm tracking-[0.08em] text-muted uppercase transition-colors hover:text-ink focus-visible:text-ink md:top-[33px] md:left-[200px]"
         >
           [&larr; BACK]
         </Link>
-        <PixelGarden />
-        {/* Two meeples peeking over the header's bottom edge. */}
-        <div aria-hidden="true" className="absolute right-[88px] bottom-0 flex items-end gap-[11px] overflow-hidden max-md:right-[110px]">
-          <Meeple color="var(--color-meeple-purple)" className="translate-y-[22px]" />
-          <Meeple color="var(--color-meeple-blue)" className="translate-y-[11px]" />
-        </div>
       </div>
 
       <main className="mx-auto max-w-[968px] px-[22px] pt-11 pb-22 md:px-11">
-        <p className="text-sm tracking-[0.08em] text-accent uppercase">HEY [I&rsquo;M] RYKER</p>
+        <p className="text-sm tracking-[0.08em] text-ink uppercase">HEY [I&rsquo;M] RYKER</p>
         <h1 className="mt-5 text-[clamp(32px,5.2vw,56px)] leading-[1.05] font-extrabold tracking-[-0.015em] text-balance">
           I&rsquo;m a brand designer interested in strategy, craft and art direction.
         </h1>
@@ -77,7 +69,7 @@ export default function AboutPage() {
                 href="https://lucid.co"
                 target="_blank"
                 rel="noopener"
-                className="underline decoration-grid underline-offset-4 transition-colors hover:text-accent hover:decoration-accent focus-visible:text-accent"
+                className="underline decoration-grid underline-offset-4 transition-colors hover:marker focus-visible:marker"
               >
                 Lucid Software
               </a>
@@ -92,7 +84,7 @@ export default function AboutPage() {
               <a
                 href={RESUME}
                 download="Ryker-Marble-Resume.pdf"
-                className="inline-flex h-11 items-center bg-accent px-5 text-sm font-semibold tracking-[0.08em] text-white uppercase transition-colors hover:bg-ink focus-visible:bg-ink"
+                className="inline-flex h-11 items-center bg-accent px-5 text-sm font-semibold tracking-[0.08em] text-ink uppercase transition-colors hover:bg-ink hover:text-white focus-visible:bg-ink focus-visible:text-white"
               >
                 Download PDF
               </a>
@@ -100,7 +92,7 @@ export default function AboutPage() {
                 href={RESUME}
                 target="_blank"
                 rel="noopener"
-                className="inline-flex h-11 items-center border border-ink px-5 text-sm font-semibold tracking-[0.08em] uppercase transition-colors hover:border-accent hover:text-accent focus-visible:text-accent"
+                className="inline-flex h-11 items-center border border-ink px-5 text-sm font-semibold tracking-[0.08em] uppercase transition-colors hover:border-ink hover:marker focus-visible:marker"
               >
                 View in browser
               </a>
@@ -124,7 +116,7 @@ export default function AboutPage() {
                   <a
                     href={href}
                     {...(href.startsWith("http") ? { target: "_blank", rel: "noopener" } : {})}
-                    className="text-lg underline decoration-grid underline-offset-4 transition-colors hover:text-accent hover:decoration-accent focus-visible:text-accent"
+                    className="text-lg underline decoration-grid underline-offset-4 transition-colors hover:marker focus-visible:marker"
                   >
                     {value}
                   </a>

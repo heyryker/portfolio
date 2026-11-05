@@ -13,7 +13,11 @@
   --color-ink: #000000;
   --color-ink-soft: #221f20;
   --color-muted: #a1a3a6;
-  --color-accent: #58b9f8;
+  /* 2026-11: the brand is black and white with a yellow accent (Ryker's call;
+     CLAUDE.md §3 still says blue). Yellow can't carry text on white, so it's
+     used as a fill: the highlighter under hovered links, squares and markers.
+     Text stays ink. */
+  --color-accent: #ffd60a;
 
   /* Meeples and small playful moments only. Never body text. */
   --color-meeple-yellow: #fbec5a;
@@ -25,6 +29,20 @@
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   /* Pixel accent font: tags, metadata, 404, footer, meeple moments. Use sparingly. */
   --font-pixel: var(--font-silkscreen), ui-monospace, monospace;
+}
+
+/*
+ * The hover and focus look for links: the text stays black and a yellow
+ * highlighter bar runs under it (an underline drawn behind the letters).
+ * Use as hover:marker, group-hover:marker, focus-visible:marker.
+ */
+@utility marker {
+  color: var(--color-ink);
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 0.32em;
+  text-underline-offset: -0.14em;
+  text-decoration-skip-ink: none;
 }
 
 :root {
@@ -83,7 +101,7 @@ body {
   align-items: center;
   justify-content: center;
   min-height: 60svh;
-  padding: 120px 24px 16px;
+  padding: 120px 24px 48px;
   text-align: center;
 }
 
@@ -125,22 +143,27 @@ body {
 .landing-intro-links a:focus-visible,
 .showcase-pause:hover,
 .showcase-pause:focus-visible {
-  color: var(--color-accent);
+  color: var(--color-ink);
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 0.32em;
+  text-underline-offset: -0.14em;
+  text-decoration-skip-ink: none;
 }
 
 /*
- * The case study stack (components/CaseStack.tsx): image cards leaning back
- * like records in a crate, running down the page with the front card at the
+ * The case study stack (components/CaseStack.tsx): image cards tipped toward
+ * the viewer like records in a crate, running down the page with the front card at the
  * bottom. Each card sits --step below the one behind it; the upright card
  * stands straight, and the cards in front of it (--after: 1) drop by
  * --reveal to show it. Square corners, at Ryker's ask.
  */
 .case-stack-section {
-  padding: 8px 12px 0;
+  padding: 24px 12px 0;
 }
 
 .case-stack {
-  --w: min(880px, 100vw - 24px);
+  --w: min(1080px, 100vw - 24px);
   --h: calc(var(--w) * 0.6);
   --step: calc(var(--h) * 0.22);
   --reveal: calc(var(--h) * 0.55);
@@ -149,13 +172,21 @@ body {
   --tilt: -40deg;
   position: relative;
   width: var(--w);
-  /* Just the resting stack: the tipped front card shows about half
-     its height. A card flipped upright hangs over the All work button for a
-     moment; the button sits above it, and pointing at it lets the stack rest. */
+  /* Just the resting stack: the tipped front card shows about half its
+     height. A card flipped upright hangs over the toggle for a moment; the
+     toggle sits above it, and pointing at it lets the stack rest. */
   height: calc(var(--h) * 0.48 + (var(--count) - 1) * var(--step));
   margin: 0 auto;
   perspective: 1100px;
   perspective-origin: 50% 0;
+}
+
+/* Without a cursor, scrolling flips the front card upright on its way past,
+   and there's no pointing at the toggle to put it back, so leave room for it. */
+@media (hover: none) {
+  .case-stack {
+    height: calc(var(--h) + (var(--count) - 1) * var(--step));
+  }
 }
 
 .case-stack-card {
@@ -301,7 +332,12 @@ body {
 
 .work-toggle button:hover,
 .work-toggle button:focus-visible {
-  color: var(--color-accent);
+  color: var(--color-ink);
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 0.32em;
+  text-underline-offset: -0.14em;
+  text-decoration-skip-ink: none;
 }
 
 /* The carousel runs edge to edge, past the section's side padding. */
@@ -492,8 +528,8 @@ body {
   }
 
   .showcase-arrow:hover {
-    border-color: var(--color-accent);
-    color: var(--color-accent);
+    border-color: var(--color-ink);
+    background: var(--color-accent);
   }
 
   .showcase-arrow:disabled {
@@ -523,7 +559,7 @@ body {
 /*
  * A landing-page button: a thin outline in its own text color, so a meeple
  * walking over it tints the whole button. No fill, so meeples stay visible
- * behind it. Hover and focus fill it with the accent.
+ * behind it. Hover and focus fill it with the yellow accent, text in ink.
  */
 .landing-button {
   display: flex;
@@ -545,16 +581,19 @@ body {
 .landing-button:focus-visible {
   border-color: var(--color-accent);
   background-color: var(--color-accent);
-  color: var(--color-bg) !important;
+  color: var(--color-ink) !important;
 }
 
 /*
- * The landing page footer (components/SiteFooter.tsx): pixel grass, then
- * email and LinkedIn in small muted caps.
+ * The landing page footer (components/SiteFooter.tsx): a thin rule, then
+ * email and LinkedIn in small muted caps. (The pixel grass came out in
+ * 2026-11 with the black, white and yellow brand.)
  */
-/* No background, so meeples that wander down can walk on the grass. */
 .site-footer {
   position: relative;
+  margin-inline: 24px;
+  border-top: 1px solid #e8e8e8;
+  padding-top: 12px;
 }
 
 .site-footer-links {
@@ -694,23 +733,23 @@ html:has(.site-menu[open]) {
   display: inline-block;
   padding-block: calc(var(--grid-cell) / 2);
   margin-block: calc(var(--grid-cell) / -2);
-  font-size: calc(var(--menu-cap) / 0.7275);
-  font-weight: 800;
+  font-family: "Times New Roman", Times, serif;
+  font-size: calc(var(--menu-cap) / 0.662);
+  font-weight: 400;
   line-height: 1;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
   white-space: nowrap;
   transition: color 0.2s;
 }
 
-/* Pull the ink, not the line box, onto the grid lines (Inter's metrics, as
-   in .headline-line). */
+/* Pull the ink, not the line box, onto the grid lines (Times' cap height
+   is about 0.66em, with about 0.23em above it in the line box). */
 .menu-text {
   display: block;
-  margin-top: -0.1365em;
-  margin-left: -0.057em;
+  margin-top: -0.22em;
 }
 
-/* A blue pixel square marks the hovered, focused or current item. It's one
+/* A yellow square marks the hovered, focused or current item. It's one
    meeple pixel, centered on the grid line a cell to the item's left. */
 .menu-link::before {
   content: "";
@@ -726,7 +765,12 @@ html:has(.site-menu[open]) {
 
 .menu-link:hover,
 .menu-link:focus-visible {
-  color: var(--color-accent);
+  color: var(--color-ink);
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 0.32em;
+  text-underline-offset: -0.14em;
+  text-decoration-skip-ink: none;
 }
 
 .menu-link:hover::before,
@@ -740,14 +784,14 @@ html:has(.site-menu[open]) {
   width: 0.42em;
   height: 0.42em;
   margin-left: 0.1em;
-  vertical-align: calc(0.7275em - 0.42em);
+  vertical-align: calc(0.662em - 0.42em);
   color: var(--color-muted);
   transition: color 0.2s;
 }
 
 .menu-link:hover .menu-icon,
 .menu-link:focus-visible .menu-icon {
-  color: var(--color-accent);
+  color: var(--color-ink);
 }
 
 .menu-download {
@@ -770,7 +814,7 @@ html:has(.site-menu[open]) {
 
 .menu-download:hover,
 .menu-download:focus-visible {
-  color: var(--color-accent);
+  color: var(--color-ink);
 }
 
 @media (min-width: 720px) and (min-height: 520px) {
@@ -779,9 +823,71 @@ html:has(.site-menu[open]) {
   }
 }
 
-/* Visible focus states in the accent blue (§10). */
+/*
+ * The header (components/SiteHeader.tsx). "Ryker Marble" in the top-left
+ * corner is the link home, set in the landing page's Times New Roman. On the
+ * landing page the header is fixed and the name slides in once the intro has
+ * scrolled away, with a white band behind the bar.
+ */
+.home-name {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 21px;
+  line-height: 1;
+  color: var(--color-ink);
+  transition:
+    opacity 300ms,
+    transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    visibility 300ms;
+}
+
+@media (min-width: 768px) {
+  .home-name {
+    left: 53px;
+  }
+}
+
+.home-name:hover,
+.home-name:focus-visible {
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 0.32em;
+  text-underline-offset: -0.14em;
+  text-decoration-skip-ink: none;
+}
+
+.home-name[data-reveal]:not([data-shown]) {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.site-header[data-sticky] {
+  height: 88px;
+  transition:
+    background-color 300ms,
+    backdrop-filter 300ms;
+}
+
+.site-header[data-sticky][data-scrolled] {
+  background-color: rgb(255 255 255 / 0.88);
+  backdrop-filter: blur(12px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-name {
+    transition: none;
+  }
+}
+
+/* Visible focus states: a black ring (yellow on white is too faint to see). */
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-ink);
   outline-offset: 4px;
 }
 
@@ -871,7 +977,7 @@ html:has(.site-menu[open]) {
 .video-sound:hover,
 .video-sound:focus-visible,
 .video-sound[aria-pressed="true"] {
-  color: var(--color-accent);
+  color: var(--color-ink);
 }
 
 /*
@@ -1098,7 +1204,12 @@ html:has(.site-menu[open]) {
 }
 
 .cookie-notice-actions button:first-child {
-  color: var(--color-accent);
+  color: var(--color-ink);
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 0.32em;
+  text-underline-offset: -0.14em;
+  text-decoration-skip-ink: none;
 }
 
 .cookie-notice-actions button:hover,
