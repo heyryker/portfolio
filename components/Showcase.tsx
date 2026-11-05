@@ -30,6 +30,7 @@ const STILL = `
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+const ease = (t: number) => 1 - (1 - t) ** 3;
 
 /**
  * Every case study and blog post as one angled rack of cards, like a card
@@ -44,7 +45,7 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
  * With reduced motion, or without JavaScript, it's a still grid of tiles
  * with titles. Placement lives in globals.css under `.showcase`.
  */
-export function Showcase({ items, enterFrom }: { items: ShowcaseItem[]; enterFrom?: number }) {
+export function Showcase({ items, from }: { items: ShowcaseItem[]; from?: DOMRect[] }) {
   const sectionRef = useRef<HTMLElement>(null);
   const cardRefs = useRef<(HTMLLIElement | null)[]>([]);
   const [active, setActive] = useState(0);
@@ -56,18 +57,28 @@ export function Showcase({ items, enterFrom }: { items: ShowcaseItem[]; enterFro
 
     let raf = 0;
     let visible = true;
-    // The lifted card, as a float while moving. Starting it off to one side
-    // (enterFrom) sweeps the cards in from there.
-    let focus = enterFrom ?? 0;
+    let focus = 0; // the lifted card, as a float while moving
     let target = 0;
     let shown = -1;
     let swipe: { x: number; from: number; moved: boolean } | undefined;
     let swiped = false;
 
+    // The entrance, when opened from the case study stack (`from` holds where
+    // those cards were on screen): they drop from there into the rack, then
+    // the rest fill in from the right, one after another.
+    const start = performance.now();
+    const stage = section.querySelector(".showcase-rack")!.getBoundingClientRect();
+    const entering = (i: number, now: number) => {
+      if (!from) return 1;
+      const delay = i < from.length ? i * 90 : 450 + (i - from.length) * 45;
+      return ease(clamp((now - start - delay) / (i < from.length ? 900 : 700), 0, 1));
+    };
+
     const layout = () => {
       raf = 0;
       const first = cardRefs.current[0];
       if (!first) return;
+      const now = performance.now();
       focus = lerp(focus, target, 0.16);
       if (Math.abs(focus - target) < 0.002) focus = target;
 
@@ -86,8 +97,23 @@ export function Showcase({ items, enterFrom }: { items: ShowcaseItem[]; enterFro
         const y = -near * h * 0.16;
         const z = near * w * 0.22 - Math.abs(d) * 6;
         const rot = -clamp(d, -1, 1) * 48 * (1 - near * 0.15);
-        card.style.transform = `translate3d(${x}px, ${y}px, ${z}px) rotateY(${rot}deg)`;
-        card.style.zIndex = String(1000 - Math.round(Math.abs(d) * 10));
+        const t = entering(i, now);
+        const r = from?.[i];
+        if (t >= 1) {
+          card.style.transform = `translate3d(${x}px, ${y}px, ${z}px) rotateY(${rot}deg)`;
+          card.style.opacity = "";
+        } else if (r) {
+          // From where it sat in the stack (relative to the card's resting
+          // spot, the centre of the rack) down into its place in the rack.
+          const fx = r.left + r.width / 2 - (stage.left + stage.width / 2);
+          const fy = r.top + r.height / 2 - (stage.top + stage.height / 2);
+          const fs = r.width / w;
+          card.style.transform = `translate3d(${lerp(fx, x, t)}px, ${lerp(fy, y, t)}px, ${lerp(0, z, t)}px) rotateY(${lerp(0, rot, t)}deg) scale(${lerp(fs, 1, t)})`;
+        } else {
+          card.style.transform = `translate3d(${x + (1 - t) * w * 1.2}px, ${y}px, ${z}px) rotateY(${rot}deg)`;
+          card.style.opacity = String(t);
+        }
+        card.style.zIndex = String(1000 - Math.round(Math.abs(d) * 10) + (r && t < 1 ? 100 : 0));
       });
 
       const now_ = Math.round(clamp(focus, 0, n - 1));
@@ -96,7 +122,8 @@ export function Showcase({ items, enterFrom }: { items: ShowcaseItem[]; enterFro
         setActive(now_);
       }
       // Keep going until the rack is still.
-      if (visible && !document.hidden && focus !== target) schedule();
+      const arriving = !!from && now - start < 450 + n * 45 + 900;
+      if (visible && !document.hidden && (focus !== target || arriving)) schedule();
     };
 
     const schedule = () => {
@@ -192,7 +219,7 @@ export function Showcase({ items, enterFrom }: { items: ShowcaseItem[]; enterFro
       section.removeEventListener("keydown", onKey);
       delete section.dataset.ready;
     };
-  }, [n, enterFrom]);
+  }, [n, from]);
 
   const current = items[active];
 

@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import { JsonLd } from "@/components/JsonLd";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, WEBSITE_ID, pageMetadata, person } from "@/lib/site";
 import { LandingIntro } from "@/components/LandingIntro";
-import { AllWork } from "@/components/AllWork";
-import { CaseStack } from "@/components/CaseStack";
 import type { ShowcaseItem } from "@/components/Showcase";
+import { WorkSection } from "@/components/WorkSection";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { LandingMarker } from "@/components/work/LandingMarker";
@@ -65,8 +64,7 @@ export default async function Home() {
       <SiteHeader />
       <main>
         <LandingIntro />
-        <CaseStack items={cases} />
-        <AllWork items={[...cases, ...posts]} />
+        <WorkSection cases={cases} all={[...cases, ...posts]} />
       </main>
       <LandingMarker />
       <SiteFooter />
