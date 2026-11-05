@@ -71,6 +71,8 @@ body {
  * to download and no font swap to shift the layout.
  */
 .landing-intro,
+.case-stack-section,
+.all-work,
 .showcase {
   font-family: "Times New Roman", Times, serif;
 }
@@ -124,6 +126,170 @@ body {
 .showcase-pause:hover,
 .showcase-pause:focus-visible {
   color: var(--color-accent);
+}
+
+/*
+ * The case study stack (components/CaseStack.tsx). Every card is the same
+ * size and sits at the bottom of the stack; each one behind (--pos 1, 2, 3)
+ * steps up by --step and shrinks from its top edge, so only its title band
+ * shows over the cards in front. Clicking one behind brings it forward.
+ */
+.case-stack-section {
+  padding: 24px 16px 0;
+}
+
+.case-stack {
+  --w: min(680px, 100vw - 32px);
+  --band: 64px;
+  --image-h: calc(var(--w) * 0.6);
+  --step: 54px;
+  --behind: 3;
+  position: relative;
+  width: var(--w);
+  height: calc(var(--band) + var(--image-h) + var(--step) * var(--behind));
+  margin: 0 auto;
+}
+
+@media not all and (min-width: 720px) {
+  .case-stack {
+    --band: 54px;
+    --step: 44px;
+  }
+}
+
+.case-stack-card {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: calc(var(--band) + var(--image-h));
+  z-index: calc(10 - var(--pos));
+  transform: translateY(calc(var(--pos) * var(--step) * -1 - var(--lift, 0px))) scale(calc(1 - var(--pos) * 0.07));
+  transform-origin: 50% 0;
+  transition: transform 650ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* A card behind rises a little on hover, to say it can come forward. */
+.case-stack-card:not([data-front]):hover {
+  --lift: 12px;
+}
+
+.case-stack-link {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--color-bg);
+  border: 1px solid rgb(34 31 32 / 0.08);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.06),
+    0 -8px 24px -12px rgb(0 0 0 / 0.18),
+    0 24px 48px -20px rgb(0 0 0 / 0.25);
+}
+
+.case-stack-band {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: var(--band);
+  padding: 0 22px;
+}
+
+.case-stack-name {
+  overflow: hidden;
+  font-size: clamp(17px, 2vw, 22px);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-ink);
+}
+
+.case-stack-eyebrow {
+  flex: none;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+}
+
+.case-stack-image {
+  position: relative;
+  flex: 1;
+  background: #f5f5f7;
+}
+
+.case-stack-image img {
+  object-fit: cover;
+}
+
+.case-stack-card[data-front] .case-stack-link:hover .case-stack-name,
+.case-stack-link:focus-visible .case-stack-name {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.case-stack-summary {
+  max-width: 34ch;
+  min-height: 3em;
+  margin: 28px auto 0;
+  text-align: center;
+  font-size: clamp(18px, 1.6vw, 21px);
+  line-height: 1.4;
+  color: var(--color-ink-soft);
+  text-wrap: balance;
+  animation: showcase-caption 400ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .case-stack-card {
+    transition: none;
+  }
+  .case-stack-summary {
+    animation: none;
+  }
+}
+
+/* The "all work" button under the stack (components/AllWork.tsx). */
+.all-work {
+  padding: 40px 0 72px;
+  text-align: center;
+}
+
+.all-work-button {
+  font-size: clamp(18px, 1.6vw, 21px);
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 600ms,
+    transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    color 200ms;
+}
+
+.all-work-button[data-shown] {
+  opacity: 1;
+  transform: none;
+}
+
+.all-work-button:hover,
+.all-work-button:focus-visible {
+  color: var(--color-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .all-work-button {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.all-work-rack {
+  animation: showcase-caption 500ms ease-out;
 }
 
 /*
@@ -227,7 +393,7 @@ body {
     overflow: clip;
   }
 
-  .showcase-title {
+  .showcase .showcase-title {
     position: absolute;
     inset-inline: 0;
     bottom: calc(50% + var(--card-h) / 2 + 72px);

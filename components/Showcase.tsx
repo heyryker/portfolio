@@ -11,6 +11,8 @@ export type ShowcaseItem = {
   title: string;
   image: string;
   alt: string;
+  /** One line about it, where there is one (case studies). */
+  summary?: string;
 };
 
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
@@ -42,7 +44,7 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
  * With reduced motion, or without JavaScript, it's a still grid of tiles
  * with titles. Placement lives in globals.css under `.showcase`.
  */
-export function Showcase({ items }: { items: ShowcaseItem[] }) {
+export function Showcase({ items, enterFrom }: { items: ShowcaseItem[]; enterFrom?: number }) {
   const sectionRef = useRef<HTMLElement>(null);
   const cardRefs = useRef<(HTMLLIElement | null)[]>([]);
   const [active, setActive] = useState(0);
@@ -54,7 +56,9 @@ export function Showcase({ items }: { items: ShowcaseItem[] }) {
 
     let raf = 0;
     let visible = true;
-    let focus = 0; // the lifted card, as a float while moving
+    // The lifted card, as a float while moving. Starting it off to one side
+    // (enterFrom) sweeps the cards in from there.
+    let focus = enterFrom ?? 0;
     let target = 0;
     let shown = -1;
     let swipe: { x: number; from: number; moved: boolean } | undefined;
@@ -188,7 +192,7 @@ export function Showcase({ items }: { items: ShowcaseItem[] }) {
       section.removeEventListener("keydown", onKey);
       delete section.dataset.ready;
     };
-  }, [n]);
+  }, [n, enterFrom]);
 
   const current = items[active];
 

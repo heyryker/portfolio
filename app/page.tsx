@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { JsonLd } from "@/components/JsonLd";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, WEBSITE_ID, pageMetadata, person } from "@/lib/site";
 import { LandingIntro } from "@/components/LandingIntro";
-import { Showcase, type ShowcaseItem } from "@/components/Showcase";
+import { AllWork } from "@/components/AllWork";
+import { CaseStack } from "@/components/CaseStack";
+import type { ShowcaseItem } from "@/components/Showcase";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { LandingMarker } from "@/components/work/LandingMarker";
@@ -14,10 +16,10 @@ export const metadata: Metadata = pageMetadata({ description: SITE_DESCRIPTION, 
 const sentenceCase = (label: string) => label.charAt(0) + label.slice(1).toLowerCase();
 
 export default async function Home() {
-  // Case studies first, so one tops each column, then the blog, newest first.
+  // The case studies lead; the carousel has them first, then the blog, newest first.
   const cases: ShowcaseItem[] = (
     await Promise.all(
-      CASE_STUDIES.map(async ({ slug, label }) => {
+      CASE_STUDIES.map(async ({ slug, label }): Promise<ShowcaseItem | undefined> => {
         const { meta } = await loadCaseStudy(slug);
         const image = meta.hero?.kind === "video" ? meta.hero.poster : meta.hero?.src;
         if (!image) return undefined;
@@ -27,6 +29,7 @@ export default async function Home() {
           title: meta.title,
           image,
           alt: meta.hero?.alt ?? "",
+          summary: meta.summary,
         };
       }),
     )
@@ -62,7 +65,8 @@ export default async function Home() {
       <SiteHeader />
       <main>
         <LandingIntro />
-        <Showcase items={[...cases, ...posts]} />
+        <CaseStack items={cases} />
+        <AllWork items={[...cases, ...posts]} />
       </main>
       <LandingMarker />
       <SiteFooter />
