@@ -12,19 +12,16 @@ import { CASE_STUDIES, loadCaseStudy } from "@/lib/work";
 
 export const metadata: Metadata = pageMetadata({ description: SITE_DESCRIPTION, path: "/" });
 
-const sentenceCase = (label: string) => label.charAt(0) + label.slice(1).toLowerCase();
-
 export default async function Home() {
   // The case studies lead; the carousel has them first, then the blog, newest first.
   const cases: ShowcaseItem[] = (
     await Promise.all(
-      CASE_STUDIES.map(async ({ slug, label, name, area }): Promise<ShowcaseItem | undefined> => {
+      CASE_STUDIES.map(async ({ slug, name, area }): Promise<ShowcaseItem | undefined> => {
         const { meta } = await loadCaseStudy(slug);
         const image = meta.hero?.kind === "video" ? meta.hero.poster : meta.hero?.src;
         if (!image) return undefined;
         return {
           href: `/work/${slug}`,
-          eyebrow: `Case study · ${sentenceCase(label)}`,
           title: meta.title,
           image,
           alt: meta.hero?.alt ?? "",
@@ -38,7 +35,6 @@ export default async function Home() {
 
   const posts: ShowcaseItem[] = getPosts().map((p) => ({
     href: `/blog/${p.slug}`,
-    eyebrow: `Blog · ${p.date.slice(0, 4)}`,
     title: p.title,
     image: p.cover,
     alt: p.coverAlt,

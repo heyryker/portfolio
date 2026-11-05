@@ -6,8 +6,6 @@ import { useLayoutEffect, useRef, useState } from "react";
 
 export type ShowcaseItem = {
   href: string;
-  /** Small line above the title: "Case study · Brand guides", "Blog · 2025". */
-  eyebrow: string;
   title: string;
   image: string;
   alt: string;
@@ -24,7 +22,6 @@ const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 const STILL = `
 .showcase { height: auto }
 .showcase .showcase-stage { position: static; height: auto; overflow: visible }
-.showcase .showcase-title { position: static }
 .showcase .showcase-rack { position: static; display: grid; perspective: none; padding: 0 16px 64px }
 .showcase .showcase-card { position: static; opacity: 1; transform: none; width: auto }
 .showcase .showcase-text { display: block }
@@ -51,7 +48,7 @@ const ease = (t: number) => 1 - (1 - t) ** 3;
  * with titles. Placement lives in globals.css under `.showcase`.
  */
 export function Showcase({ items, from }: { items: ShowcaseItem[]; from?: DOMRect[] }) {
-  const sectionRef = useRef<HTMLElement>(null);
+  const sectionRef = useRef<HTMLDivElement>(null); // WorkSection has the heading
   const cardRefs = useRef<(HTMLLIElement | null)[]>([]);
   const [active, setActive] = useState(0);
   const n = items.length;
@@ -250,14 +247,11 @@ export function Showcase({ items, from }: { items: ShowcaseItem[]; from?: DOMRec
   const current = items[active];
 
   return (
-    <section ref={sectionRef} aria-labelledby="showcase-title" className="showcase">
+    <div ref={sectionRef} className="showcase">
       <noscript>
         <style>{STILL}</style>
       </noscript>
       <div className="showcase-stage">
-        <h2 id="showcase-title" className="showcase-title">
-          Work and writing
-        </h2>
         <ul className="showcase-rack">
           {items.map((item, i) => (
             <li
@@ -279,7 +273,6 @@ export function Showcase({ items, from }: { items: ShowcaseItem[]; from?: DOMRec
                   />
                 </span>
                 <span className="showcase-text">
-                  <span className="showcase-eyebrow">{item.eyebrow}</span>
                   <span className="showcase-name">{item.title}</span>
                 </span>
               </Link>
@@ -316,13 +309,12 @@ export function Showcase({ items, from }: { items: ShowcaseItem[]; from?: DOMRec
             screen readers, so this is only for sighted visitors. */}
         <p className="showcase-caption" aria-hidden="true">
           <span key={active} className="showcase-caption-inner">
-            <span className="showcase-eyebrow">{current.eyebrow}</span>
             <Link href={current.href} tabIndex={-1} className="showcase-name">
               {current.title}
             </Link>
           </span>
         </p>
       </div>
-    </section>
+    </div>
   );
 }
