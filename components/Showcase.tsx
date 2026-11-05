@@ -31,6 +31,7 @@ const STILL = `
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const ease = (t: number) => 1 - (1 - t) ** 3;
+const inOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
 /**
  * Every case study and blog post as one angled rack of cards, like a card
@@ -52,7 +53,7 @@ export function Showcase({
   from,
 }: {
   items: ShowcaseItem[];
-  /** Where the case study cards were, with `top` measured from the bottom of this section. */
+  /** Where the case study cards were, with `top` measured from the top of this section. */
   from?: DOMRect[];
 }) {
   const sectionRef = useRef<HTMLDivElement>(null); // WorkSection has the heading
@@ -77,15 +78,16 @@ export function Showcase({
     // those cards were on screen): they drop from there into the rack, then
     // the rest fill in from the right, one after another.
     const start = performance.now();
-    // The rack's centre, measured like `from`: x on screen, y from the
-    // section's bottom (the toggle under it, which stays put on screen).
-    const rack = section.querySelector(".showcase-rack")!.getBoundingClientRect();
-    const sectionBottom = section.getBoundingClientRect().bottom;
+    // The rack's centre, measured like `from`: x on screen, y from the top
+    // of this section (where the stack started too).
+    const rackEl = section.querySelector<HTMLElement>(".showcase-rack")!;
+    const rack = rackEl.getBoundingClientRect();
+    const sectionTop = section.getBoundingClientRect().top;
     const cx = rack.left + rack.width / 2;
-    const cy = rack.top - sectionBottom + rack.height / 2;
+    const cy = rack.top - sectionTop + rack.height / 2;
     // The rack's vanishing point (its perspective and perspective-origin in the CSS).
-    const P = parseFloat(getComputedStyle(section.querySelector(".showcase-rack")!).perspective) || 1400;
-    const oy = rack.top - sectionBottom + rack.height * 0.45;
+    const P = parseFloat(getComputedStyle(rackEl).perspective) || 1400;
+    const oy = rack.top - sectionTop + rack.height * 0.45;
     // Each stack card is tipped back from its top edge (CaseStack's --tilt),
     // seen through its own perspective. The rack's perspective is different,
     // so find the tip that makes the card look the same height through it:
@@ -106,11 +108,16 @@ export function Showcase({
       return -(lo + hi) / 2;
     };
     const tips = from?.map(tip) ?? [];
+    // How far along each card's entrance is, 0 to 1 (1 once it's in).
+    const CASE_MS = 1400;
+    const REST_MS = 1000;
+    const restDelay = (i: number) => 520 + (i - (from?.length ?? 0)) * 55;
     const entering = (i: number, now: number) => {
       if (!from) return 1;
-      const delay = i < from.length ? i * 90 : 450 + (i - from.length) * 45;
-      return ease(clamp((now - start - delay) / (i < from.length ? 1000 : 700), 0, 1));
+      const r = i < from.length;
+      return clamp((now - start - (r ? i * 120 : restDelay(i))) / (r ? CASE_MS : REST_MS), 0, 1);
     };
+    const arrival = from ? Math.max((from.length - 1) * 120 + CASE_MS, restDelay(n - 1) + REST_MS) : 0;
 
     const layout = () => {
       raf = 0;
@@ -135,36 +142,44 @@ export function Showcase({
         const y = -near * h * 0.16;
         const z = near * w * 0.22 - Math.abs(d) * 6;
         const rot = -clamp(d, -1, 1) * 48 * (1 - near * 0.15);
-        const t = entering(i, now);
+        const p = entering(i, now);
         const r = from?.[i];
         const image = r ? card.querySelector<HTMLElement>(".showcase-image") : null;
-        if (t >= 1) {
+        if (p >= 1) {
           card.style.transform = `translate3d(${x}px, ${y}px, ${z}px) rotateY(${rot}deg)`;
           card.style.opacity = "";
           if (image) image.style.height = "";
         } else if (r) {
-          // From where it sat in the stack down into its place in the rack.
-          // It starts exactly as it was: the stack's size, 5:3, tipped back
-          // from its top edge. On the way it grows to 4:3 (the image box
-          // itself, so the picture is never squashed), stands up, shrinks
-          // and turns to its angle in the rack.
+          // From where it sat in the stack, up toward the viewer in a big arc,
+          // and down into its place in the rack. It starts exactly as it was
+          // (the stack's size, 5:3, tipped back from its top edge), and on the
+          // way grows to 4:3 (the image box itself, so the picture is never
+          // squashed), stands up, swings and turns to its angle in the rack.
+          const t = inOut(p);
+          const arc = Math.sin(Math.PI * t);
           const box = lerp(0.6, 0.75, t) * w; // the image box's height now
           image!.style.height = `${box}px`;
           const sc = lerp(r.width / w, 1, t);
           // The top edge's centre, relative to the centre of the rack.
           const tx = lerp(r.left + r.width / 2 - cx, x, t);
-          const ty = lerp(r.top - cy, y - h / 2, t);
+          const ty = lerp(r.top - cy, y - h / 2, t) - arc * h * 0.6;
+          const tz = lerp(0, z, t) + arc * w * 0.7;
           // The card's box is placed for a 4:3 card, so a shorter box has its
           // centre higher by half the difference.
           const c0 = (box - h) / 2;
+          const side = i % 2 ? 1 : -1;
           card.style.transform =
-            `translate3d(${tx}px, ${ty - c0}px, ${lerp(0, z, t)}px) rotateY(${lerp(0, rot, t)}deg) ` +
-            `rotateX(${lerp(tips[i], 0, t)}deg) translateY(${(sc * box) / 2}px) scale(${sc})`;
+            `translate3d(${tx}px, ${ty - c0}px, ${tz}px) ` +
+            `rotateY(${lerp(0, rot, t) + arc * side * 28}deg) rotateZ(${arc * side * 7}deg) ` +
+            `rotateX(${lerp(tips[i], 0, t) + arc * 18}deg) translateY(${(sc * box) / 2}px) scale(${sc})`;
         } else {
-          card.style.transform = `translate3d(${x + (1 - t) * w * 1.2}px, ${y}px, ${z}px) rotateY(${rot}deg)`;
-          card.style.opacity = String(t);
+          // The rest sweep in from deep on the right, turning as they come.
+          const t = ease(p);
+          const u = 1 - t;
+          card.style.transform = `translate3d(${x + u * w * 2.6}px, ${y - u * h * 0.2}px, ${z - u * 900}px) rotateY(${rot - u * 75}deg)`;
+          card.style.opacity = String(Math.min(1, p * 3));
         }
-        card.style.zIndex = String(1000 - Math.round(Math.abs(d) * 10) + (r && t < 1 ? 100 : 0));
+        card.style.zIndex = String(1000 - Math.round(Math.abs(d) * 10) + (r && p < 1 ? 100 : 0));
       });
 
       const now_ = Math.round(clamp(focus, 0, n - 1));
@@ -173,7 +188,9 @@ export function Showcase({
         setActive(now_);
       }
       // Keep going until the rack is still.
-      const arriving = !!from && now - start < 450 + n * 45 + 1000;
+      const arriving = !!from && now - start < arrival;
+      // The caption and the arrows wait until everything has landed.
+      if (!arriving) delete section.dataset.entering;
       if (visible && !document.hidden && (focus !== target || arriving)) schedule();
     };
 
@@ -261,6 +278,7 @@ export function Showcase({
       schedule();
     });
 
+    if (from) section.dataset.entering = "";
     layout();
     section.dataset.ready = "";
     io.observe(section);
@@ -289,6 +307,7 @@ export function Showcase({
       section.removeEventListener("focusin", onFocus);
       section.removeEventListener("keydown", onKey);
       delete section.dataset.ready;
+      delete section.dataset.entering;
     };
   }, [n, from]);
 

@@ -491,7 +491,16 @@ body {
     display: none;
   }
 
+  /* While the cards fly in (Showcase sets data-entering), the caption and the
+     side buttons stay out of the way, then fade in. */
+  .showcase[data-entering] .showcase-caption,
+  .showcase[data-entering] .showcase-arrow {
+    opacity: 0;
+    pointer-events: none;
+  }
+
   .showcase-caption {
+    transition: opacity 400ms;
     position: absolute;
     inset-inline: 0;
     top: calc(50% + var(--card-h) / 2 + 40px);
@@ -857,14 +866,6 @@ html:has(.site-menu[open]) {
 
 .site-header[data-sticky] {
   height: 88px;
-  transition:
-    background-color 300ms,
-    backdrop-filter 300ms;
-}
-
-.site-header[data-sticky][data-scrolled] {
-  background-color: rgb(255 255 255 / 0.88);
-  backdrop-filter: blur(12px);
 }
 
 @media (prefers-reduced-motion: reduce) {
