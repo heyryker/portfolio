@@ -146,12 +146,12 @@ body {
   --reveal: calc(var(--h) * 0.55);
   --count: 4;
   /* Negative tips the tops toward the viewer, so the cards come forward. */
-  --tilt: -26deg;
+  --tilt: -40deg;
   position: relative;
   width: var(--w);
   height: calc(var(--h) + (var(--count) - 1) * var(--step) + var(--reveal));
   margin: 0 auto;
-  perspective: 1500px;
+  perspective: 1100px;
   perspective-origin: 50% 0;
 }
 
@@ -195,13 +195,25 @@ body {
   inset: 0 0 auto;
   padding: 14px 18px 36px;
   background: linear-gradient(rgb(0 0 0 / 0.55), transparent);
-  font-size: clamp(16px, 1.7vw, 21px);
+  font-size: clamp(18px, 2vw, 26px);
   line-height: 1.2;
   color: #fff;
   text-shadow: 0 1px 8px rgb(0 0 0 / 0.3);
 }
 
-.case-stack-card[data-upright] .case-stack-title {
+.case-stack-name,
+.case-stack-area {
+  display: block;
+}
+
+.case-stack-area {
+  margin-top: 2px;
+  font-size: 0.72em;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.case-stack-card[data-upright] .case-stack-name {
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;

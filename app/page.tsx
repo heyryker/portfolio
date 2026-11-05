@@ -18,7 +18,7 @@ export default async function Home() {
   // The case studies lead; the carousel has them first, then the blog, newest first.
   const cases: ShowcaseItem[] = (
     await Promise.all(
-      CASE_STUDIES.map(async ({ slug, label }): Promise<ShowcaseItem | undefined> => {
+      CASE_STUDIES.map(async ({ slug, label, name, area }): Promise<ShowcaseItem | undefined> => {
         const { meta } = await loadCaseStudy(slug);
         const image = meta.hero?.kind === "video" ? meta.hero.poster : meta.hero?.src;
         if (!image) return undefined;
@@ -29,6 +29,8 @@ export default async function Home() {
           image,
           alt: meta.hero?.alt ?? "",
           summary: meta.summary,
+          name,
+          area,
         };
       }),
     )

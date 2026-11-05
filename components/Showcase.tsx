@@ -13,6 +13,9 @@ export type ShowcaseItem = {
   alt: string;
   /** One line about it, where there is one (case studies). */
   summary?: string;
+  /** Short card label for the case study crate: what it is, then the design area. */
+  name?: string;
+  area?: string;
 };
 
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";

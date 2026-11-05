@@ -98,7 +98,10 @@ export function CaseStack({
               priority={i === n - 1}
               draggable={false}
             />
-            <span className="case-stack-title">{item.title}</span>
+            <span className="case-stack-title">
+              <span className="case-stack-name">{item.name ?? item.title}</span>
+              {item.area && <span className="case-stack-area">{item.area}</span>}
+            </span>
           </Link>
         </li>
       ))}
