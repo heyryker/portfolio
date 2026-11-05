@@ -123,6 +123,12 @@ body {
   text-wrap: balance;
 }
 
+/* "Based in Utah." in the yellow accent, at Ryker's ask. A short aside, so it's
+   the one place yellow carries type on white, despite the low contrast. */
+.landing-intro-place {
+  color: var(--color-accent);
+}
+
 .landing-intro-links {
   display: flex;
   gap: 32px;
@@ -552,8 +558,14 @@ body {
     stroke-width: 1.5;
   }
 
+  /* On hover the arrow itself turns yellow (Ryker's call), heavier so it
+     still reads on white. */
   .showcase-arrow:hover {
-    background: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .showcase-arrow:hover svg {
+    stroke-width: 2.5;
   }
 
   .showcase-arrow:disabled {

@@ -16,7 +16,7 @@ export function LandingIntro() {
         <br />
         I build brand systems that stay clear as they scale.
         <br />
-        <em>Based in Utah.</em>
+        <em className="landing-intro-place">Based in Utah.</em>
       </p>
       <p className="landing-intro-links">
         <a href={RESUME} target="_blank" rel="noopener">
