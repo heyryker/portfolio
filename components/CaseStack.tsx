@@ -7,7 +7,7 @@ import type { ShowcaseItem } from "./Showcase";
 
 /**
  * The four case studies as records in a crate, after Ryker's reference:
- * image cards tip forward, toward the viewer, in a stack that runs down the page, each showing a
+ * large square-cornered image cards tip forward, toward the viewer, in a stack that runs down the page, each showing a
  * strip with its title over the image. As the cursor moves over the stack,
  * the card under it flips upright and the cards in front drop back to show
  * it. On touch screens, scrolling the stack past the middle of the screen
@@ -57,7 +57,6 @@ export function CaseStack({
     <ul
       ref={stackRef}
       className="case-stack"
-      data-up={up >= 0 && up < n - 1 ? "" : undefined}
       onPointerLeave={(e) => {
         if (e.pointerType === "mouse") {
           setUp(-1);
@@ -95,7 +94,7 @@ export function CaseStack({
               src={item.image}
               alt={item.alt}
               fill
-              sizes="(min-width: 720px) 620px, 100vw"
+              sizes="(min-width: 920px) 880px, 100vw"
               priority={i === n - 1}
               draggable={false}
             />

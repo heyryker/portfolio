@@ -82,8 +82,8 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 72svh;
-  padding: 120px 24px 40px;
+  min-height: 60svh;
+  padding: 120px 24px 16px;
   text-align: center;
 }
 
@@ -133,14 +133,14 @@ body {
  * like records in a crate, running down the page with the front card at the
  * bottom. Each card sits --step below the one behind it; the upright card
  * stands straight, and the cards in front of it (--after: 1) drop by
- * --reveal to show it. With nothing upright, the stack sits centred.
+ * --reveal to show it. Square corners, at Ryker's ask.
  */
 .case-stack-section {
-  padding: 24px 16px 0;
+  padding: 8px 12px 0;
 }
 
 .case-stack {
-  --w: min(620px, 100vw - 32px);
+  --w: min(880px, 100vw - 24px);
   --h: calc(var(--w) * 0.6);
   --step: calc(var(--h) * 0.22);
   --reveal: calc(var(--h) * 0.55);
@@ -161,15 +161,11 @@ body {
   top: 0;
   height: var(--h);
   z-index: var(--i);
-  transform-origin: 50% 100%;
-  transform: translateY(calc(var(--i) * var(--step) + var(--after) * var(--reveal) + var(--rest, 0.5) * var(--reveal)))
+  /* Hinged at the top, so each title strip stays put and the stack hangs right under its heading. */
+  transform-origin: 50% 0;
+  transform: translateY(calc(var(--i) * var(--step) + var(--after) * var(--reveal)))
     rotateX(var(--lean, var(--tilt)));
   transition: transform 650ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-/* With a card upright (and not the front one), the stack opens from the top. */
-.case-stack[data-up] .case-stack-card {
-  --rest: 0;
 }
 
 .case-stack-card[data-upright] {
@@ -181,7 +177,6 @@ body {
   display: block;
   height: 100%;
   overflow: hidden;
-  border-radius: 14px;
   background: #f5f5f7;
   box-shadow:
     0 1px 2px rgb(0 0 0 / 0.08),
