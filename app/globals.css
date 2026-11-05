@@ -129,31 +129,31 @@ body {
 }
 
 /*
- * The case study stack (components/CaseStack.tsx). Every card is the same
- * size and sits at the bottom of the stack; each one behind (--pos 1, 2, 3)
- * steps up by --step and shrinks from its top edge, so only its title band
- * shows over the cards in front. Clicking one behind brings it forward.
+ * The case study stack (components/CaseStack.tsx): image-only cards. Every
+ * card is the same size and sits at the bottom of the stack; each one behind
+ * (--pos 1, 2, 3) steps up by --step and shrinks from its top edge, so only a
+ * sliver of it shows over the cards in front.
  */
 .case-stack-section {
   padding: 24px 16px 0;
 }
 
 .case-stack {
-  --w: min(680px, 100vw - 32px);
-  --band: 64px;
+  --w: min(720px, 100vw - 32px);
   --image-h: calc(var(--w) * 0.6);
-  --step: 54px;
+  --step: 26px;
   --behind: 3;
   position: relative;
   width: var(--w);
-  height: calc(var(--band) + var(--image-h) + var(--step) * var(--behind));
+  height: calc(var(--image-h) + var(--step) * var(--behind));
   margin: 0 auto;
+  /* Sideways swipes turn the stack; up and down still scroll the page. */
+  touch-action: pan-y;
 }
 
 @media not all and (min-width: 720px) {
   .case-stack {
-    --band: 54px;
-    --step: 44px;
+    --step: 18px;
   }
 }
 
@@ -161,91 +161,164 @@ body {
   position: absolute;
   inset-inline: 0;
   bottom: 0;
-  height: calc(var(--band) + var(--image-h));
+  height: var(--image-h);
   z-index: calc(10 - var(--pos));
-  transform: translateY(calc(var(--pos) * var(--step) * -1 - var(--lift, 0px))) scale(calc(1 - var(--pos) * 0.07));
+  transform: translateY(calc(var(--pos) * var(--step) * -1 - var(--lift, 0px))) scale(calc(1 - var(--pos) * 0.06));
   transform-origin: 50% 0;
-  transition: transform 650ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition:
+    transform 800ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 800ms;
+  filter: brightness(calc(1 - var(--pos) * 0.06));
 }
 
 /* A card behind rises a little on hover, to say it can come forward. */
 .case-stack-card:not([data-front]):hover {
-  --lift: 12px;
+  --lift: 10px;
+}
+
+/*
+ * The turn: the card that just left the front drops down and away, then
+ * comes up from behind into the back of the stack. Two copies of the same
+ * animation alternate (data-turn 0 and 1) so it restarts on every turn.
+ */
+.case-stack-card[data-turn="0"] {
+  animation: case-stack-turn-a 1100ms cubic-bezier(0.45, 0, 0.2, 1);
+}
+.case-stack-card[data-turn="1"] {
+  animation: case-stack-turn-b 1100ms cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+@keyframes case-stack-turn-a {
+  0% {
+    transform: none;
+    opacity: 1;
+    z-index: 20;
+  }
+  40% {
+    transform: translateY(45%) scale(0.92) rotate(-2deg);
+    opacity: 0;
+    z-index: 20;
+  }
+  41% {
+    transform: translateY(calc(var(--step) * -1)) scale(0.8);
+    opacity: 0;
+    z-index: 0;
+  }
+}
+
+@keyframes case-stack-turn-b {
+  0% {
+    transform: none;
+    opacity: 1;
+    z-index: 20;
+  }
+  40% {
+    transform: translateY(45%) scale(0.92) rotate(-2deg);
+    opacity: 0;
+    z-index: 20;
+  }
+  41% {
+    transform: translateY(calc(var(--step) * -1)) scale(0.8);
+    opacity: 0;
+    z-index: 0;
+  }
 }
 
 .case-stack-link {
-  display: flex;
-  flex-direction: column;
+  position: relative;
+  display: block;
   height: 100%;
   overflow: hidden;
   border-radius: 18px;
-  background: var(--color-bg);
-  border: 1px solid rgb(34 31 32 / 0.08);
+  background: #f5f5f7;
   box-shadow:
     0 1px 2px rgb(0 0 0 / 0.06),
-    0 -8px 24px -12px rgb(0 0 0 / 0.18),
-    0 24px 48px -20px rgb(0 0 0 / 0.25);
+    0 -6px 20px -12px rgb(0 0 0 / 0.2),
+    0 24px 48px -20px rgb(0 0 0 / 0.28);
+  -webkit-user-drag: none;
 }
 
-.case-stack-band {
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  height: var(--band);
-  padding: 0 22px;
-}
-
-.case-stack-name {
-  overflow: hidden;
-  font-size: clamp(17px, 2vw, 22px);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  color: var(--color-ink);
-}
-
-.case-stack-eyebrow {
-  flex: none;
-  font-size: 13px;
-  letter-spacing: 0.04em;
-  color: var(--color-muted);
-}
-
-.case-stack-image {
-  position: relative;
-  flex: 1;
-  background: #f5f5f7;
-}
-
-.case-stack-image img {
+.case-stack-link img {
   object-fit: cover;
 }
 
-.case-stack-card[data-front] .case-stack-link:hover .case-stack-name,
-.case-stack-link:focus-visible .case-stack-name {
+.case-stack-dots {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 20px;
+}
+
+/* A 24px tap target around an 8px dot. */
+.case-stack-dot {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.case-stack-dot::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-muted);
+  opacity: 0.45;
+  transition:
+    opacity 300ms,
+    transform 300ms;
+}
+
+.case-stack-dot[aria-current]::before {
+  opacity: 1;
+  transform: scale(1.15);
+  background: var(--color-ink);
+}
+
+.case-stack-dot:focus-visible::before {
+  background: var(--color-accent);
+  opacity: 1;
+}
+
+.case-stack-caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 5.5em;
+  margin: 16px auto 0;
+  padding: 0 8px;
+  text-align: center;
+  animation: showcase-caption 500ms ease-out;
+}
+
+.case-stack-name {
+  font-size: clamp(21px, 2.1vw, 26px);
+  color: var(--color-ink);
+}
+
+.case-stack-name:hover,
+.case-stack-name:focus-visible {
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
 }
 
 .case-stack-summary {
-  max-width: 34ch;
-  min-height: 3em;
-  margin: 28px auto 0;
-  text-align: center;
-  font-size: clamp(18px, 1.6vw, 21px);
+  max-width: 40ch;
+  font-size: clamp(17px, 1.5vw, 19px);
   line-height: 1.4;
   color: var(--color-ink-soft);
   text-wrap: balance;
-  animation: showcase-caption 400ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .case-stack-card {
     transition: none;
+    animation: none !important;
   }
-  .case-stack-summary {
+  .case-stack-caption {
     animation: none;
   }
 }
