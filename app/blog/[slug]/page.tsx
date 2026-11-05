@@ -75,7 +75,7 @@ export default async function BlogPost({ params }: PageProps<"/blog/[slug]">) {
       <main className="mx-auto max-w-[968px] px-[22px] pt-11 pb-22 md:px-11">
         <article>
           <header>
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-pixel text-xs leading-[22px] text-muted">
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-serif text-xs leading-[22px] text-muted">
               <time dateTime={post.date}>{formatDate(post.date)}</time>
               {post.tags.map((tag) => (
                 <span key={tag}>[{tag.toUpperCase()}]</span>
@@ -129,7 +129,7 @@ export default async function BlogPost({ params }: PageProps<"/blog/[slug]">) {
             </span>
             <CopyEmail email={EMAIL} />
           </p>
-          <p className="mt-22 font-pixel text-xs text-muted">
+          <p className="mt-22 font-serif text-xs text-muted">
             Designed by Ryker. Animated by five very small coworkers.
           </p>
         </footer>

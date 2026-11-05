@@ -86,7 +86,7 @@ export async function CaseStudy({ slug }: { slug: CaseStudySlug }) {
           ).map(([label, value]) => (
             <div key={label} className="flex items-baseline gap-3">
               <dt className="text-sm tracking-[0.08em] text-muted uppercase">[{label}]</dt>
-              <dd className={value.startsWith("TODO") ? "font-pixel text-xs text-ink uppercase" : ""}>{value}</dd>
+              <dd className={value.startsWith("TODO") ? "font-serif text-xs text-ink uppercase" : ""}>{value}</dd>
             </div>
           ))}
         </dl>
@@ -115,7 +115,7 @@ export async function CaseStudy({ slug }: { slug: CaseStudySlug }) {
 
           <div className="mt-11 flex items-end justify-between gap-4">
             {/* TODO(ryker): approve line */}
-            <p className="bg-bg font-pixel text-xs text-muted">
+            <p className="bg-bg font-serif text-xs text-muted">
               Designed by Ryker. Animated by five very small coworkers.
             </p>
             <span aria-hidden="true" className="flex items-end gap-[11px]">

@@ -38,7 +38,7 @@ export function AiSummary({ points }: { points: string[] }) {
           ))}
         </ul>
         {/* TODO(ryker): approve line */}
-        <p className="mt-3 font-pixel text-xs text-muted">Summarized by AI from this page. The long version is below.</p>
+        <p className="mt-3 font-serif text-xs text-muted">Summarized by AI from this page. The long version is below.</p>
       </div>
     </div>
   );

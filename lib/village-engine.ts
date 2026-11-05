@@ -557,7 +557,8 @@ export class VillageEngine {
   private raf = 0;
   private last = 0;
   private time = 0;
-  private font = "700 8px monospace";
+  // Name tags and signs use the site's serif (it replaced the pixel font).
+  private font = '10px "Times New Roman", Times, serif';
 
   private nodes: Node[] = [];
   private edges: Edge[] = [];
@@ -609,9 +610,6 @@ export class VillageEngine {
     if (!ctx) throw new Error("Canvas 2D is not available");
     this.ctx = ctx;
     this.ground = document.createElement("canvas");
-
-    const pixel = getComputedStyle(document.documentElement).getPropertyValue("--font-silkscreen").trim();
-    if (pixel) this.font = `700 8px ${pixel}`;
 
     this.build();
 

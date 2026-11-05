@@ -135,7 +135,7 @@ export default function AboutPage() {
                 <span>
                   <span className="font-semibold">{job.role}</span>, {job.org}
                 </span>
-                <span className="font-pixel text-xs leading-6 text-muted">{job.years}</span>
+                <span className="font-serif text-xs leading-6 text-muted">{job.years}</span>
               </li>
             ))}
           </ul>
@@ -151,7 +151,7 @@ export default function AboutPage() {
         </section>
 
         {/* TODO(ryker): approve line */}
-        <p className="mt-22 font-pixel text-xs text-muted">
+        <p className="mt-22 font-serif text-xs text-muted">
           Designed by Ryker. Animated by five very small coworkers.
         </p>
       </main>

@@ -26,7 +26,7 @@ export function CopyEmail({ email }: { email: string }) {
         [COPY]
       </button>
       {/* TODO(ryker): approve line */}
-      <span aria-live="polite" className="font-pixel text-xs text-ink">
+      <span aria-live="polite" className="font-serif text-xs text-ink">
         {copied ? "Copied. Your move." : ""}
       </span>
     </span>

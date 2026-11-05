@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Silkscreen } from "next/font/google";
+import { Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { AnalyticsEvents } from "@/components/AnalyticsEvents";
@@ -13,11 +13,6 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const silkscreen = Silkscreen({
-  variable: "--font-silkscreen",
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -50,7 +45,7 @@ export default function RootLayout({ children, work }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${silkscreen.variable} h-full antialiased`}
+      className={`${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full">
         {/* The page. Made inert while a case study covers it. */}

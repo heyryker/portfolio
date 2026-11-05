@@ -83,10 +83,33 @@ export function Showcase({
     const sectionBottom = section.getBoundingClientRect().bottom;
     const cx = rack.left + rack.width / 2;
     const cy = rack.top - sectionBottom + rack.height / 2;
+    // The rack's vanishing point (its perspective and perspective-origin in the CSS).
+    const P = parseFloat(getComputedStyle(section.querySelector(".showcase-rack")!).perspective) || 1400;
+    const oy = rack.top - sectionBottom + rack.height * 0.45;
+    // Each stack card is tipped back from its top edge (CaseStack's --tilt),
+    // seen through its own perspective. The rack's perspective is different,
+    // so find the tip that makes the card look the same height through it:
+    // then the first frame matches the stack exactly and nothing jumps.
+    const tip = (r: DOMRect) => {
+      const full = r.width * 0.6; // the stack card's real height (5:3)
+      const seen = (deg: number) => {
+        const a = (deg * Math.PI) / 180;
+        return oy + ((r.top + full * Math.cos(a) - oy) * P) / (P + full * Math.sin(a)) - r.top;
+      };
+      let lo = 0;
+      let hi = 85;
+      for (let k = 0; k < 24; k++) {
+        const mid = (lo + hi) / 2;
+        if (seen(mid) > r.height) lo = mid;
+        else hi = mid;
+      }
+      return -(lo + hi) / 2;
+    };
+    const tips = from?.map(tip) ?? [];
     const entering = (i: number, now: number) => {
       if (!from) return 1;
       const delay = i < from.length ? i * 90 : 450 + (i - from.length) * 45;
-      return ease(clamp((now - start - delay) / (i < from.length ? 900 : 700), 0, 1));
+      return ease(clamp((now - start - delay) / (i < from.length ? 1000 : 700), 0, 1));
     };
 
     const layout = () => {
@@ -99,7 +122,7 @@ export function Showcase({
 
       const vw = section.clientWidth;
       const w = first.offsetWidth;
-      const h = first.offsetHeight;
+      const h = w * 0.75; // the cards are 4:3
       const wide = vw >= 860;
       const spacing = w * (wide ? 0.13 : 0.1);
 
@@ -114,17 +137,29 @@ export function Showcase({
         const rot = -clamp(d, -1, 1) * 48 * (1 - near * 0.15);
         const t = entering(i, now);
         const r = from?.[i];
+        const image = r ? card.querySelector<HTMLElement>(".showcase-image") : null;
         if (t >= 1) {
           card.style.transform = `translate3d(${x}px, ${y}px, ${z}px) rotateY(${rot}deg)`;
           card.style.opacity = "";
+          if (image) image.style.height = "";
         } else if (r) {
-          // From where it sat in the stack (relative to the card's resting
-          // spot, the centre of the rack) down into its place in the rack.
-          // Scaled on each axis to the card's footprint in the stack, so it
-          // starts the same shape it was (wide and short, tipped).
-          const fx = r.left + r.width / 2 - cx;
-          const fy = r.top + r.height / 2 - cy;
-          card.style.transform = `translate3d(${lerp(fx, x, t)}px, ${lerp(fy, y, t)}px, ${lerp(0, z, t)}px) rotateY(${lerp(0, rot, t)}deg) scale(${lerp(r.width / w, 1, t)}, ${lerp(r.height / h, 1, t)})`;
+          // From where it sat in the stack down into its place in the rack.
+          // It starts exactly as it was: the stack's size, 5:3, tipped back
+          // from its top edge. On the way it grows to 4:3 (the image box
+          // itself, so the picture is never squashed), stands up, shrinks
+          // and turns to its angle in the rack.
+          const box = lerp(0.6, 0.75, t) * w; // the image box's height now
+          image!.style.height = `${box}px`;
+          const sc = lerp(r.width / w, 1, t);
+          // The top edge's centre, relative to the centre of the rack.
+          const tx = lerp(r.left + r.width / 2 - cx, x, t);
+          const ty = lerp(r.top - cy, y - h / 2, t);
+          // The card's box is placed for a 4:3 card, so a shorter box has its
+          // centre higher by half the difference.
+          const c0 = (box - h) / 2;
+          card.style.transform =
+            `translate3d(${tx}px, ${ty - c0}px, ${lerp(0, z, t)}px) rotateY(${lerp(0, rot, t)}deg) ` +
+            `rotateX(${lerp(tips[i], 0, t)}deg) translateY(${(sc * box) / 2}px) scale(${sc})`;
         } else {
           card.style.transform = `translate3d(${x + (1 - t) * w * 1.2}px, ${y}px, ${z}px) rotateY(${rot}deg)`;
           card.style.opacity = String(t);
@@ -138,7 +173,7 @@ export function Showcase({
         setActive(now_);
       }
       // Keep going until the rack is still.
-      const arriving = !!from && now - start < 450 + n * 45 + 900;
+      const arriving = !!from && now - start < 450 + n * 45 + 1000;
       if (visible && !document.hidden && (focus !== target || arriving)) schedule();
     };
 

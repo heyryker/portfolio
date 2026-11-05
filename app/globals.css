@@ -27,8 +27,9 @@
   --color-meeple-blue: #58b9f8;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  /* Pixel accent font: tags, metadata, 404, footer, meeple moments. Use sparingly. */
-  --font-pixel: var(--font-silkscreen), ui-monospace, monospace;
+  /* The serif for small details (dates, tags, notes), matching the landing
+     page. It replaced the pixel font (Silkscreen) in 2026-11. */
+  --font-serif: "Times New Roman", Times, serif;
 }
 
 /*
@@ -166,7 +167,9 @@ body {
   --w: min(1080px, 100vw - 24px);
   --h: calc(var(--w) * 0.6);
   --step: calc(var(--h) * 0.22);
-  --reveal: calc(var(--h) * 0.55);
+  /* Just enough that the front card, dropped below a flipped one, still ends
+     at the bottom of the box. */
+  --reveal: calc(var(--h) * 0.48);
   --count: 4;
   /* Negative tips the tops toward the viewer, so the cards come forward. */
   --tilt: -40deg;
@@ -175,12 +178,12 @@ body {
   /* Tall enough for the front card standing upright, so a flipped card never
      hangs over the toggle or the footer. At rest the cards spread out to fill
      it (--rest-step), showing more of each image; with one up they close to
-     --step and the ones in front drop by --reveal. */
-  --rest-step: calc(var(--step) + var(--h) * 0.19);
+     --step and the ones in front drop by --reveal. Tipped, each card looks
+     about 0.56 of its height, so a rest step of 0.38 leaves the front card's
+     bottom right at the bottom of the box, with even overlaps all the way. */
+  --rest-step: calc(var(--h) * 0.38);
   height: calc(var(--h) * 1.04 + (var(--count) - 1) * var(--step));
   margin: 0 auto;
-  perspective: 1100px;
-  perspective-origin: 50% 0;
 }
 
 .case-stack-card {
@@ -191,8 +194,12 @@ body {
   z-index: var(--i);
   /* Hinged at the top, so each title strip stays put and the stack hangs right under its heading. */
   transform-origin: 50% 0;
+  /* Each card has its own perspective, seen from its own top edge, so every
+     card looks the same however far down the stack it sits (a shared one
+     foreshortened the lower cards more and left uneven gaps). It scales with
+     the card (1100px on a full-size one), so phones see the same shape. */
   transform: translateY(calc(var(--i) * var(--gap, var(--rest-step)) + var(--after) * var(--reveal)))
-    rotateX(var(--lean, var(--tilt)));
+    perspective(calc(var(--h) * 1.7)) rotateX(var(--lean, var(--tilt)));
   transition: transform 650ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 

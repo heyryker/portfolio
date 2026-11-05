@@ -59,7 +59,7 @@ export default function BlogIndex() {
                   />
                 </div>
                 <div>
-                  <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-pixel text-xs leading-[22px] text-muted">
+                  <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-serif text-xs leading-[22px] text-muted">
                     <time dateTime={post.date}>{formatDate(post.date)}</time>
                     {post.tags.map((tag) => (
                       <span key={tag}>[{tag.toUpperCase()}]</span>
@@ -79,7 +79,7 @@ export default function BlogIndex() {
         </ol>
 
         {/* TODO(ryker): approve line */}
-        <p className="mt-22 font-pixel text-xs text-muted">
+        <p className="mt-22 font-serif text-xs text-muted">
           Designed by Ryker. Animated by five very small coworkers.
         </p>
       </main>
