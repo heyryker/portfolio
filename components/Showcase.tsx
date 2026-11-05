@@ -47,7 +47,14 @@ const ease = (t: number) => 1 - (1 - t) ** 3;
  * With reduced motion, or without JavaScript, it's a still grid of tiles
  * with titles. Placement lives in globals.css under `.showcase`.
  */
-export function Showcase({ items, from }: { items: ShowcaseItem[]; from?: DOMRect[] }) {
+export function Showcase({
+  items,
+  from,
+}: {
+  items: ShowcaseItem[];
+  /** Where the case study cards were, with `top` measured from the bottom of this section. */
+  from?: DOMRect[];
+}) {
   const sectionRef = useRef<HTMLDivElement>(null); // WorkSection has the heading
   const cardRefs = useRef<(HTMLLIElement | null)[]>([]);
   const [active, setActive] = useState(0);
@@ -70,7 +77,12 @@ export function Showcase({ items, from }: { items: ShowcaseItem[]; from?: DOMRec
     // those cards were on screen): they drop from there into the rack, then
     // the rest fill in from the right, one after another.
     const start = performance.now();
-    const stage = section.querySelector(".showcase-rack")!.getBoundingClientRect();
+    // The rack's centre, measured like `from`: x on screen, y from the
+    // section's bottom (the toggle under it, which stays put on screen).
+    const rack = section.querySelector(".showcase-rack")!.getBoundingClientRect();
+    const sectionBottom = section.getBoundingClientRect().bottom;
+    const cx = rack.left + rack.width / 2;
+    const cy = rack.top - sectionBottom + rack.height / 2;
     const entering = (i: number, now: number) => {
       if (!from) return 1;
       const delay = i < from.length ? i * 90 : 450 + (i - from.length) * 45;
@@ -108,10 +120,11 @@ export function Showcase({ items, from }: { items: ShowcaseItem[]; from?: DOMRec
         } else if (r) {
           // From where it sat in the stack (relative to the card's resting
           // spot, the centre of the rack) down into its place in the rack.
-          const fx = r.left + r.width / 2 - (stage.left + stage.width / 2);
-          const fy = r.top + r.height / 2 - (stage.top + stage.height / 2);
-          const fs = r.width / w;
-          card.style.transform = `translate3d(${lerp(fx, x, t)}px, ${lerp(fy, y, t)}px, ${lerp(0, z, t)}px) rotateY(${lerp(0, rot, t)}deg) scale(${lerp(fs, 1, t)})`;
+          // Scaled on each axis to the card's footprint in the stack, so it
+          // starts the same shape it was (wide and short, tipped).
+          const fx = r.left + r.width / 2 - cx;
+          const fy = r.top + r.height / 2 - cy;
+          card.style.transform = `translate3d(${lerp(fx, x, t)}px, ${lerp(fy, y, t)}px, ${lerp(0, z, t)}px) rotateY(${lerp(0, rot, t)}deg) scale(${lerp(r.width / w, 1, t)}, ${lerp(r.height / h, 1, t)})`;
         } else {
           card.style.transform = `translate3d(${x + (1 - t) * w * 1.2}px, ${y}px, ${z}px) rotateY(${rot}deg)`;
           card.style.opacity = String(t);
@@ -268,7 +281,10 @@ export function Showcase({ items, from }: { items: ShowcaseItem[]; from?: DOMRec
                     src={item.image}
                     alt={item.alt}
                     fill
-                    sizes="(min-width: 860px) 420px, 70vw"
+                    // The case study cards reuse the stack's image size (already
+                    // loaded), so they don't blank out on the way in.
+                    sizes={from && i < from.length ? "(min-width: 1104px) 1080px, 100vw" : "(min-width: 860px) 420px, 70vw"}
+                    loading={from ? "eager" : undefined}
                     draggable={false}
                   />
                 </span>

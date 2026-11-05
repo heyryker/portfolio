@@ -435,7 +435,9 @@ body {
   .showcase-stage {
     position: relative;
     height: calc(var(--card-h) + 220px);
-    overflow: clip;
+    /* Sideways only: the case study cards drop in from above the rack when
+       All work opens, and shouldn't be cut off on the way. */
+    overflow-x: clip;
   }
 
 
@@ -499,7 +501,7 @@ body {
     place-items: center;
     width: 48px;
     height: 48px;
-    border: 1px solid rgb(0 0 0 / 0.12);
+    border: 0;
     background: rgb(255 255 255 / 0.9);
     color: var(--color-ink);
     cursor: pointer;
@@ -526,7 +528,6 @@ body {
   }
 
   .showcase-arrow:hover {
-    border-color: var(--color-ink);
     background: var(--color-accent);
   }
 
