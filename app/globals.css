@@ -1005,13 +1005,10 @@ html:has(.site-menu[open]) {
 }
 
 .ai-summary-panel li::before {
-  content: "";
+  content: "–";
   position: absolute;
   left: 0;
-  top: 0.6em;
-  width: 6px;
-  height: 6px;
-  background: var(--color-accent);
+  color: var(--color-muted);
 }
 
 @keyframes ai-summary-in {

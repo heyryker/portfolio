@@ -3,7 +3,6 @@ import Link from "next/link";
 import { CopyEmail } from "@/components/CopyEmail";
 import { JsonLd } from "@/components/JsonLd";
 import { PixelPortrait } from "@/components/PixelPortrait";
-import { PixelSquare } from "@/components/PixelSquare";
 import { SiteHeader } from "@/components/SiteHeader";
 import { EDUCATION, EMAIL, EXPERIENCE, PROFILES, RESUME, SITE_URL, WEBSITE_ID, absoluteUrl, pageMetadata, person } from "@/lib/site";
 import portrait from "@/public/ryker-marble.jpg";
@@ -23,11 +22,11 @@ const CONTACT = [
   { label: "GITHUB", value: "github.com/heyryker", href: PROFILES.github },
 ];
 
-/** A bracketed section label with a pixel-square marker, on the 44px rhythm. */
+/** A bracketed section label, on the 44px rhythm. */
 function SectionLabel({ children, id }: { children: React.ReactNode; id?: string }) {
   return (
-    <h2 id={id} className="flex h-11 items-center gap-3 text-sm tracking-[0.08em] text-muted uppercase">
-      <PixelSquare className="size-[7px]" />[{children}]
+    <h2 id={id} className="flex h-11 items-center text-sm tracking-[0.08em] text-muted uppercase">
+      [{children}]
     </h2>
   );
 }

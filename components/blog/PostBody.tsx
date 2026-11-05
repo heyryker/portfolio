@@ -2,7 +2,6 @@ import { evaluate } from "@mdx-js/mdx";
 import type { MDXComponents } from "mdx/types";
 import Image from "next/image";
 import * as runtime from "react/jsx-runtime";
-import { PixelSquare } from "@/components/PixelSquare";
 
 /*
  * Renders a post's MDX at build time. Text sits in a readable column; figures
@@ -58,19 +57,13 @@ function Gallery({ children, cols = 2 }: { children: React.ReactNode; cols?: 2 |
 
 const components: MDXComponents = {
   h2: (props) => (
-    <h2 className="mt-16 mb-4 flex max-w-[660px] items-baseline gap-3 text-2xl leading-tight font-extrabold tracking-[-0.01em]" {...props}>
-      <PixelSquare className="size-[0.3em] shrink-0 -translate-y-[0.1em]" />
-      <span>{props.children}</span>
-    </h2>
+    <h2 className="mt-16 mb-4 max-w-[660px] text-2xl leading-tight font-extrabold tracking-[-0.01em]" {...props} />
   ),
   h3: (props) => <h3 className="mt-11 mb-3 max-w-[660px] text-xl leading-snug font-bold" {...props} />,
   p: (props) => <p className="my-4 max-w-[660px] text-lg leading-relaxed" {...props} />,
-  ul: (props) => <ul className="my-4 max-w-[660px] space-y-2 text-lg leading-relaxed" {...props} />,
-  li: (props) => (
-    <li className="relative pl-5" {...props}>
-      <PixelSquare className="absolute top-[0.7em] left-0 size-[6px]" />
-      {props.children}
-    </li>
+  // Plain round bullets (the yellow pixel squares came out in 2026-11).
+  ul: (props) => (
+    <ul className="my-4 max-w-[660px] list-disc space-y-2 pl-5 text-lg leading-relaxed marker:text-muted" {...props} />
   ),
   blockquote: (props) => (
     <blockquote

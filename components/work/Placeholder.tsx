@@ -1,8 +1,7 @@
-import { Meeple } from "@/components/Meeple";
-
 /**
  * Stand-in for a missing image or video: a light gray patch with a note
- * for Ryker and a meeple keeping it warm. Same size as the asset it replaces.
+ * for Ryker. Same size as the asset it replaces. (Meeples only live in the
+ * Village now.)
  */
 export function Placeholder({ label, className }: { label: string; className?: string }) {
   return (
@@ -13,11 +12,6 @@ export function Placeholder({ label, className }: { label: string; className?: s
     >
       <span className="bg-bg px-2 py-1 text-center font-serif text-xs text-muted uppercase">
         TODO(ryker): {label}
-      </span>
-      {/* The Sleepy One, napping on the job. */}
-      <span aria-hidden="true" className="absolute bottom-0 left-[44px] flex items-end gap-1">
-        <Meeple color="var(--color-meeple-blue)" />
-        <span className="mb-[46px] font-serif text-[10px] leading-none text-ink">z</span>
       </span>
     </div>
   );
