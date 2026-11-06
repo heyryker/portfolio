@@ -245,8 +245,9 @@
     var cardsPad = cards.map(function (c) { return { l: c.l - 6, t: c.t - 6, r: c.r + 6, b: c.b + 6 }; });
     var live = host._live.map(function (d) { return d.box; });
     // never a kind drawn in the last two marks
-    var kind = pick(['arrow', 'arrow', 'celebrate', 'celebrate', 'zigzag', 'star', 'smiley', 'scribble', 'scribble']
+    var kind = pick(['arrow', 'arrow', 'celebrate', 'celebrate', 'zigzag', 'star', 'scribble', 'scribble']
       .filter(function (k) { return recent.indexOf(k) < 0; }));
+    if (Math.random() < .06 && recent.indexOf('smiley') < 0) kind = 'smiley'; // smiley faces are a rare treat
 
     for (var tries = 0; tries < 50; tries++) {
       var s, scale, rot, cx, cy, over = false;
@@ -280,7 +281,7 @@
       } else if (kind === 'star' || kind === 'smiley' || kind === 'scribble') {
         // stars, smiley faces and scribbles go in the open space
         s = SHAPES[kind === 'scribble' ? pick(['scratch', 'tangle']) : kind]();
-        scale = kind === 'scribble' ? rnd(.75, 1.25) : rnd(.8, 1.5);
+        scale = kind === 'scribble' ? rnd(1.4, 2.1) : rnd(.8, 1.5);
         rot = rnd(-18, 18);
         cx = rnd(view.l + 40, view.r - 40); cy = rnd(view.t + 40, view.b - 40);
       } else {
