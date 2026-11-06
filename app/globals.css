@@ -126,7 +126,46 @@ body {
 /* "Based in Utah." in the yellow accent, at Ryker's ask. A short aside, so it's
    the one place yellow carries type on white, despite the low contrast. */
 .landing-intro-place {
+  display: inline-grid;
+  justify-items: center;
   color: var(--color-accent);
+  cursor: default;
+  outline-offset: 4px;
+}
+
+/* "Based in Utah.*" and "*Willing to relocate." stacked in one cell; hovering
+   (or tapping, or tabbing to it) crossfades to the second. */
+.landing-intro-place-home,
+.landing-intro-place-move {
+  grid-area: 1 / 1;
+  transition:
+    opacity 250ms,
+    transform 250ms;
+}
+
+.landing-intro-place-move {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.landing-intro-place:hover .landing-intro-place-home,
+.landing-intro-place:focus .landing-intro-place-home {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.landing-intro-place:hover .landing-intro-place-move,
+.landing-intro-place:focus .landing-intro-place-move {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-intro-place-home,
+  .landing-intro-place-move {
+    transition: none;
+    transform: none;
+  }
 }
 
 .landing-intro-links {

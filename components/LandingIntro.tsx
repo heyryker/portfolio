@@ -16,7 +16,18 @@ export function LandingIntro() {
         <br />
         I build brand systems that stay clear as they scale.
         <br />
-        <em className="landing-intro-place">Based in Utah.</em>
+        {/* Hover (or tap/focus) swaps it for the footnote. Both lines share one
+            grid cell, so the swap doesn't shift anything; screen readers get
+            both from the sr-only text. */}
+        <em className="landing-intro-place" tabIndex={0}>
+          <span className="sr-only">Based in Utah. Willing to relocate.</span>
+          <span aria-hidden="true" className="landing-intro-place-home">
+            Based in Utah.*
+          </span>
+          <span aria-hidden="true" className="landing-intro-place-move">
+            *Willing to relocate.
+          </span>
+        </em>
       </p>
       <p className="landing-intro-links">
         <a href={RESUME} target="_blank" rel="noopener">
