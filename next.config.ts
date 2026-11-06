@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [{ source: "/chartahealth", destination: "/chartahealth/index.html" }];
   },
+  // Always revalidate the concept page so edits show up without a hard refresh
+  // (its stylesheet, script and illustrations carry content-hash query strings).
+  async headers() {
+    return [{ source: "/chartahealth", headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }] }];
+  },
   partialPrefetching: true,
   // Case studies (and later the blog) are MDX files in /content, imported by
   // their routes rather than used as pages, so no `pageExtensions` change.

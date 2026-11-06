@@ -3,6 +3,14 @@
 #   python3 scripts/chartahealth-snapshot.py /tmp/charta.html public/chartahealth/index.html
 # Ryker's design changes live in public/chartahealth/concept.css.
 import re, sys
+
+# Cache-busting: each local asset URL carries a hash of its contents, so a
+# browser never pairs a fresh page with a stale stylesheet or illustration.
+import hashlib, os
+PUB = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'public')
+def v(url):
+    with open(os.path.join(PUB, url.lstrip('/')), 'rb') as fh:
+        return url + '?v=' + hashlib.sha1(fh.read()).hexdigest()[:8]
 src, out = sys.argv[1], sys.argv[2]
 s = open(src, encoding='utf8').read()
 
@@ -100,7 +108,7 @@ def illo(m):
         return m.group(0)
     done.add(name)
     f, alt = ILLOS[name]
-    return (f'<img src="/chartahealth/illustrations/{f}.svg" loading="lazy" width="960" height="960" '
+    return (f'<img src="{v(f"/chartahealth/illustrations/{f}.svg")}" loading="lazy" width="960" height="960" '
             f'alt="Abstract illustration: {alt}" class="solutions-tabs_tab-image"/>')
 done = set()
 s = re.sub(r'<img[^>]*class="solutions-tabs_tab-image[^"]*"[^>]*>', illo, s)
@@ -117,9 +125,9 @@ for phrase in ['changed the entire work capabilities',
 s = re.sub(r'<title>.*?</title>', '<title>Charta Health homepage concept</title>', s, flags=re.S)
 s = re.sub(r'<meta[^>]+(name="description"|property="og:|name="twitter:)[^>]*>', '', s)
 head_add = '''<meta name="robots" content="noindex, nofollow, noarchive">
-<link href="/chartahealth/concept.css" rel="stylesheet" type="text/css">'''
+<link href="''' + v('/chartahealth/concept.css') + '''" rel="stylesheet" type="text/css">'''
 s = s.replace('</head>', head_add + '\n</head>', 1)
 note = '''<a class="concept-note" href="https://heyryker.com">Unofficial concept by Ryker Marble &middot; not affiliated with Charta Health</a>'''
-s = re.sub(r'</body>', note + '\n<script src="/chartahealth/chartahealth.js" defer></script>\n</body>', s, count=1)
+s = re.sub(r'</body>', note + '\n<script src="' + v('/chartahealth/chartahealth.js') + '" defer></script>\n</body>', s, count=1)
 open(out, 'w', encoding='utf8').write(s)
 print(len(s))
