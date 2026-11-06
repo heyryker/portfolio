@@ -157,10 +157,10 @@ mark.hl {
 }
 
 /* Hero: shorter, bigger headline; "every" gets the hand-drawn underline a beat after load. */
-h1.heading-style-h2 { font-size: clamp(3rem, 7.2vw, 6.75rem); line-height: 1.02; letter-spacing: -.02em; }
+h1.heading-style-h2 { font-size: clamp(3rem, 7.2vw, 6.75rem); line-height: 1.14; letter-spacing: -.02em; }
 .hl-ready h1 mark.hl { transition-delay: 1.8s; transition-duration: 1.4s; }
 
-/* Resources + webinars: doodle layer (drawn by chartahealth.js) sits behind the
+/* Resources + webinars: yellow doodle layer (drawn by chartahealth.js) sits behind the
    cards and copy, except doodles that overlap a card's corner or edge. */
 .section_featured-resources { position: relative; isolation: isolate; }
 .section_featured-resources .doodles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
