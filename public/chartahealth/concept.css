@@ -15,7 +15,7 @@
 /* The slightly darker light green on cards, tabs, tags and the secondary button. */
 .tag:not([class*="is-"]), .tag.is-navmenu, .toggle_mask, .solutions-tabs_tab-link { background-color: #f3eee4 !important; }
 /* The secondary button keeps its original light green. */
-.button.secondary, .button[class*="w-variant-1527680c"] { background-color: #e6efeb !important; border-color: #e6efeb !important; }
+.button.secondary, .button[class*="w-variant-1527680c"] { background-color: #e6efeb !important; }
 /* All strokes are dark green. */
 .home-hero_image-wrapper, .resources-index_item, .testimonial-slider_content-right,
 .personas_row { border-color: #0f2d29 !important; }
@@ -50,9 +50,10 @@
 /* 4. Neon yellow CTAs. */
 .button:not(.is-secondary):not(.secondary):not(.is-link):not(.link):not(.is-alternate):not([class*="w-variant-1527680c"]) {
   background-color: #fdff72 !important;
-  border-color: #fdff72 !important;
   color: #0f2d29 !important;
 }
+/* Every filled button gets a dark green stroke. */
+.button:not(.is-link):not(.link) { border: 1px solid #0f2d29 !important; }
 
 /* 5. No provider / payer toggle. */
 .audience-toggle_wrapper { display: none !important; }
@@ -72,16 +73,16 @@
    (from their vertical logo scroll), all in black. */
 .hiw-steps, .hiw-ticker { width: min(80rem, 90%); margin-left: auto; margin-right: auto; }
 .hiw-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3rem; text-align: left; }
-/* Big yellow numbers sit behind the heading as a graphic, not as text to read. */
+/* Big light green numbers (yellow on hover) sit behind the heading as a graphic, not as text to read. */
 .hiw-step { position: relative; isolation: isolate; padding-top: 4.5rem; }
 .hiw-step_num {
   position: absolute; z-index: -1; top: 0; left: -.06em;
-  color: #fdff72; font-family: Fragment, "Times New Roman", serif;
+  color: #e6efeb; font-family: Fragment, "Times New Roman", serif;
   font-size: 11rem; line-height: .8; letter-spacing: -.04em; pointer-events: none; user-select: none;
   transition: color .4s ease;
 }
 /* The number sits behind the heading, so hovering anywhere on the step counts. */
-.hiw-step:hover .hiw-step_num { color: #e6efeb; }
+.hiw-step:hover .hiw-step_num { color: #fdff72; }
 .hiw-step h3 { font-size: clamp(1.6rem, 2.2vw, 2.25rem); line-height: 1.15; white-space: nowrap; }
 .hiw-step .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .hiw-ticker {
