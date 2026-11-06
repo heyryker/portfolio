@@ -134,6 +134,11 @@ def persona(m):
 s, n = re.subn(r'<img[^>]*class="personas_background-image"[^>]*>', persona, s)
 assert n == len(PERSONAS), n
 
+# Hero headline condensed, with the hand-drawn underline on "every".
+s, n = re.subn(r'(<h1 class="heading-style-h2[^"]*">)What if you could guarantee revenue integrity and clinical compliance on every chart\?</h1>',
+               r'\1Clinical compliance on <mark class="hl">every</mark> chart?</h1>', s)
+assert n == 1, n
+
 # Hand-drawn yellow highlights on the key phrase of each testimonial.
 for phrase in ['changed the entire work capabilities',
                'audit 100% of claims prepayment',
