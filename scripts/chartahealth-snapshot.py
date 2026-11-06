@@ -100,6 +100,6 @@ head_add = '''<meta name="robots" content="noindex, nofollow, noarchive">
 <link href="/chartahealth/concept.css" rel="stylesheet" type="text/css">'''
 s = s.replace('</head>', head_add + '\n</head>', 1)
 note = '''<a class="concept-note" href="https://heyryker.com">Unofficial concept by Ryker Marble &middot; not affiliated with Charta Health</a>'''
-s = re.sub(r'</body>', note + '\n</body>', s, count=1)
+s = re.sub(r'</body>', note + '\n<script src="/chartahealth/chartahealth.js" defer></script>\n</body>', s, count=1)
 open(out, 'w', encoding='utf8').write(s)
 print(len(s))

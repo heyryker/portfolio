@@ -107,11 +107,15 @@
   background: url(/chartahealth/grid-dark.svg) center top / 640px 168px;
 }
 
-/* Hand-drawn yellow highlighter on key phrases in the testimonials: an uneven
-   marker stroke (SVG, stretched per line) that runs a little past the words. */
+/* Hand-drawn yellow underline on key phrases in the testimonials: an uneven
+   double marker stroke (SVG, stretched per line) that draws in left to right
+   when the quote scrolls or slides into view (chartahealth.js adds .is-drawn). */
 .testimonial-slider_quote mark.hl {
-  color: inherit; background: none; padding: 0 .3em; margin: 0 -.24em;
+  color: inherit; background: none; padding: 0 .1em .12em; margin: 0 -.1em;
   -webkit-box-decoration-break: clone; box-decoration-break: clone;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 40' preserveAspectRatio='none'%3E%3Cpath d='M6 13 C50 9 110 12 170 8 S260 9 294 7 L291 13 L297 19 L292 25 L296 31 C240 34 170 31 110 35 S30 33 4 36 L8 30 L2 24 L7 18 Z' fill='%23fdff72'/%3E%3Cpath d='M10 10 C80 7 160 10 230 6 S280 7 290 6' stroke='%23fdff72' stroke-width='5' stroke-linecap='round' fill='none'/%3E%3Cpath d='M12 33 C90 30 180 35 288 30' stroke='%23f2f25a' stroke-width='3' stroke-linecap='round' fill='none' opacity='.8'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-size: 100% 74%; background-position: 0 70%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 24' preserveAspectRatio='none'%3E%3Cpath d='M4 13 C60 7 130 10 190 8 S270 6 296 9' stroke='%23fdff72' stroke-width='12' stroke-linecap='round' fill='none'/%3E%3Cpath d='M14 18 C80 14 150 17 210 14 S275 13 290 15' stroke='%23fdff72' stroke-width='8' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: 0 100%; background-size: 100% .5em;
 }
+.hl-ready .testimonial-slider_quote mark.hl { background-size: 0% .5em; transition: background-size .9s cubic-bezier(.6,.1,.3,1) .25s; }
+.hl-ready .testimonial-slider_quote mark.hl.is-drawn { background-size: 100% .5em; }
+@media (prefers-reduced-motion: reduce) { .hl-ready .testimonial-slider_quote mark.hl { transition: none; background-size: 100% .5em; } }
