@@ -62,7 +62,14 @@ st, en = block(s, '<div class="timeline_content">')
 old = s[st:en]
 steps = re.findall(r'<h3[^>]*>(.*?)</h3>.*?<p[^>]*>(.*?)</p>', old, flags=re.S)
 assert len(steps) == 3, len(steps)
-cols = ''.join(f'<div class="hiw-step"><div class="margin-bottom margin-small"><h3 class="heading-style-h3 text-wrap-balance">{h}</h3></div><p class="text-size-regular">{p}</p></div>' for h, p in steps)
+def step(h, p):
+    # Number pulled out big and yellow; only the first paragraph is kept.
+    num, title = re.match(r'\s*(\d+)\.\s*(.*)', h, flags=re.S).groups()
+    first = re.split(r'<br\s*/?>\s*<br\s*/?>', p)[0]
+    return (f'<div class="hiw-step"><div class="hiw-step_num" aria-hidden="true">{num}</div>'
+            f'<div class="margin-bottom margin-small"><h3 class="heading-style-h3 text-wrap-balance">'
+            f'<span class="sr-only">{num}. </span>{title}</h3></div><p class="text-size-regular">{first}</p></div>')
+cols = ''.join(step(h, p) for h, p in steps)
 def imgs(hidden):
     out = ''
     for n in LOGOS:
