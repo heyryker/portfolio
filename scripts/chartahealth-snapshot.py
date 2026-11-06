@@ -122,6 +122,18 @@ done = set()
 s = re.sub(r'<img[^>]*class="solutions-tabs_tab-image[^"]*"[^>]*>', illo, s)
 assert done == set(ILLOS), done
 
+# "Built for teams across your practice": warmer grades of their persona photos
+# (made by scripts/chartahealth-warm-photos.py), same crops and alt text.
+PERSONAS = ['Revenue cycle', 'Clinical leadership', 'Compliance', 'Operations', 'Executive', 'Quality']
+def persona(m):
+    tag = m.group(0)
+    name = next(n for n in PERSONAS if '_' + n.replace(' ', '%20') + '.avif' in tag)
+    local = v('/chartahealth/personas/' + name.lower().replace(' ', '-') + '.webp')
+    tag = re.sub(r'\s(srcset|sizes)="[^"]*"', '', tag)
+    return re.sub(r'src="[^"]*"', 'src="' + local + '"', tag)
+s, n = re.subn(r'<img[^>]*class="personas_background-image"[^>]*>', persona, s)
+assert n == len(PERSONAS), n
+
 # Hand-drawn yellow highlights on the key phrase of each testimonial.
 for phrase in ['changed the entire work capabilities',
                'audit 100% of claims prepayment',
