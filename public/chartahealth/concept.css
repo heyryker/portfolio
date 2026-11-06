@@ -72,11 +72,14 @@
    (from their vertical logo scroll), all in black. */
 .hiw-steps, .hiw-ticker { width: min(80rem, 90%); margin-left: auto; margin-right: auto; }
 .hiw-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3rem; text-align: left; }
+/* Big yellow numbers sit behind the heading as a graphic, not as text to read. */
+.hiw-step { position: relative; isolation: isolate; padding-top: 4.5rem; }
 .hiw-step_num {
-  display: inline-block; margin-bottom: 1.5rem; padding: .1em .3em;
-  background: #fdff72; color: #0f2d29;
-  font-family: Fragment, "Times New Roman", serif; font-size: 5rem; line-height: 1; letter-spacing: -.02em;
+  position: absolute; z-index: -1; top: 0; left: -.06em;
+  color: #fdff72; font-family: Fragment, "Times New Roman", serif;
+  font-size: 11rem; line-height: .8; letter-spacing: -.04em; pointer-events: none; user-select: none;
 }
+.hiw-step h3 { font-size: clamp(1.6rem, 2.2vw, 2.25rem); line-height: 1.15; white-space: nowrap; }
 .hiw-step .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .hiw-ticker {
   margin-top: 5rem; overflow: hidden;
@@ -90,7 +93,8 @@
 @media (max-width: 767px) {
   .hiw-steps { grid-template-columns: 1fr; gap: 2.5rem; }
   .hiw-ticker { margin-top: 3.5rem; }
-  .hiw-step_num { font-size: 3.5rem; margin-bottom: 1rem; }
+  .hiw-step { padding-top: 3.5rem; }
+  .hiw-step_num { font-size: 8rem; }
   .hiw-ticker img { height: calc(var(--h) * .75px); margin-right: 2.5rem; }
 }
 @media (prefers-reduced-motion: reduce) { .hiw-ticker_track { animation: none; } }

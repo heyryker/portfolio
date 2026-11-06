@@ -65,9 +65,14 @@ assert len(steps) == 3, len(steps)
 def step(h, p):
     # Number pulled out big and yellow; only the first paragraph is kept.
     num, title = re.match(r'\s*(\d+)\.\s*(.*)', h, flags=re.S).groups()
+    # Headers on two lines.
+    breaks = {'Automated chart pull': 'Automated<br/>chart pull',
+              'Automated pre-billing chart audits': 'Automated pre-billing<br/>chart audits',
+              'Detailed, real-time reporting': 'Detailed,<br/>real-time reporting'}
+    title = breaks.get(title.strip(), title)
     first = re.split(r'<br\s*/?>\s*<br\s*/?>', p)[0]
     return (f'<div class="hiw-step"><div class="hiw-step_num" aria-hidden="true">{num}</div>'
-            f'<div class="margin-bottom margin-small"><h3 class="heading-style-h3 text-wrap-balance">'
+            f'<div class="margin-bottom margin-small"><h3 class="heading-style-h3">'
             f'<span class="sr-only">{num}. </span>{title}</h3></div><p class="text-size-regular">{first}</p></div>')
 cols = ''.join(step(h, p) for h, p in steps)
 def imgs(hidden):
