@@ -116,7 +116,7 @@ def illo(m):
     done.add(name)
     f, desc = ILLOS[name]
     cls = re.search(r'class="([^"]*)"', tag)[1]
-    return (f'<img src="{v(f"/chartahealth/illustrations/{f}.svg")}" loading="lazy" width="960" height="960" '
+    return (f'<img src="{v(f"/chartahealth/illustrations/{f}.svg")}" loading="lazy" width="1000" height="800" '
             f'alt="Abstract illustration: {desc}" class="{cls}"/>')
 done = set()
 s = re.sub(r'<img[^>]*class="solutions-tabs_tab-image[^"]*"[^>]*>', illo, s)
