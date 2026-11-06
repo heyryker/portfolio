@@ -1,0 +1,50 @@
+/*
+ * Ryker's changes layered over Charta's own Webflow styles. Everything else
+ * on the page is their live homepage as of 2026-11-06.
+ */
+
+/* 1. Sharp corners everywhere. */
+*, *::before, *::after { border-radius: 0 !important; }
+
+/* 2. Creme where they use the light green background. */
+:root {
+  --brand--off-white-background: #f6f1e7;      /* was #f3f7f5 */
+  --brand--foreground-lighter-stroke: #ece4d4; /* was #e6efeb */
+  --brand--darker-border: #ddd2bd;             /* was #cee0d8 */
+}
+/* The slightly darker light green on cards, tabs, tags and the secondary button. */
+.tag:not([class*="is-"]), .tag.is-navmenu, .toggle_mask, .solutions-tabs_tab-link, .resources-index_item,
+.button.secondary, .button[class*="w-variant-1527680c"] { background-color: #ece4d4 !important; }
+.button.secondary, .button[class*="w-variant-1527680c"] { border-color: #ece4d4 !important; }
+.solutions-tabs_tabs-menu { background-color: #ddd2bd !important; }
+
+/* 3. Dark green nav. */
+.navbar_component, .navbar_container:not(.is-dropdown) { background-color: #0f2d29 !important; }
+.navbar_logo { filter: brightness(0) invert(1); }
+.menu-icon_line-top, .menu-icon1_line-middle, .menu-icon1_line-middle-inner, .menu-icon1_line-bottom { background-color: #fff !important; }
+/* Top-level links go white on the bar. Below the desktop breakpoint they sit
+   in Webflow's white slide-down menu, so they keep their original color. */
+@media (min-width: 992px) {
+  .navbar_menu-left > a, .navbar_dropdown-toggle, .navbar_menu-right > a:not(.button) { color: #fff !important; }
+}
+
+/* 4. Neon yellow CTAs. */
+.button:not(.is-secondary):not(.secondary):not(.is-link):not(.link):not(.is-alternate):not([class*="w-variant-1527680c"]) {
+  background-color: #fdff72 !important;
+  border-color: #fdff72 !important;
+  color: #0f2d29 !important;
+}
+
+/* 5. No provider / payer toggle. */
+.audience-toggle_wrapper { display: none !important; }
+
+/* Cookie banner isn't needed on a concept. */
+.fs-cc-component-wrapper, [fs-cc="banner"] { display: none !important; }
+
+/* Small credit line under Charta's footer. */
+.concept-note {
+  display: block; background: #0f2d29; color: rgba(255,255,255,.55);
+  font: 400 12px/1.4 Satoshi, Arial, sans-serif; text-align: center;
+  padding: 0 16px 24px; text-decoration: none;
+}
+.concept-note:hover { color: #fff; }
