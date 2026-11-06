@@ -1,9 +1,6 @@
 import Image from "next/image";
 import { AiSummary } from "@/components/AiSummary";
 import { CopyEmail } from "@/components/CopyEmail";
-import { Meeple } from "@/components/Meeple";
-import { PixelSquare } from "@/components/PixelSquare";
-import { PixelGarden } from "@/components/PixelGarden";
 import { SiteHeader } from "@/components/SiteHeader";
 import { caseStudyLabel, loadCaseStudy, nextCaseStudy, type CaseStudySlug } from "@/lib/work";
 import { CloseCaseStudy } from "./CloseCaseStudy";
@@ -25,16 +22,14 @@ export async function CaseStudy({ slug }: { slug: CaseStudySlug }) {
 
   return (
     <article className="min-h-svh bg-bg">
-      {/* The header band, matching About and the blog: a strip of pixel grass. */}
+      {/* The header band, matching About and the blog. */}
       <div className="bg-graph relative h-[calc(var(--grid-cell)*6)] md:h-[calc(var(--grid-cell)*3)]">
-        <PixelGarden />
         <SiteHeader />
-        <div className="absolute flex top-[34px] left-[66px] md:top-[33px] md:left-[88px]">
+        <div className="absolute flex top-[34px] left-[164px] md:top-[33px] md:left-[200px]">
           <CloseCaseStudy />
         </div>
-        {/* Sits just above the grass. */}
-        <p className="absolute right-[22px] bottom-[17px] flex h-11 items-center gap-3 text-sm tracking-[0.08em] text-accent uppercase max-md:hidden md:right-[88px]">
-          <PixelSquare className="size-[7px]" />[{caseStudyLabel(slug)}]
+        <p className="absolute right-[22px] bottom-[17px] flex h-11 items-center text-sm tracking-[0.08em] text-ink uppercase max-md:hidden md:right-[88px]">
+          [{caseStudyLabel(slug)}]
         </p>
       </div>
 
@@ -89,7 +84,7 @@ export async function CaseStudy({ slug }: { slug: CaseStudySlug }) {
           ).map(([label, value]) => (
             <div key={label} className="flex items-baseline gap-3">
               <dt className="text-sm tracking-[0.08em] text-muted uppercase">[{label}]</dt>
-              <dd className={value.startsWith("TODO") ? "font-pixel text-xs text-accent uppercase" : ""}>{value}</dd>
+              <dd className={value.startsWith("TODO") ? "font-serif text-xs text-ink uppercase" : ""}>{value}</dd>
             </div>
           ))}
         </dl>
@@ -109,23 +104,17 @@ export async function CaseStudy({ slug }: { slug: CaseStudySlug }) {
             <span>Like what you see? I&rsquo;m one email away.</span>
             <a
               href={`mailto:${EMAIL}`}
-              className="underline decoration-grid underline-offset-4 transition-colors hover:text-accent hover:decoration-accent focus-visible:text-accent"
+              className="underline decoration-grid underline-offset-4 transition-colors hover:marker focus-visible:marker"
             >
               {EMAIL}
             </a>
             <CopyEmail email={EMAIL} />
           </div>
 
-          <div className="mt-11 flex items-end justify-between gap-4">
-            {/* TODO(ryker): approve line */}
-            <p className="bg-bg font-pixel text-xs text-muted">
-              Designed by Ryker. Animated by five very small coworkers.
-            </p>
-            <span aria-hidden="true" className="flex items-end gap-[11px]">
-              <Meeple color="var(--color-meeple-yellow)" />
-              <Meeple color="var(--color-meeple-green)" />
-            </span>
-          </div>
+          {/* TODO(ryker): approve line */}
+          <p className="mt-11 font-serif text-xs text-muted">
+            Designed by Ryker. Animated by five very small coworkers.
+          </p>
         </div>
       </footer>
     </article>

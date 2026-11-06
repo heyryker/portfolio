@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { HomeName } from "@/components/HomeName";
 import { usePathname } from "next/navigation";
 import { useId, useRef } from "react";
 import { Icon } from "@/components/Icon";
@@ -10,9 +11,9 @@ const RESUME = "/resume/ryker-marble-resume.pdf";
 const CONJURE = "https://conjure-inky.vercel.app/";
 
 const LINKS = [
-  { href: "/about", label: "ABOUT" },
-  { href: "/blog", label: "BLOG" },
-  { href: "/village", label: "VILLAGE" },
+  { href: "/about", label: "About" },
+  { href: "/blog", label: "Blog" },
+  { href: "/village", label: "Village" },
 ] as const;
 
 /**
@@ -20,8 +21,8 @@ const LINKS = [
  *
  * The menu is a native modal <dialog>: showModal() makes the page behind it
  * inert, which traps focus, and Esc closes it, with focus returning to the
- * hamburger. It's plain white, with the rows still spaced in grid cells so
- * they line up with the page (see `.site-menu` in globals.css).
+ * hamburger. It's plain white, set in the landing page's Times New Roman,
+ * with the rows still spaced in grid cells (see `.site-menu` in globals.css).
  */
 export function SiteMenu() {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -48,7 +49,7 @@ export function SiteMenu() {
         aria-haspopup="dialog"
         aria-controls={id}
         onClick={() => dialog.current?.showModal()}
-        className="pointer-events-auto absolute top-[22px] right-[22px] grid size-11 cursor-pointer place-items-center text-ink-soft transition-colors hover:text-accent focus-visible:text-accent md:right-[53px]"
+        className="pointer-events-auto absolute top-[22px] right-[22px] grid size-11 cursor-pointer place-items-center text-ink-soft transition-colors hover:marker focus-visible:marker md:right-[53px]"
       >
         <Icon name="menu" className="size-6" />
       </button>
@@ -62,14 +63,8 @@ export function SiteMenu() {
         onClick={onClick}
         className="site-menu pointer-events-auto"
       >
-        {/* The home mark stays put, exactly where it is on the page. */}
-        <Link
-          href="/"
-          aria-label="Ryker Marble, home"
-          className="absolute top-[22px] left-[22px] grid size-11 place-items-center"
-        >
-          <span aria-hidden="true" className="block size-3 bg-accent" />
-        </Link>
+        {/* The home link, where it is on the page. */}
+        <HomeName />
 
         {/* Where the hamburger was. */}
         <button
@@ -77,7 +72,7 @@ export function SiteMenu() {
           aria-label="Close menu"
           autoFocus
           onClick={close}
-          className="absolute top-[22px] right-[22px] grid size-11 cursor-pointer place-items-center text-ink-soft transition-colors hover:text-accent focus-visible:text-accent md:right-[53px]"
+          className="absolute top-[22px] right-[22px] grid size-11 cursor-pointer place-items-center text-ink-soft transition-colors hover:marker focus-visible:marker md:right-[53px]"
         >
           <Icon name="close" className="size-6" />
         </button>
@@ -94,7 +89,7 @@ export function SiteMenu() {
             <li>
               <a href={CONJURE} target="_blank" rel="noopener" className="menu-link">
                 <span className="menu-text">
-                  CONJURE
+                  Conjure
                   <Icon name="arrow_outward" className="menu-icon" />
                 </span>
                 <span className="sr-only"> (opens in a new tab)</span>
@@ -103,7 +98,7 @@ export function SiteMenu() {
             <li className="flex items-start gap-[calc(var(--grid-cell)/2)]">
               <a href={RESUME} target="_blank" rel="noopener" className="menu-link">
                 <span className="menu-text">
-                  RESUME
+                  Resume
                   <Icon name="arrow_outward" className="menu-icon" />
                 </span>
                 <span className="sr-only"> (PDF, opens in a new tab)</span>

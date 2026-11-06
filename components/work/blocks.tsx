@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { PixelSquare } from "@/components/PixelSquare";
 import { LazyVideo } from "./LazyVideo";
 import { Placeholder } from "./Placeholder";
 
@@ -123,8 +122,8 @@ export function Results({ items }: { items: { value: string; label: string }[] }
 /** "## Process" in MDX renders as a bracketed label: [PROCESS]. */
 export function SectionLabel({ children }: { children?: React.ReactNode }) {
   return (
-    <h2 className="case-col mt-22 mb-3 flex h-11 items-center gap-3 text-sm tracking-[0.08em] text-muted uppercase">
-      <PixelSquare className="size-[7px]" />[{children}]
+    <h2 className="case-col mt-22 mb-3 flex h-11 items-center text-sm tracking-[0.08em] text-muted uppercase">
+      [{children}]
     </h2>
   );
 }
@@ -132,7 +131,7 @@ export function SectionLabel({ children }: { children?: React.ReactNode }) {
 /** A note for Ryker that shows on the page until it's filled in. */
 export function Todo({ children }: { children: React.ReactNode }) {
   return (
-    <p className="case-col my-4 font-pixel text-xs leading-[22px] text-accent uppercase">
+    <p className="case-col my-4 font-serif text-xs leading-[22px] text-ink uppercase">
       TODO(ryker): {children}
     </p>
   );

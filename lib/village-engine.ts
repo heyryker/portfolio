@@ -31,7 +31,7 @@
  * arrives); tap the church, or wait, for choir practice on its steps, which
  * ends with the gold flower (below).
  *
- * Everything the meeples do on the homepage (lib/meeple-engine.ts) works here
+ * Everything the meeples do on the homepage (the old landing-page meeple engine, retired in 2026-11) works here
  * too, so they keep their tricks if the homepage changes: the Curious One
  * follows the cursor and lassos it, the Chaotic One rushes it, they plant
  * tufts of grass out on the grass (which the Chaotic One tramples), the
@@ -121,7 +121,7 @@ const C = {
 
 const MEEPLE_HEXES = MEEPLES.map((m) => m.hex);
 
-// ---- Brought over from the landing page (lib/meeple-engine.ts), so the
+// ---- Brought over from the landing page (the old landing-page meeple engine, retired in 2026-11), so the
 // meeples keep all their tricks here even if the homepage changes.
 
 // The gold flower that ends choir practice. It grows from a seed to full size
@@ -557,7 +557,8 @@ export class VillageEngine {
   private raf = 0;
   private last = 0;
   private time = 0;
-  private font = "700 8px monospace";
+  // Name tags and signs use the site's serif (it replaced the pixel font).
+  private font = '10px "Times New Roman", Times, serif';
 
   private nodes: Node[] = [];
   private edges: Edge[] = [];
@@ -609,9 +610,6 @@ export class VillageEngine {
     if (!ctx) throw new Error("Canvas 2D is not available");
     this.ctx = ctx;
     this.ground = document.createElement("canvas");
-
-    const pixel = getComputedStyle(document.documentElement).getPropertyValue("--font-silkscreen").trim();
-    if (pixel) this.font = `700 8px ${pixel}`;
 
     this.build();
 

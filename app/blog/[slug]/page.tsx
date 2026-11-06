@@ -75,7 +75,7 @@ export default async function BlogPost({ params }: PageProps<"/blog/[slug]">) {
       <main className="mx-auto max-w-[968px] px-[22px] pt-11 pb-22 md:px-11">
         <article>
           <header>
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-pixel text-xs leading-[22px] text-muted">
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-serif text-xs leading-[22px] text-muted">
               <time dateTime={post.date}>{formatDate(post.date)}</time>
               {post.tags.map((tag) => (
                 <span key={tag}>[{tag.toUpperCase()}]</span>
@@ -110,7 +110,7 @@ export default async function BlogPost({ params }: PageProps<"/blog/[slug]">) {
           {next && (
             <Link href={`/blog/${next.slug}`} className="group block">
               <span className="text-sm tracking-[0.08em] text-muted uppercase">[NEXT POST]</span>
-              <span className="mt-2 block text-[clamp(24px,3vw,32px)] leading-tight font-extrabold text-balance transition-colors group-hover:text-accent group-focus-visible:text-accent">
+              <span className="mt-2 block text-[clamp(24px,3vw,32px)] leading-tight font-extrabold text-balance transition-colors group-hover:marker group-focus-visible:marker">
                 {next.title} &rarr;
               </span>
             </Link>
@@ -121,7 +121,7 @@ export default async function BlogPost({ params }: PageProps<"/blog/[slug]">) {
               Like what you see? I&rsquo;m{" "}
               <a
                 href={`mailto:${EMAIL}`}
-                className="underline decoration-grid underline-offset-4 transition-colors hover:text-accent hover:decoration-accent focus-visible:text-accent"
+                className="underline decoration-grid underline-offset-4 transition-colors hover:marker focus-visible:marker"
               >
                 one email away
               </a>
@@ -129,7 +129,7 @@ export default async function BlogPost({ params }: PageProps<"/blog/[slug]">) {
             </span>
             <CopyEmail email={EMAIL} />
           </p>
-          <p className="mt-22 font-pixel text-xs text-muted">
+          <p className="mt-22 font-serif text-xs text-muted">
             Designed by Ryker. Animated by five very small coworkers.
           </p>
         </footer>

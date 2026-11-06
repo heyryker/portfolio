@@ -9,10 +9,10 @@ import type { MDXContent } from "mdx/types";
  * `{ slug: "email", label: "EMAIL" }` between MOTION and EDITORIAL.
  */
 export const CASE_STUDIES = [
-  { slug: "hackathon", label: "EVENT BRANDING" },
-  { slug: "tron", label: "BRAND GUIDES" },
-  { slug: "motion", label: "MOTION" },
-  { slug: "editorial", label: "EDITORIAL" },
+  { slug: "hackathon", label: "EVENT BRANDING", name: "Lucid Hackathon", area: "Event branding" },
+  { slug: "tron", label: "BRAND GUIDES", name: "TRON DAO", area: "Brand development" },
+  { slug: "motion", label: "MOTION", name: "TRON DAO & Lucid", area: "Motion art direction" },
+  { slug: "editorial", label: "EDITORIAL", name: "SixFifty", area: "Editorial design" },
 ] as const;
 
 export type CaseStudySlug = (typeof CASE_STUDIES)[number]["slug"];
