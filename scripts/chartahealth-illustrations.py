@@ -12,6 +12,9 @@ import os
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'chartahealth', 'illustrations')
 W = 960
 IW, IH = 1000, 800
+# The page shows these like the screenshots: a ~430px-wide strip from the
+# left edge of the canvas (object-position 0 0), so the drawing sits there.
+CX, SC = 222, 0.5
 BG, LINE, CELL, YEL = '#f3f7f5', '#0f2d29', '#cfe0d8', '#fdff72'
 C = math.cos(math.radians(30))
 OX, OY = 480, 470
@@ -88,7 +91,7 @@ def svg(body, title, dx=0, dy=0):
     # page's own image sizing applies unchanged; transparent background.
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {IW} {IH}" width="{IW}" height="{IH}" role="img" aria-label="{title}">'
             f'<title>{title}</title>{DEFS}'
-            f'<g transform="translate({IW / 2},{IH / 2}) scale(0.8) translate({dx - W / 2},{dy - W / 2})">{body}</g></svg>')
+            f'<g transform="translate({CX},{IH / 2}) scale({SC}) translate({dx - W / 2},{dy - W / 2})">{body}</g></svg>')
 
 
 def framed(w, h, inner, op=.75):
