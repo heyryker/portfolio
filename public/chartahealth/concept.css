@@ -100,12 +100,9 @@
 @media (prefers-reduced-motion: reduce) { .hiw-ticker_track { animation: none; } }
 
 /* The grid from Charta's social graphics (clean rows and columns, a few
-   dotted cells), covering whole sections: hero, logo band, solutions, and the
-   closing CTA with the footer. Centered so the columns sit symmetrically. */
-.section_home-hero, .section_logo-component, .section_solutions-tabs, .footer_component { position: relative; isolation: isolate; }
-.section_home-hero::before, .section_logo-component::before, .section_solutions-tabs::before, .footer_component::before {
+   dotted cells), only on the dark logo band, covering it edge to edge. */
+.section_logo-component { position: relative; isolation: isolate; }
+.section_logo-component::before {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background-size: 640px 168px; background-position: center top;
+  background: url(/chartahealth/grid-dark.svg) center top / 640px 168px;
 }
-.section_home-hero::before, .section_solutions-tabs::before { background-image: url(/chartahealth/grid-light.svg); }
-.section_logo-component::before, .footer_component::before { background-image: url(/chartahealth/grid-dark.svg); }
