@@ -13,9 +13,14 @@
   --brand--darker-border: #ddd2bd;             /* was #cee0d8 */
 }
 /* The slightly darker light green on cards, tabs, tags and the secondary button. */
-.tag:not([class*="is-"]), .tag.is-navmenu, .toggle_mask, .solutions-tabs_tab-link,
-.button.secondary, .button[class*="w-variant-1527680c"] { background-color: #ece4d4 !important; }
-.button.secondary, .button[class*="w-variant-1527680c"] { border-color: #ece4d4 !important; }
+.tag:not([class*="is-"]), .tag.is-navmenu, .toggle_mask, .solutions-tabs_tab-link { background-color: #ece4d4 !important; }
+/* The secondary button keeps its original light green. */
+.button.secondary, .button[class*="w-variant-1527680c"] { background-color: #e6efeb !important; border-color: #e6efeb !important; }
+/* All strokes are dark green. */
+.home-hero_image-wrapper, .resources-index_item, .testimonial-slider_content-right,
+.personas_row { border-color: #0f2d29 !important; }
+/* "Watch Replay" tags on the webinar cards. */
+.tag.is-accent { background-color: #0f2d29 !important; border-color: #0f2d29 !important; }
 .solutions-tabs_tabs-menu { background-color: #ddd2bd !important; }
 
 /* Cards (resources, webinars, testimonial) get white behind their copy. */
