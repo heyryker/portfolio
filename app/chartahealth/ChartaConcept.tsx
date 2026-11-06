@@ -8,8 +8,8 @@ import { useEffect, useState, type ReactNode } from "react";
  * Unofficial homepage concept for Charta Health (chartahealth.com), built for
  * an interview. Copy, product screenshots and logo are Charta's own, taken
  * from their live homepage (2026-11). Colors are their Webflow brand tokens:
- *   dark-bg #0f2d29, headings #25413c, accent #3a8363, off-white #f3f7f5,
- *   darker-border #cee0d8, stroke #e6efeb, paragraph #5c716d, sand #d9c8bb.
+ *   dark-bg #0f2d29, headings #25413c, accent #3a8363, off-white #f6f1e7,
+ *   darker-border #ddd3bf, stroke #e9e2d3, paragraph #5c716d, sand #d9c8bb.
  * Nothing here uses the portfolio's own brand on purpose.
  *
  * "Design notes" (off by default) show numbered callouts explaining what
@@ -149,33 +149,29 @@ const FEED = [
 const NOTES: Record<number, { title: string; body: string }> = {
   1: {
     title: "Say what it is before asking a question",
-    body: "The live hero opens with a hypothetical question. A buyer has to read the subhead to learn what Charta does. The new headline states the promise plainly, and the proof points (11%, 100%, CPC- and CRC-certified engineers) sit in the first screen instead of further down.",
+    body: "The live hero opens with a hypothetical question. A buyer has to read the subhead to learn what Charta does. The new headline states the promise plainly, and the proof points (11%, 100%, CPC- and CRC-certified engineers) sit in the first screen instead of further down. The small Provider / Payer switch above the headline is gone, so nothing competes with the promise.",
   },
   2: {
     title: "Show the product doing the job",
     body: "The hero visual is a small live feed of charts being reviewed at note close. It explains pre-billing review in about three seconds, without a paragraph. (The encounters in it are illustrative.)",
   },
   3: {
-    title: "Two clear doors instead of a small switch",
-    body: "Providers and payers buy different things. The live page uses a small Provider / Payer toggle above the headline that's easy to miss. Two labeled doors let each buyer self-select right away.",
-  },
-  4: {
     title: "Customer results right after the promise",
     body: "On the live page the strongest proof (customer quotes with real numbers) is about two-thirds of the way down, in a slider. The first logos under the hero are associations Charta is a member of, which can read as customer logos but aren't. Here the numbers lead and the quotes back them up.",
   },
-  5: {
+  4: {
     title: "Lead each product with an outcome",
     body: "The product tour keeps the real screenshots, but each panel now leads with a concrete outcome. For example, payer compliance goes from \u201cGet peace of mind and greater control\u201d to \u201cFix issues while charts are still open.\u201d",
   },
-  6: {
+  5: {
     title: "Three steps that scan",
     body: "Each step was two long paragraphs. Now each is one or two sentences, and the 'you decide what happens' choice from step two becomes three chips, since it's a real selling point.",
   },
-  7: {
+  6: {
     title: "Roles as a quick list, not stock photos",
     body: "Six photo cards became a two-column list. Visitors find their role and outcome in seconds, and the page is shorter and lighter.",
   },
-  8: {
+  7: {
     title: "Lead with people at the close",
     body: "The final ask names the dedicated, certified engineer, the differentiator buried in step one of the live page. Resources drop from six long cards to three short ones.",
   },
@@ -193,11 +189,11 @@ export function ChartaConcept() {
 
       <main>
         {/* Hero */}
-        <section className="relative overflow-hidden bg-[#f3f7f5]">
+        <section className="relative overflow-hidden bg-[#f6f1e7]">
           <div className="mx-auto grid max-w-[1280px] gap-12 px-5 pt-14 pb-16 md:px-10 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-16 lg:pt-20 lg:pb-24">
             <div>
               {notes && <Note n={1} />}
-              <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#cee0d8] bg-white px-3 py-1 text-[13px] font-medium text-[#3a8363]">
+              <p className="mb-5 inline-flex items-center gap-2 border border-[#ddd3bf] bg-white px-3 py-1 text-[13px] font-medium text-[#3a8363]">
                 <span className="size-1.5 rounded-full bg-[#3a8363]" aria-hidden="true" />
                 AI chart review for providers and payers
               </p>
@@ -214,7 +210,7 @@ export function ChartaConcept() {
                   See how it works
                 </Button>
               </div>
-              <dl className="mt-12 grid max-w-[540px] grid-cols-3 gap-4 border-t border-[#cee0d8] pt-6">
+              <dl className="mt-12 grid max-w-[540px] grid-cols-3 gap-4 border-t border-[#ddd3bf] pt-6">
                 <Stat value="11%" label="average revenue uplift" />
                 <Stat value="100%" label="of encounters reviewed pre-bill" />
                 <Stat value="CPC & CRC" label="certified engineers on your team" small />
@@ -227,39 +223,14 @@ export function ChartaConcept() {
           </div>
         </section>
 
-        {/* Audience doors */}
-        <section className="border-b border-[#e6efeb] bg-white">
-          <div className="mx-auto max-w-[1280px] px-5 py-14 md:px-10">
-            {notes && <Note n={3} />}
-            <div className="grid gap-4 md:grid-cols-2">
-              <Door
-                who="For providers"
-                line="Code every encounter correctly, find missed revenue and stay audit-ready."
-                items={["Autonomous coding", "Revenue discovery", "Payer compliance", "Clinical quality", "Provider feedback"]}
-              />
-              <Door
-                who="For payers"
-                line="Hit 98% accuracy on coding projects and make risk adjustment audit-proof."
-                items={[
-                  "Retrospective risk adjustment",
-                  "Automated second-pass & QA",
-                  "RADV & audit management",
-                  "HEDIS & quality analytics",
-                ]}
-                dark
-              />
-            </div>
-          </div>
-        </section>
-
         {/* Proof */}
         <section className="bg-[#0f2d29] text-white">
           <div className="mx-auto max-w-[1280px] px-5 py-20 md:px-10 md:py-24">
-            {notes && <Note n={4} dark />}
+            {notes && <Note n={3} dark />}
             <h2 className="max-w-[640px] font-[family-name:var(--font-charta-serif)] text-[34px] leading-[1.1] tracking-[-0.02em] md:text-[44px]">
               Teams review more charts without hiring more reviewers.
             </h2>
-            <div className="mt-12 grid gap-px overflow-hidden rounded-2xl bg-white/10 md:grid-cols-3">
+            <div className="mt-12 grid gap-px overflow-hidden bg-white/10 md:grid-cols-3">
               {PROOF.map((p) => (
                 <figure key={p.name} className="flex flex-col bg-[#0f2d29] p-7 md:p-8">
                   <p className="font-[family-name:var(--font-charta-serif)] text-[64px] leading-none tracking-[-0.03em] text-[#9cc1b1]">
@@ -282,9 +253,9 @@ export function ChartaConcept() {
         </section>
 
         {/* Solutions */}
-        <section className="bg-[#f3f7f5]">
+        <section className="bg-[#f6f1e7]">
           <div className="mx-auto max-w-[1280px] px-5 py-20 md:px-10 md:py-24">
-            {notes && <Note n={5} />}
+            {notes && <Note n={4} />}
             <SectionHead
               eyebrow="Platform"
               title="One review, five ways to protect the practice"
@@ -299,8 +270,8 @@ export function ChartaConcept() {
                   aria-selected={tab === s.id}
                   aria-controls="solution-panel"
                   onClick={() => setTab(s.id)}
-                  className={`shrink-0 rounded-full px-4 py-2 text-[15px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3a8363] ${
-                    tab === s.id ? "bg-[#25413c] text-white" : "bg-white text-[#25413c] hover:bg-[#e6efeb]"
+                  className={`shrink-0 px-4 py-2 text-[15px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3a8363] ${
+                    tab === s.id ? "bg-[#25413c] text-white" : "bg-white text-[#25413c] hover:bg-[#e9e2d3]"
                   }`}
                 >
                   {s.tab}
@@ -311,7 +282,7 @@ export function ChartaConcept() {
               id="solution-panel"
               role="tabpanel"
               aria-labelledby={`tab-${solution.id}`}
-              className="mt-6 grid gap-8 rounded-3xl border border-[#cee0d8] bg-white p-6 md:p-10 lg:grid-cols-[1fr_1.25fr] lg:items-center"
+              className="mt-6 grid gap-8 border border-[#ddd3bf] bg-white p-6 md:p-10 lg:grid-cols-[1fr_1.25fr] lg:items-center"
             >
               <div>
                 <h3 className="font-[family-name:var(--font-charta-serif)] text-[30px] leading-[1.15] tracking-[-0.01em] md:text-[36px]">
@@ -322,7 +293,7 @@ export function ChartaConcept() {
                   Learn about {solution.tab.toLowerCase()} <span aria-hidden="true">→</span>
                 </a>
               </div>
-              <div className="overflow-hidden rounded-2xl border border-[#e6efeb] bg-[#f3f7f5]">
+              <div className="overflow-hidden border border-[#e9e2d3] bg-[#f6f1e7]">
                 <Image
                   key={solution.img}
                   src={solution.img}
@@ -340,7 +311,7 @@ export function ChartaConcept() {
         {/* How it works */}
         <section id="how" className="scroll-mt-20 bg-white">
           <div className="mx-auto max-w-[1280px] px-5 py-20 md:px-10 md:py-24">
-            {notes && <Note n={6} />}
+            {notes && <Note n={5} />}
             <SectionHead
               eyebrow="How Charta works"
               title="Live in your EHR, reviewing from the first note"
@@ -348,21 +319,21 @@ export function ChartaConcept() {
             />
             <ol className="mt-12 grid gap-6 lg:grid-cols-3">
               {STEPS.map((s) => (
-                <li key={s.n} className="flex flex-col rounded-3xl border border-[#e6efeb] bg-[#f3f7f5] p-6 md:p-8">
+                <li key={s.n} className="flex flex-col border border-[#e9e2d3] bg-[#f6f1e7] p-6 md:p-8">
                   <span className="font-[family-name:var(--font-charta-serif)] text-[20px] text-[#3a8363]">{s.n}</span>
                   <h3 className="mt-3 text-[22px] leading-[1.25] font-semibold tracking-[-0.01em]">{s.title}</h3>
                   <p className="mt-3 text-[16px] leading-[1.6] text-[#5c716d]">{s.body}</p>
                   {s.chips && (
                     <ul className="mt-4 flex flex-wrap gap-2">
                       {s.chips.map((c) => (
-                        <li key={c} className="rounded-full border border-[#cee0d8] bg-white px-3 py-1 text-[13px] font-medium">
+                        <li key={c} className=" border border-[#ddd3bf] bg-white px-3 py-1 text-[13px] font-medium">
                           {c}
                         </li>
                       ))}
                     </ul>
                   )}
                   {s.img ? (
-                    <div className="mt-6 overflow-hidden rounded-2xl border border-[#e6efeb] bg-white">
+                    <div className="mt-6 overflow-hidden border border-[#e9e2d3] bg-white">
                       <Image src={s.img} alt={s.alt ?? ""} width={1312} height={1312} className="h-auto w-full" unoptimized />
                     </div>
                   ) : (
@@ -375,20 +346,20 @@ export function ChartaConcept() {
         </section>
 
         {/* Roles */}
-        <section className="bg-[#f3f7f5]">
+        <section className="bg-[#f6f1e7]">
           <div className="mx-auto grid max-w-[1280px] gap-10 px-5 py-20 md:px-10 md:py-24 lg:grid-cols-[1fr_1.4fr]">
             <div>
-              {notes && <Note n={7} />}
+              {notes && <Note n={6} />}
               <SectionHead
                 eyebrow="Built for"
                 title="Teams across your practice"
                 body="Provider organizations use Charta to grow revenue and build scalable systems for payer compliance, provider performance and clinical quality."
               />
             </div>
-            <ul className="grid gap-px overflow-hidden rounded-3xl border border-[#cee0d8] bg-[#cee0d8] sm:grid-cols-2">
+            <ul className="grid gap-px overflow-hidden border border-[#ddd3bf] bg-[#ddd3bf] sm:grid-cols-2">
               {ROLES.map(([role, line]) => (
                 <li key={role}>
-                  <a href="#" className="group flex h-full flex-col bg-white p-6 transition-colors hover:bg-[#f9fbfa]">
+                  <a href="#" className="group flex h-full flex-col bg-white p-6 transition-colors hover:bg-[#fbf8f2]">
                     <span className="flex items-center justify-between text-[17px] font-semibold">
                       {role}
                       <span aria-hidden="true" className="text-[#3a8363] transition-transform group-hover:translate-x-1">
@@ -406,7 +377,7 @@ export function ChartaConcept() {
         {/* Resources + CTA */}
         <section className="bg-white">
           <div className="mx-auto max-w-[1280px] px-5 py-20 md:px-10 md:py-24">
-            {notes && <Note n={8} />}
+            {notes && <Note n={7} />}
             <div className="flex flex-wrap items-end justify-between gap-4">
               <SectionHead eyebrow="Resources" title="Learn from teams already doing it" />
               <a href="#" className="font-semibold text-[#3a8363] hover:underline">
@@ -418,7 +389,7 @@ export function ChartaConcept() {
                 <a
                   key={r.title}
                   href="#"
-                  className="group flex flex-col rounded-3xl border border-[#e6efeb] p-6 transition-colors hover:border-[#cee0d8] hover:bg-[#f3f7f5]"
+                  className="group flex flex-col border border-[#e9e2d3] p-6 transition-colors hover:border-[#ddd3bf] hover:bg-[#f6f1e7]"
                 >
                   <span className="text-[12px] font-semibold tracking-[0.08em] text-[#3a8363] uppercase">{r.kind}</span>
                   <span className="mt-3 font-[family-name:var(--font-charta-serif)] text-[22px] leading-[1.25]">{r.title}</span>
@@ -427,7 +398,7 @@ export function ChartaConcept() {
               ))}
             </div>
 
-            <div className="mt-20 grid gap-8 overflow-hidden rounded-[32px] bg-[#0f2d29] p-8 text-white md:p-14 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+            <div className="mt-20 grid gap-8 overflow-hidden bg-[#0f2d29] p-8 text-white md:p-14 lg:grid-cols-[1.4fr_1fr] lg:items-center">
               <div>
                 <h2 className="font-[family-name:var(--font-charta-serif)] text-[36px] leading-[1.1] tracking-[-0.02em] md:text-[48px]">
                   Talk to the engineer who&rsquo;ll build your setup.
@@ -470,14 +441,14 @@ function ConceptBar({ notes, onToggle }: { notes: boolean; onToggle: () => void 
           type="button"
           onClick={onToggle}
           aria-pressed={notes}
-          className="flex shrink-0 items-center gap-2 rounded-full bg-[#0f2d29] px-3 py-1 font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f2d29]"
+          className="flex shrink-0 items-center gap-2 bg-[#0f2d29] px-3 py-1 font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f2d29]"
         >
           <span
             aria-hidden="true"
-            className={`relative h-3.5 w-6 rounded-full transition-colors ${notes ? "bg-[#9cc1b1]" : "bg-white/25"}`}
+            className={`relative h-3.5 w-6 transition-colors ${notes ? "bg-[#9cc1b1]" : "bg-white/25"}`}
           >
             <span
-              className={`absolute top-0.5 size-2.5 rounded-full bg-white transition-[left] ${notes ? "left-3" : "left-0.5"}`}
+              className={`absolute top-0.5 size-2.5 bg-white transition-[left] ${notes ? "left-3" : "left-0.5"}`}
             />
           </span>
           Design notes
@@ -490,41 +461,41 @@ function ConceptBar({ notes, onToggle }: { notes: boolean; onToggle: () => void 
 function Nav() {
   const [open, setOpen] = useState(false);
   return (
-    <header className="sticky top-0 z-30 border-b border-[#e6efeb] bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-30 bg-[#0f2d29] text-white">
       <div className="mx-auto flex h-[68px] max-w-[1280px] items-center justify-between px-5 md:px-10">
         <div className="flex items-center gap-10">
           <a href="#" aria-label="Charta home">
-            <Image src="/chartahealth/logo.svg" alt="Charta" width={127} height={36} priority unoptimized />
+            <Image src="/chartahealth/logo.svg" alt="Charta" width={127} height={36} priority className="brightness-0 invert" unoptimized />
           </a>
           <nav aria-label="Main" className="hidden items-center gap-7 text-[15px] lg:flex">
             {["Platform", "Solutions", "Customers", "Resources", "Company"].map((l) => (
-              <a key={l} href="#" className="hover:text-[#3a8363]">
+              <a key={l} href="#" className="text-white/85 hover:text-[#fdff72]">
                 {l}
               </a>
             ))}
           </nav>
         </div>
         <div className="flex items-center gap-5">
-          <a href="#" className="hidden text-[15px] hover:text-[#3a8363] md:inline">
+          <a href="#" className="hidden text-[15px] text-white/85 hover:text-[#fdff72] md:inline">
             Client login
           </a>
           <Button small>Request a demo</Button>
           <button
             type="button"
-            className="grid size-10 place-items-center rounded-full hover:bg-[#f3f7f5] lg:hidden"
+            className="grid size-10 place-items-center hover:bg-white/10 lg:hidden"
             aria-label="Menu"
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
           >
             <span aria-hidden="true" className="flex flex-col gap-1">
-              <span className="h-0.5 w-5 bg-[#25413c]" />
-              <span className="h-0.5 w-5 bg-[#25413c]" />
+              <span className="h-0.5 w-5 bg-white" />
+              <span className="h-0.5 w-5 bg-white" />
             </span>
           </button>
         </div>
       </div>
       {open && (
-        <nav aria-label="Main" className="border-t border-[#e6efeb] px-5 py-4 lg:hidden">
+        <nav aria-label="Main" className="border-t border-white/10 px-5 py-4 lg:hidden">
           {["Platform", "Solutions", "Customers", "Resources", "Company", "Client login"].map((l) => (
             <a key={l} href="#" className="block py-2 text-[17px]">
               {l}
@@ -551,14 +522,14 @@ function Button({
 }) {
   const size = small ? "px-4 py-2 text-[14px] max-sm:hidden" : "px-6 py-3 text-[16px]";
   const look = light
-    ? "bg-white text-[#0f2d29] hover:bg-[#e6efeb]"
+    ? "bg-[#fdff72] text-[#0f2d29] hover:bg-[#f0f25a]"
     : variant === "ghost"
-      ? "border border-[#cee0d8] bg-white text-[#25413c] hover:border-[#3a8363]"
-      : "bg-[#3a8363] text-white hover:bg-[#2f6d52]";
+      ? "border border-[#ddd3bf] bg-white text-[#25413c] hover:border-[#3a8363]"
+      : "bg-[#fdff72] text-[#0f2d29] hover:bg-[#f0f25a] ring-1 ring-inset ring-[#0f2d29]/10";
   return (
     <a
       href={href}
-      className={`inline-flex items-center justify-center rounded-full font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3a8363] ${size} ${look}`}
+      className={`inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3a8363] ${size} ${look}`}
     >
       {children}
     </a>
@@ -595,40 +566,6 @@ function SectionHead({ eyebrow, title, body }: { eyebrow: string; title: string;
   );
 }
 
-function Door({ who, line, items, dark }: { who: string; line: string; items: string[]; dark?: boolean }) {
-  return (
-    <a
-      href="#"
-      className={`group flex flex-col rounded-3xl p-7 transition-transform hover:-translate-y-0.5 md:p-9 ${
-        dark ? "bg-[#25413c] text-white" : "border border-[#cee0d8] bg-[#f3f7f5]"
-      }`}
-    >
-      <span className="flex items-center justify-between">
-        <span className="font-[family-name:var(--font-charta-serif)] text-[30px] leading-none tracking-[-0.01em]">{who}</span>
-        <span
-          aria-hidden="true"
-          className={`grid size-10 place-items-center rounded-full transition-transform group-hover:translate-x-1 ${
-            dark ? "bg-white text-[#25413c]" : "bg-[#3a8363] text-white"
-          }`}
-        >
-          →
-        </span>
-      </span>
-      <span className={`mt-4 max-w-[440px] text-[16px] leading-[1.55] ${dark ? "text-white/75" : "text-[#5c716d]"}`}>{line}</span>
-      <span className="mt-6 flex flex-wrap gap-2">
-        {items.map((i) => (
-          <span
-            key={i}
-            className={`rounded-full px-3 py-1 text-[13px] ${dark ? "bg-white/10 text-white/85" : "border border-[#cee0d8] bg-white"}`}
-          >
-            {i}
-          </span>
-        ))}
-      </span>
-    </a>
-  );
-}
-
 /* The hero visual: notes arriving at close and getting reviewed, one by one. */
 function ReviewFeed() {
   const [tick, setTick] = useState(0);
@@ -642,15 +579,15 @@ function ReviewFeed() {
   const rows = Array.from({ length: 5 }, (_, i) => ({ ...FEED[(tick + i) % FEED.length], key: tick + i }));
   return (
     <div className="relative">
-      <div className="rounded-3xl border border-[#cee0d8] bg-white p-5 shadow-[0_30px_60px_-30px_rgba(15,45,41,0.35)] md:p-6">
-        <div className="flex items-center justify-between border-b border-[#e6efeb] pb-4">
+      <div className=" border border-[#ddd3bf] bg-white p-5 shadow-[0_30px_60px_-30px_rgba(15,45,41,0.35)] md:p-6">
+        <div className="flex items-center justify-between border-b border-[#e9e2d3] pb-4">
           <div>
             <p className="text-[13px] text-[#5c716d]">Notes closed today</p>
             <p className="font-[family-name:var(--font-charta-serif)] text-[28px] leading-tight tabular-nums">
               {(1284 + tick).toLocaleString()} reviewed
             </p>
           </div>
-          <span className="flex items-center gap-2 rounded-full bg-[#e6efeb] px-3 py-1 text-[13px] font-medium text-[#3a8363]">
+          <span className="flex items-center gap-2 bg-[#e9e2d3] px-3 py-1 text-[13px] font-medium text-[#3a8363]">
             <span className="relative flex size-2">
               <span className="absolute inset-0 animate-ping rounded-full bg-[#3a8363] opacity-60 motion-reduce:hidden" />
               <span className="relative size-2 rounded-full bg-[#3a8363]" />
@@ -662,7 +599,7 @@ function ReviewFeed() {
           {rows.map((r, i) => (
             <li
               key={r.key}
-              className={`flex items-center justify-between gap-4 border-b border-[#f0f4f2] py-3.5 last:border-0 ${
+              className={`flex items-center justify-between gap-4 border-b border-[#efe9dc] py-3.5 last:border-0 ${
                 i === 0 ? "animate-[charta-in_500ms_ease-out]" : ""
               }`}
               style={{ opacity: 1 - i * 0.14 }}
@@ -685,25 +622,25 @@ function ReviewFeed() {
 function Badge({ tone, children }: { tone: "ok" | "fix" | "flag"; children: ReactNode }) {
   const look =
     tone === "ok"
-      ? "bg-[#e6efeb] text-[#25413c]"
+      ? "bg-[#e9e2d3] text-[#25413c]"
       : tone === "fix"
         ? "bg-[#3a8363] text-white"
         : "bg-[#f6ede6] text-[#7a4b2a]";
-  return <span className={`shrink-0 rounded-full px-3 py-1 text-right text-[12px] font-medium sm:text-[13px] ${look}`}>{children}</span>;
+  return <span className={`shrink-0 px-3 py-1 text-right text-[12px] font-medium sm:text-[13px] ${look}`}>{children}</span>;
 }
 
 /* Step one has no product screenshot on the live site, so it gets a simple EHR → Charta diagram. */
 function EhrVisual() {
   return (
     <div
-      className="mt-6 flex flex-1 items-center justify-center gap-3 rounded-2xl border border-[#e6efeb] bg-white p-8"
+      className="mt-6 flex flex-1 items-center justify-center gap-3 border border-[#e9e2d3] bg-white p-8"
       aria-hidden="true"
     >
-      <span className="rounded-xl border border-[#cee0d8] px-4 py-3 text-[14px] font-semibold">Your EHR</span>
+      <span className=" border border-[#ddd3bf] px-4 py-3 text-[14px] font-semibold">Your EHR</span>
       <span className="flex items-center gap-1 text-[#3a8363]">
         <span className="h-px w-8 bg-[#3a8363]" />→
       </span>
-      <span className="flex items-center gap-2 rounded-xl bg-[#0f2d29] px-4 py-3 text-[14px] font-semibold text-white">
+      <span className="flex items-center gap-2 bg-[#0f2d29] px-4 py-3 text-[14px] font-semibold text-white">
         <Image src="/chartahealth/logo.svg" alt="" width={60} height={17} className="brightness-0 invert" unoptimized />
       </span>
     </div>
@@ -714,11 +651,11 @@ function Note({ n, dark }: { n: number; dark?: boolean }) {
   const note = NOTES[n];
   return (
     <aside
-      className={`mb-6 flex max-w-[560px] gap-3 rounded-2xl border p-4 text-[14px] leading-[1.5] ${
-        dark ? "border-[#d9c8bb]/40 bg-[#d9c8bb]/10 text-white/85" : "border-[#d9c8bb] bg-[#faf6f2] text-[#25413c]"
+      className={`mb-6 flex max-w-[560px] gap-3 border p-4 text-[14px] leading-[1.5] ${
+        dark ? "border-[#d9c8bb]/40 bg-[#d9c8bb]/10 text-white/85" : "border-[#d9c8bb] bg-[#fffdf8] text-[#25413c]"
       }`}
     >
-      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#d9c8bb] text-[12px] font-bold text-[#0f2d29]">
+      <span className="grid size-6 shrink-0 place-items-center bg-[#d9c8bb] text-[12px] font-bold text-[#0f2d29]">
         {n}
       </span>
       <span>
