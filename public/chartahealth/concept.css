@@ -121,16 +121,17 @@
 @media (prefers-reduced-motion: reduce) { .hl-ready .testimonial-slider_quote mark.hl { transition: none; background-size: 100% .5em; } }
 
 
-/* Solutions tabs, tighter: no image outline, the button right under the copy,
-   and the illustration fitted whole on the right at the height of that block. */
-.section_solutions-tabs .solutions-tabs_tab-content { align-items: center; gap: 2rem; }
-.section_solutions-tabs .solutions-tabs_tab-text-wrapper { justify-content: flex-start !important; gap: 2rem; height: auto !important; align-self: center; }
+/* Solutions tabs, tighter: no image outline, the copy at the top and the
+   button at the bottom of the text column, and the illustration filling the
+   right side at the height of the tab list. */
+.section_solutions-tabs .solutions-tabs_tab-content { align-items: stretch; gap: 2rem; }
+.section_solutions-tabs .solutions-tabs_tab-text-wrapper { justify-content: space-between !important; gap: 2rem; height: auto !important; }
 .section_solutions-tabs img.solutions-tabs_tab-image[src*="/illustrations/"] {
   border: 0 !important; position: static !important; inset: auto !important;
-  width: 46% !important; max-width: 30rem !important; height: auto !important; aspect-ratio: 5 / 4 !important;
-  object-fit: contain !important; object-position: center !important; flex: none; align-self: center; margin-left: auto;
+  width: 55% !important; max-width: none !important; height: auto !important; max-height: none !important; aspect-ratio: auto !important;
+  object-fit: contain !important; object-position: center !important; flex: none; align-self: stretch; min-height: 0;
 }
 @media (max-width: 767px) {
-  .section_solutions-tabs .solutions-tabs_tab-content { flex-direction: column; align-items: stretch; }
-  .section_solutions-tabs img.solutions-tabs_tab-image[src*="/illustrations/"] { width: 100% !important; margin: 0; }
+  .section_solutions-tabs .solutions-tabs_tab-content { flex-direction: column; }
+  .section_solutions-tabs img.solutions-tabs_tab-image[src*="/illustrations/"] { width: 100% !important; aspect-ratio: 5 / 4 !important; }
 }

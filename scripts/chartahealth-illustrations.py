@@ -13,7 +13,7 @@ OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'chartahealth', 'i
 W = 960
 IW, IH = 1000, 800
 # Centered; concept.css fits the whole canvas beside the tab copy.
-CX, SC = 500, 0.8
+CX, SC = 500, 0.95
 BG, LINE, CELL, YEL = '#f3f7f5', '#0f2d29', '#cfe0d8', '#fdff72'
 C = math.cos(math.radians(30))
 OX, OY = 480, 470
