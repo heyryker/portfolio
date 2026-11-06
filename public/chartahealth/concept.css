@@ -1,0 +1,169 @@
+/*
+ * Ryker's changes layered over Charta's own Webflow styles. Everything else
+ * on the page is their live homepage as of 2026-11-06.
+ */
+
+/* 1. Sharp corners everywhere. */
+*, *::before, *::after { border-radius: 0 !important; }
+
+/* 2. Creme where they use the light green background. */
+:root {
+  --brand--off-white-background: #fbf8f2;      /* was #f3f7f5 */
+  --brand--foreground-lighter-stroke: #f3eee4; /* was #e6efeb */
+  --brand--darker-border: #e6dfd0;             /* was #cee0d8 */
+}
+/* The slightly darker light green on cards, tabs, tags and the secondary button. */
+.tag:not([class*="is-"]), .tag.is-navmenu, .toggle_mask, .solutions-tabs_tab-link { background-color: #f3eee4 !important; }
+/* The secondary button keeps its original light green. */
+.button.secondary, .button[class*="w-variant-1527680c"] { background-color: #e6efeb !important; }
+/* All strokes are dark green. */
+.home-hero_image-wrapper, .resources-index_item, .testimonial-slider_content-right,
+.personas_row { border-color: #0f2d29 !important; }
+/* "Watch Replay" tags on the webinar cards. */
+.tag.is-accent { background-color: #0f2d29 !important; border-color: #0f2d29 !important; }
+.solutions-tabs_tabs-menu { background-color: #e6dfd0 !important; }
+
+/* Cards (resources, webinars, testimonial) get white behind their copy. */
+.resources-index_item, .testimonial-slider_content-right { background-color: #fff !important; }
+
+/* "Strengthen coding accuracy" tabs: light green background as on the live
+   site, dark green strokes, tabs are dark green and the selected one goes light green. */
+.section_solutions-tabs { background-color: #f3f7f5 !important; }
+.section_solutions-tabs .solutions-tabs_tabs,
+.section_solutions-tabs .solutions-tabs_tab-image { border-color: #0f2d29 !important; }
+.section_solutions-tabs .solutions-tabs_tabs-menu { background-color: #0f2d29 !important; border-color: #0f2d29 !important; }
+.section_solutions-tabs .solutions-tabs_tab-link { background-color: #0f2d29 !important; color: #fff !important; transition: background-color .3s, color .3s; }
+.section_solutions-tabs .solutions-tabs_tab-link * { color: #fff !important; }
+.section_solutions-tabs .solutions-tabs_tab-link.w--current { background-color: #e6efeb !important; color: #25413c !important; }
+.section_solutions-tabs .solutions-tabs_tab-link.w--current * { color: #25413c !important; }
+
+/* 3. Dark green nav. */
+.navbar_component, .navbar_container:not(.is-dropdown) { background-color: #0f2d29 !important; }
+.navbar_logo { filter: brightness(0) invert(1); }
+.menu-icon_line-top, .menu-icon1_line-middle, .menu-icon1_line-middle-inner, .menu-icon1_line-bottom { background-color: #fff !important; }
+/* Top-level links go white on the bar. Below the desktop breakpoint they sit
+   in Webflow's white slide-down menu, so they keep their original color. */
+@media (min-width: 992px) {
+  .navbar_menu-left > a, .navbar_dropdown-toggle, .navbar_menu-right > a:not(.button) { color: #fff !important; }
+}
+
+/* 4. Neon yellow CTAs. */
+.button:not(.is-secondary):not(.secondary):not(.is-link):not(.link):not(.is-alternate):not([class*="w-variant-1527680c"]) {
+  background-color: #fdff72 !important;
+  color: #0f2d29 !important;
+}
+/* Every filled button gets a dark green stroke. */
+.button:not(.is-link):not(.link) { border: 1px solid #0f2d29 !important; }
+
+/* 5. No provider / payer toggle. */
+.audience-toggle_wrapper { display: none !important; }
+
+/* Cookie banner isn't needed on a concept. */
+.fs-cc-component-wrapper, [fs-cc="banner"] { display: none !important; }
+
+/* Small credit line under Charta's footer. */
+.concept-note {
+  display: block; background: #0f2d29; color: rgba(255,255,255,.55);
+  font: 400 12px/1.4 Satoshi, Arial, sans-serif; text-align: center;
+  padding: 0 16px 24px; text-decoration: none;
+}
+.concept-note:hover { color: #fff; }
+
+/* "How Charta works": three steps in one row, then a ticker of the EHR logos
+   (from their vertical logo scroll), all in black. */
+.hiw-steps, .hiw-ticker { width: min(80rem, 90%); margin-left: auto; margin-right: auto; }
+.hiw-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3rem; text-align: left; }
+/* Big light green numbers (yellow on hover) sit behind the heading as a graphic, not as text to read. */
+.hiw-step { position: relative; isolation: isolate; padding-top: 4.5rem; }
+.hiw-step_num {
+  position: absolute; z-index: -1; top: 0; left: -.06em;
+  color: #e6efeb; font-family: Fragment, "Times New Roman", serif;
+  font-size: 11rem; line-height: .8; letter-spacing: -.04em; pointer-events: none; user-select: none;
+  transition: color .4s ease;
+}
+/* The number sits behind the heading, so hovering anywhere on the step counts. */
+.hiw-step:hover .hiw-step_num { color: #fdff72; }
+.hiw-step h3 { font-size: clamp(1.6rem, 2.2vw, 2.25rem); line-height: 1.15; white-space: nowrap; }
+.hiw-step .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.hiw-ticker {
+  margin-top: 5rem; overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.hiw-ticker_track { display: flex; width: max-content; animation: hiw-scroll 140s linear infinite; }
+.hiw-ticker_set { display: flex; align-items: center; }
+.hiw-ticker img { height: calc(var(--h) * 1px); width: auto; max-width: none; margin-right: 4rem; }
+@keyframes hiw-scroll { to { transform: translateX(-50%); } }
+@media (max-width: 767px) {
+  .hiw-steps { grid-template-columns: 1fr; gap: 2.5rem; }
+  .hiw-ticker { margin-top: 3.5rem; }
+  .hiw-step { padding-top: 3.5rem; }
+  .hiw-step_num { font-size: 8rem; }
+  .hiw-ticker img { height: calc(var(--h) * .75px); margin-right: 2.5rem; }
+}
+@media (prefers-reduced-motion: reduce) { .hiw-ticker_track { animation: none; } }
+
+/* The grid from Charta's social graphics (clean rows and columns, a few
+   dotted cells), only on the dark logo band, covering it edge to edge. */
+.section_logo-component { position: relative; isolation: isolate; }
+.section_logo-component::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: url(/chartahealth/grid-dark.svg) center top / 640px 168px;
+}
+
+/* Hand-drawn yellow underline on key words (hero headline, testimonials): an uneven
+   double marker stroke (SVG, stretched per line) that draws in left to right
+   when the quote scrolls or slides into view (chartahealth.js adds .is-drawn). */
+mark.hl {
+  color: inherit; background: none; padding: 0 .1em .12em; margin: 0 -.1em;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 24' preserveAspectRatio='none'%3E%3Cpath d='M4 13 C60 7 130 10 190 8 S270 6 296 9' stroke='%23fdff72' stroke-width='12' stroke-linecap='round' fill='none'/%3E%3Cpath d='M14 18 C80 14 150 17 210 14 S275 13 290 15' stroke='%23fdff72' stroke-width='8' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: 0 100%; background-size: 100% .5em;
+}
+.hl-ready mark.hl { background-size: 0% .5em; transition: background-size .9s cubic-bezier(.6,.1,.3,1) .25s; }
+.hl-ready mark.hl.is-drawn { background-size: 100% .5em; }
+@media (prefers-reduced-motion: reduce) { .hl-ready mark.hl { transition: none; background-size: 100% .5em; } }
+
+
+/* Solutions tabs: one fixed box size for every tab, no image outline, copy at
+   the top, the button pinned 20px from the bottom, and the illustration
+   centered vertically on the right. Charta's Finsweet script rebuilds each
+   pane as .w-tab-pane > .w-dyn-item > content, so heights cover both shapes.
+   chartahealth.js inlines the illustrations (.illo) and draws them in. */
+.section_solutions-tabs .solutions-tabs_tabs { height: 31rem; }
+.section_solutions-tabs .w-tab-content,
+.section_solutions-tabs .w-tab-pane,
+.section_solutions-tabs .w-tab-pane > .w-dyn-item,
+.section_solutions-tabs .solutions-tabs_tab-content { height: 100% !important; }
+.section_solutions-tabs .solutions-tabs_tab-content { position: relative; align-items: center; gap: 2rem; overflow: hidden; }
+.section_solutions-tabs .solutions-tabs_tab-text-wrapper { position: relative; align-self: stretch; height: 100% !important; justify-content: flex-start !important; padding-bottom: 6rem !important; }
+.section_solutions-tabs .solutions-tabs_tab-text-wrapper > .margin-top { position: absolute; left: 0; bottom: 20px; margin: 0 !important; padding: 0 !important; padding-left: inherit !important; }
+.section_solutions-tabs img.solutions-tabs_tab-image[src*="/illustrations/"],
+.section_solutions-tabs .solutions-tabs_tab-image.illo {
+  border: 0 !important; position: static !important; inset: auto !important; transform: none !important;
+  width: 55% !important; max-width: none !important; height: 88% !important; max-height: none !important; aspect-ratio: auto !important;
+  object-fit: contain !important; object-position: center !important; flex: none; align-self: center;
+}
+.section_solutions-tabs .illo svg { display: block; width: 100%; height: 100%; }
+@media (max-width: 991px) {
+  .section_solutions-tabs .solutions-tabs_tabs { height: auto; }
+  .section_solutions-tabs .w-tab-content { height: 46rem !important; }
+  .section_solutions-tabs .solutions-tabs_tab-content { flex-direction: column; align-items: stretch; gap: 0; }
+  .section_solutions-tabs .solutions-tabs_tab-text-wrapper { height: auto !important; flex: none !important; padding-bottom: 0 !important; position: static; }
+  .section_solutions-tabs img.solutions-tabs_tab-image[src*="/illustrations/"],
+  .section_solutions-tabs .solutions-tabs_tab-image.illo { width: 100% !important; height: auto !important; flex: 1 1 auto; min-height: 0; margin-bottom: 5rem; }
+  /* the pane's own side padding (1.43rem) plus the text column's */
+  .section_solutions-tabs .solutions-tabs_tab-text-wrapper > .margin-top { left: 1.43rem; }
+}
+
+/* Hero: shorter, bigger headline; "every" gets the hand-drawn underline a beat after load. */
+h1.heading-style-h2 { font-size: clamp(3rem, 7.2vw, 6.75rem); line-height: 1.14; letter-spacing: -.02em; }
+.hl-ready h1 mark.hl { transition-delay: 1.8s; transition-duration: 1.4s; }
+
+/* Resources + webinars: doodle layer (drawn by chartahealth.js) sits behind the
+   cards and copy, except doodles that overlap a card's corner or edge. */
+.section_featured-resources { position: relative; isolation: isolate; }
+.section_featured-resources .doodles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.section_featured-resources .doodles svg { position: absolute; z-index: -1; overflow: visible; transform-origin: 50% 50%; }
+/* the occasional doodle that tucks over a card corner or edge sits on top */
+.section_featured-resources .doodles svg.is-over { z-index: 1; }
