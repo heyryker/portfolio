@@ -22,14 +22,15 @@
 .resources-index_item, .testimonial-slider_content-right { background-color: #fff !important; }
 
 /* "Strengthen coding accuracy" tabs: light green background as on the live
-   site, dark green strokes, and the selected tab goes dark green. */
+   site, dark green strokes, tabs are dark green and the selected one goes light green. */
 .section_solutions-tabs { background-color: #f3f7f5 !important; }
 .section_solutions-tabs .solutions-tabs_tabs,
 .section_solutions-tabs .solutions-tabs_tab-image { border-color: #0f2d29 !important; }
 .section_solutions-tabs .solutions-tabs_tabs-menu { background-color: #0f2d29 !important; border-color: #0f2d29 !important; }
-.section_solutions-tabs .solutions-tabs_tab-link { background-color: #e6efeb !important; transition: background-color .3s, color .3s; }
-.section_solutions-tabs .solutions-tabs_tab-link.w--current { background-color: #0f2d29 !important; color: #fff !important; }
-.section_solutions-tabs .solutions-tabs_tab-link.w--current * { color: #fff !important; }
+.section_solutions-tabs .solutions-tabs_tab-link { background-color: #0f2d29 !important; color: #fff !important; transition: background-color .3s, color .3s; }
+.section_solutions-tabs .solutions-tabs_tab-link * { color: #fff !important; }
+.section_solutions-tabs .solutions-tabs_tab-link.w--current { background-color: #e6efeb !important; color: #25413c !important; }
+.section_solutions-tabs .solutions-tabs_tab-link.w--current * { color: #25413c !important; }
 
 /* 3. Dark green nav. */
 .navbar_component, .navbar_container:not(.is-dropdown) { background-color: #0f2d29 !important; }
