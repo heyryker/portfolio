@@ -85,6 +85,7 @@ DEFS = f'''<defs>
 </defs>'''
 
 
+# After regenerating, run scripts/chartahealth-fit-illustrations.js to optically centre each drawing.
 def svg(body, title, dx=0, dy=0):
     # Same 1000x800 canvas as the product screenshots they replace, so the
     # page's own image sizing applies unchanged; transparent background.

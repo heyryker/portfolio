@@ -53,16 +53,16 @@
     var k = root.width / vb.width;
     // shared origin: bottom centre of the canvas
     var ox = root.left + root.width / 2, oy = root.top + root.height;
-    var items = [], far = 1;
+    var items = [], far = 0, near = Infinity;
     svg.querySelectorAll(SHAPES).forEach(function (el) {
       if (el.closest('defs')) return;
       var r = el.getBoundingClientRect();
       var d = Math.hypot(r.left + r.width / 2 - ox, r.top + r.height / 2 - oy) / k;
-      far = Math.max(far, d);
+      far = Math.max(far, d); near = Math.min(near, d);
       items.push([el, d]);
     });
     items.forEach(function (it) {
-      var el = it[0], delay = 80 + 900 * (it[1] / far);
+      var el = it[0], delay = 120 + 1700 * ((it[1] - near) / Math.max(1, far - near));
       var cs = getComputedStyle(el);
       var stroked = cs.stroke && cs.stroke !== 'none';
       var dashed = cs.strokeDasharray && cs.strokeDasharray !== 'none' && !el.hasAttribute('data-drawn');
@@ -72,13 +72,13 @@
         el.setAttribute('stroke-dasharray', '1 1');
         el.setAttribute('data-drawn', '');
         el.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }],
-          { duration: 700, delay: delay, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'backwards' });
+          { duration: 1400, delay: delay, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'backwards' });
       } else if (stroked) {
-        el.animate([{ strokeOpacity: 0 }, { strokeOpacity: so }], { duration: 500, delay: delay, fill: 'backwards' });
+        el.animate([{ strokeOpacity: 0 }, { strokeOpacity: so }], { duration: 1000, delay: delay, fill: 'backwards' });
       }
       if (cs.fill && cs.fill !== 'none') {
         el.animate([{ fillOpacity: 0 }, { fillOpacity: fo }],
-          { duration: 500, delay: delay + 250, easing: 'ease-out', fill: 'backwards' });
+          { duration: 1000, delay: delay + 600, easing: 'ease-out', fill: 'backwards' });
       }
     });
   }
