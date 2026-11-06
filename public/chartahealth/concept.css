@@ -8,12 +8,12 @@
 
 /* 2. Creme where they use the light green background. */
 :root {
-  --brand--off-white-background: #f6f1e7;      /* was #f3f7f5 */
-  --brand--foreground-lighter-stroke: #ece4d4; /* was #e6efeb */
-  --brand--darker-border: #ddd2bd;             /* was #cee0d8 */
+  --brand--off-white-background: #fbf8f2;      /* was #f3f7f5 */
+  --brand--foreground-lighter-stroke: #f3eee4; /* was #e6efeb */
+  --brand--darker-border: #e6dfd0;             /* was #cee0d8 */
 }
 /* The slightly darker light green on cards, tabs, tags and the secondary button. */
-.tag:not([class*="is-"]), .tag.is-navmenu, .toggle_mask, .solutions-tabs_tab-link { background-color: #ece4d4 !important; }
+.tag:not([class*="is-"]), .tag.is-navmenu, .toggle_mask, .solutions-tabs_tab-link { background-color: #f3eee4 !important; }
 /* The secondary button keeps its original light green. */
 .button.secondary, .button[class*="w-variant-1527680c"] { background-color: #e6efeb !important; border-color: #e6efeb !important; }
 /* All strokes are dark green. */
@@ -21,7 +21,7 @@
 .personas_row { border-color: #0f2d29 !important; }
 /* "Watch Replay" tags on the webinar cards. */
 .tag.is-accent { background-color: #0f2d29 !important; border-color: #0f2d29 !important; }
-.solutions-tabs_tabs-menu { background-color: #ddd2bd !important; }
+.solutions-tabs_tabs-menu { background-color: #e6dfd0 !important; }
 
 /* Cards (resources, webinars, testimonial) get white behind their copy. */
 .resources-index_item, .testimonial-slider_content-right { background-color: #fff !important; }
