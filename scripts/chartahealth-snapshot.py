@@ -86,6 +86,13 @@ ticker = (f'<div class="hiw-ticker" role="region" aria-label="EHRs Charta connec
           f'<div class="hiw-ticker_set">{imgs(False)}</div><div class="hiw-ticker_set" aria-hidden="true">{imgs(True)}</div></div></div>')
 s = s[:st] + f'<div class="hiw-steps">{cols}</div>' + ticker + s[en:]
 
+# Hand-drawn yellow highlights on the key phrase of each testimonial.
+for phrase in ['changed the entire work capabilities',
+               'audit 100% of claims prepayment',
+               'increased our internal pre-bill review coverage by 90%']:
+    assert phrase in s, phrase
+    s = s.replace(phrase, f'<mark class="hl">{phrase}</mark>')
+
 # Meta: private concept.
 s = re.sub(r'<title>.*?</title>', '<title>Charta Health homepage concept</title>', s, flags=re.S)
 s = re.sub(r'<meta[^>]+(name="description"|property="og:|name="twitter:)[^>]*>', '', s)
