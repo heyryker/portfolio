@@ -78,7 +78,10 @@
   position: absolute; z-index: -1; top: 0; left: -.06em;
   color: #fdff72; font-family: Fragment, "Times New Roman", serif;
   font-size: 11rem; line-height: .8; letter-spacing: -.04em; pointer-events: none; user-select: none;
+  transition: color .4s ease;
 }
+/* The number sits behind the heading, so hovering anywhere on the step counts. */
+.hiw-step:hover .hiw-step_num { color: #e6efeb; }
 .hiw-step h3 { font-size: clamp(1.6rem, 2.2vw, 2.25rem); line-height: 1.15; white-space: nowrap; }
 .hiw-step .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .hiw-ticker {
@@ -86,7 +89,7 @@
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
           mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
 }
-.hiw-ticker_track { display: flex; width: max-content; animation: hiw-scroll 70s linear infinite; }
+.hiw-ticker_track { display: flex; width: max-content; animation: hiw-scroll 140s linear infinite; }
 .hiw-ticker_set { display: flex; align-items: center; }
 .hiw-ticker img { height: calc(var(--h) * 1px); width: auto; max-width: none; margin-right: 4rem; }
 @keyframes hiw-scroll { to { transform: translateX(-50%); } }
