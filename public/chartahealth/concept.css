@@ -158,4 +158,4 @@ mark.hl {
 
 /* Hero: shorter, bigger headline; "every" gets the hand-drawn underline a beat after load. */
 h1.heading-style-h2 { font-size: clamp(3rem, 7.2vw, 6.75rem); line-height: 1.02; letter-spacing: -.02em; }
-.hl-ready h1 mark.hl { transition-delay: .7s; transition-duration: 1.1s; }
+.hl-ready h1 mark.hl { transition-delay: 1.8s; transition-duration: 1.4s; }
