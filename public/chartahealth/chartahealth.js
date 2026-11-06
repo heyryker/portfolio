@@ -117,24 +117,25 @@
   }
 })();
 
-// 3. Resources + webinars: yellow hand-drawn marks, one at a time, like a
-//    doctor scribbling notes on a chart. Each mark is tied to a card or button:
-//    an arrow pointing at it, a little celebration burst coming off a corner or
-//    edge, or a zigzag across its border. A mark draws in, holds a few seconds,
-//    fades, and then the next one starts.
+// 3. Resources + webinars: dark green hand-drawn marks, drawn one after another
+//    like a doctor scribbling notes on a chart: arrows pointing at cards and
+//    buttons, celebration ticks off card corners, zigzags across card borders,
+//    stars and smiley faces in the open space. Each mark holds a few seconds and
+//    fades; the next one starts as soon as the last has finished drawing.
 (function () {
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var hosts = [].slice.call(document.querySelectorAll('.section_featured-resources'));
   if (reduce || !hosts.length || !document.body.animate) return;
 
   var NS = 'http://www.w3.org/2000/svg';
-  var INK = '#fdff72';
+  var INK = '#0f2d29';
   hosts.forEach(function (host) {
     var layer = document.createElement('div');
     layer.className = 'doodles';
     layer.setAttribute('aria-hidden', 'true');
     host.appendChild(layer);
     host._doodles = layer;
+    host._live = [];
   });
 
   function rnd(a, b) { return a + Math.random() * (b - a); }
@@ -167,11 +168,23 @@
       }
       return { w: 100, h: 60, base: [50, 54], paths: p };
     },
-    sparkle: function () {
-      return { w: 60, h: 60, center: true, paths: [
-        'M' + pt(30, 4) + ' L' + pt(30, 22), 'M' + pt(30, 38) + ' L' + pt(30, 56),
-        'M' + pt(4, 30) + ' L' + pt(22, 30), 'M' + pt(38, 30) + ' L' + pt(56, 30)
-      ] };
+    star: function () {
+      var d = '';
+      for (var i = 0; i <= 10; i++) {
+        var a = rad(-90 + i * 36), r = i % 2 ? 12 : 28;
+        d += (i ? ' L' : 'M') + pt(32 + Math.cos(a) * r, 33 + Math.sin(a) * r);
+      }
+      return { w: 64, h: 64, paths: [d] };
+    },
+    smiley: function () {
+      var d = '', start = rnd(-120, -60);
+      for (var i = 0; i <= 26; i++) { // a circle that doesn't quite close
+        var a = rad(start + i * 14), r = 30 + rnd(-1.2, 1.2);
+        d += (i ? ' L' : 'M') + (35 + Math.cos(a) * r).toFixed(1) + ' ' + (35 + Math.sin(a) * r).toFixed(1);
+      }
+      return { w: 70, h: 70, paths: [d,
+        'M' + pt(25, 25) + ' L' + pt(25, 31), 'M' + pt(45, 25) + ' L' + pt(45, 31),
+        'M' + pt(21, 42) + ' Q' + pt(35, 56) + ' ' + pt(49, 42)] };
     },
     zigzag: function () {
       var d = 'M' + pt(4, 14), n = Math.round(rnd(6, 9));
@@ -208,7 +221,8 @@
     if (!cards.length && !buttons.length) return null;
     var avoid = copy(host, box);
     var cardsPad = cards.map(function (c) { return { l: c.l - 6, t: c.t - 6, r: c.r + 6, b: c.b + 6 }; });
-    var kind = pick(['arrow', 'arrow', 'arrow', 'celebrate', 'celebrate', 'celebrate', 'zigzag']);
+    var live = host._live.map(function (d) { return d.box; });
+    var kind = pick(['arrow', 'arrow', 'arrow', 'celebrate', 'celebrate', 'zigzag', 'zigzag', 'free', 'free', 'free']);
 
     for (var tries = 0; tries < 50; tries++) {
       var s, scale, rot, cx, cy, over = false;
@@ -229,40 +243,39 @@
         cx = tx - L * Math.cos(rad(theta)); cy = ty - L * Math.sin(rad(theta));
       } else if (kind === 'celebrate') {
         var card = pick(cards.length ? cards : buttons);
-        // corners and edges, with the direction the marks fly off in
-        var spots = [
-          [card.l, card.t, -135], [card.r, card.t, -45], [card.l, card.b, 135], [card.r, card.b, 45],
-          [(card.l + card.r) / 2 + rnd(-60, 60), card.t, -90], [card.r, card.t + rnd(30, 140), 0], [card.l, card.t + rnd(30, 140), 180]
-        ];
-        var sp = pick(spots), phi = sp[2] + rnd(-12, 12);
-        s = SHAPES[Math.random() < .7 ? 'burst' : 'sparkle']();
-        scale = rnd(.95, 1.45);
-        if (s.base) {
-          rot = phi + 90;
-          var bx = (s.base[0] - s.w / 2) * scale, by = (s.base[1] - s.h / 2) * scale;
-          var cr = Math.cos(rad(rot)), sr = Math.sin(rad(rot));
-          var ax = sp[0] + 8 * Math.cos(rad(phi)), ay = sp[1] + 8 * Math.sin(rad(phi));
-          cx = ax - (bx * cr - by * sr); cy = ay - (bx * sr + by * cr);
-        } else {
-          rot = rnd(-15, 15);
-          var dist = s.w / 2 * scale + 10;
-          cx = sp[0] + dist * Math.cos(rad(phi)); cy = sp[1] + dist * Math.sin(rad(phi));
-        }
+        // ticks fly off a corner, pointing away from the card
+        var sp = pick([[card.l, card.t, -135], [card.r, card.t, -45], [card.l, card.b, 135], [card.r, card.b, 45]]);
+        var phi = sp[2] + rnd(-12, 12);
+        s = SHAPES.burst();
+        scale = rnd(.85, 1.3);
+        rot = phi + 90;
+        var bx = (s.base[0] - s.w / 2) * scale, by = (s.base[1] - s.h / 2) * scale;
+        var cr = Math.cos(rad(rot)), sr = Math.sin(rad(rot));
+        var ax = sp[0] + 6 * Math.cos(rad(phi)), ay = sp[1] + 6 * Math.sin(rad(phi));
+        cx = ax - (bx * cr - by * sr); cy = ay - (bx * sr + by * cr);
+      } else if (kind === 'free') {
+        // a star or a smiley face in the open space
+        s = SHAPES[Math.random() < .55 ? 'star' : 'smiley']();
+        scale = rnd(.8, 1.5);
+        rot = rnd(-18, 18);
+        cx = rnd(view.l + 40, view.r - 40); cy = rnd(view.t + 40, view.b - 40);
       } else {
         var c = pick(cards.length ? cards : buttons);
         s = SHAPES.zigzag();
         var horiz = Math.random() < .7;
         var len = Math.min(220, (horiz ? c.r - c.l : c.b - c.t) * rnd(.3, .55));
         scale = len / s.w; over = true;
-        if (horiz) { cx = rnd(c.l + len / 2 + 10, c.r - len / 2 - 10); cy = Math.random() < .5 ? c.t : c.b; rot = rnd(-4, 4); }
-        else { cy = rnd(c.t + len / 2 + 10, c.b - len / 2 - 10); cx = Math.random() < .5 ? c.l : c.r; rot = 90 + rnd(-4, 4); }
+        // keep to the white part of the card: dark green ink vanishes on the dark cover images
+        var img = c.t + Math.min(220, (c.b - c.t) * .45);
+        if (horiz) { cx = rnd(c.l + len / 2 + 10, c.r - len / 2 - 10); cy = c.b; rot = rnd(-4, 4); }
+        else { len = Math.min(len, c.b - img - 30); scale = len / s.w; cy = rnd(img + len / 2 + 10, c.b - len / 2 - 10); cx = Math.random() < .5 ? c.l : c.r; rot = 90 + rnd(-4, 4); }
       }
       var w = s.w * scale, h = s.h * scale, half = Math.max(w, h) / 2;
       var bb = { l: cx - half, t: cy - half, r: cx + half, b: cy + half };
       var tight = { l: cx - half * .75, t: cy - half * .75, r: cx + half * .75, b: cy + half * .75 };
-      if (!inView(bb) || hits(tight, avoid)) continue;
+      if (!inView(bb) || hits(tight, avoid) || hits(bb, live)) continue;
       if (kind !== 'zigzag' && hits(tight, cardsPad)) continue;
-      return { host: host, s: s, w: w, h: h, x: cx - w / 2, y: cy - h / 2, rot: rot, scale: scale, over: over };
+      return { host: host, s: s, w: w, h: h, x: cx - w / 2, y: cy - h / 2, rot: rot, scale: scale, over: over, box: bb };
     }
     return null;
   }
@@ -276,7 +289,8 @@
     svg.style.top = p.y.toFixed(0) + 'px';
     svg.style.transform = 'rotate(' + p.rot.toFixed(1) + 'deg)';
     if (p.over) svg.classList.add('is-over');
-    var stroke = rnd(5.5, 7.5) * Math.min(1.2, Math.max(.9, p.scale));
+    var stroke = rnd(3.2, 4.6) * Math.min(1.25, Math.max(.9, p.scale));
+    var opacity = rnd(.45, .6).toFixed(2); // mildly transparent
     var speed = rnd(650, 1100) * Math.max(.8, Math.min(1.4, p.scale)); // a quick, sure hand
     var many = s.paths.length > 2, at = 0;
     s.paths.forEach(function (d, i) {
@@ -284,6 +298,7 @@
       path.setAttribute('d', d);
       path.setAttribute('fill', 'none');
       path.setAttribute('stroke', INK);
+      path.setAttribute('stroke-opacity', opacity);
       path.setAttribute('stroke-width', stroke.toFixed(1));
       path.setAttribute('stroke-linecap', 'round');
       path.setAttribute('stroke-linejoin', 'round');
@@ -297,12 +312,15 @@
       at += many ? dur * .7 : dur + 60;
     });
     p.host._doodles.appendChild(svg);
+    var item = { box: p.box };
+    p.host._live.push(item);
+    setTimeout(done, at); // the next mark starts once this one is drawn
     var fade = svg.animate([{ opacity: 1 }, { opacity: 0 }],
       { duration: 700, delay: at + rnd(2500, 3500), easing: 'ease-in', fill: 'forwards' });
-    fade.onfinish = function () { svg.remove(); done(); };
+    fade.onfinish = function () { svg.remove(); p.host._live.splice(p.host._live.indexOf(item), 1); };
   }
 
-  // One mark at a time across both sections.
+  // One mark drawing at a time across both sections.
   var visible = new Set(), busy = false, timer = null;
   function next() {
     timer = null;
@@ -311,7 +329,7 @@
     for (var i = 0; i < 4 && !p; i++) p = plan(pick(list));
     if (!p) { timer = setTimeout(next, 600); return; }
     busy = true;
-    draw(p, function () { busy = false; timer = setTimeout(next, rnd(350, 900)); });
+    draw(p, function () { busy = false; timer = setTimeout(next, rnd(120, 400)); });
   }
   var io = new IntersectionObserver(function (es) {
     es.forEach(function (e) { if (e.isIntersecting) visible.add(e.target); else visible.delete(e.target); });
