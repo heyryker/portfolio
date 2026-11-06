@@ -120,7 +120,8 @@
 // 3. Resources + webinars: dark green hand-drawn marks, drawn one after another
 //    like a doctor scribbling notes on a chart: arrows pointing at cards and
 //    buttons, celebration ticks off card corners, zigzags across card borders,
-//    stars and smiley faces in the open space. Each mark holds a few seconds and
+//    stars, smiley faces and scribbles in the open space (no kind repeats
+//    within two marks). Each mark holds a few seconds and
 //    fades; the next one starts as soon as the last has finished drawing.
 (function () {
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -186,6 +187,25 @@
         'M' + pt(25, 25) + ' L' + pt(25, 31), 'M' + pt(45, 25) + ' L' + pt(45, 31),
         'M' + pt(21, 42) + ' Q' + pt(35, 56) + ' ' + pt(49, 42)] };
     },
+    // true scribbles: a back-and-forth scratch, and a tangle of loops
+    scratch: function () {
+      var d = 'M' + pt(10, 14), y = 14, n = Math.round(rnd(7, 11));
+      for (var i = 0; i < n; i++) {
+        y += rnd(3.5, 6.5);
+        var x = i % 2 ? rnd(6, 18) : rnd(82, 94);
+        d += ' Q' + pt((x + 50) / 2, y - rnd(4, 9)) + ' ' + pt(x, y);
+      }
+      return { w: 100, h: Math.max(60, y + 10), paths: [d] };
+    },
+    tangle: function () {
+      var d = 'M' + pt(20, 40), steps = 60, cx = 50, cy = 38;
+      for (var i = 1; i <= steps; i++) {
+        var t = i / steps * Math.PI * 2 * rnd(4.6, 5.4) / 1, r = 14 + 12 * Math.sin(i * .37);
+        cx += rnd(-1.4, 1.6); cy += rnd(-1, 1);
+        d += ' L' + (cx + Math.cos(t * 1.03) * (r + 6)).toFixed(1) + ' ' + (cy + Math.sin(t) * r * .8).toFixed(1);
+      }
+      return { w: 110, h: 80, paths: [d] };
+    },
     zigzag: function () {
       var d = 'M' + pt(4, 14), n = Math.round(rnd(6, 9));
       for (var i = 1; i <= n; i++) d += ' L' + pt(4 + i * (132 / n), i % 2 ? 2 : 26);
@@ -193,6 +213,7 @@
     }
   };
 
+  var recent = []; // the last two kinds drawn
   function rel(r, box, m) { return { l: r.left - box.left - m, t: r.top - box.top - m, r: r.right - box.left + m, b: r.bottom - box.top + m }; }
   function hits(a, list) {
     for (var i = 0; i < list.length; i++) { var o = list[i]; if (a.l < o.r && a.r > o.l && a.t < o.b && a.b > o.t) return true; }
@@ -222,7 +243,9 @@
     var avoid = copy(host, box);
     var cardsPad = cards.map(function (c) { return { l: c.l - 6, t: c.t - 6, r: c.r + 6, b: c.b + 6 }; });
     var live = host._live.map(function (d) { return d.box; });
-    var kind = pick(['arrow', 'arrow', 'arrow', 'celebrate', 'celebrate', 'zigzag', 'zigzag', 'free', 'free', 'free']);
+    // never a kind drawn in the last two marks
+    var kind = pick(['arrow', 'arrow', 'celebrate', 'celebrate', 'zigzag', 'star', 'smiley', 'scribble', 'scribble']
+      .filter(function (k) { return recent.indexOf(k) < 0; }));
 
     for (var tries = 0; tries < 50; tries++) {
       var s, scale, rot, cx, cy, over = false;
@@ -253,10 +276,10 @@
         var cr = Math.cos(rad(rot)), sr = Math.sin(rad(rot));
         var ax = sp[0] + 6 * Math.cos(rad(phi)), ay = sp[1] + 6 * Math.sin(rad(phi));
         cx = ax - (bx * cr - by * sr); cy = ay - (bx * sr + by * cr);
-      } else if (kind === 'free') {
-        // a star or a smiley face in the open space
-        s = SHAPES[Math.random() < .55 ? 'star' : 'smiley']();
-        scale = rnd(.8, 1.5);
+      } else if (kind === 'star' || kind === 'smiley' || kind === 'scribble') {
+        // stars, smiley faces and scribbles go in the open space
+        s = SHAPES[kind === 'scribble' ? pick(['scratch', 'tangle']) : kind]();
+        scale = kind === 'scribble' ? rnd(.75, 1.25) : rnd(.8, 1.5);
         rot = rnd(-18, 18);
         cx = rnd(view.l + 40, view.r - 40); cy = rnd(view.t + 40, view.b - 40);
       } else {
@@ -275,6 +298,7 @@
       var tight = { l: cx - half * .75, t: cy - half * .75, r: cx + half * .75, b: cy + half * .75 };
       if (!inView(bb) || hits(tight, avoid) || hits(bb, live)) continue;
       if (kind !== 'zigzag' && hits(tight, cardsPad)) continue;
+      recent = [kind].concat(recent).slice(0, 2);
       return { host: host, s: s, w: w, h: h, x: cx - w / 2, y: cy - h / 2, rot: rot, scale: scale, over: over, box: bb };
     }
     return null;
