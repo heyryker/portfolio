@@ -119,3 +119,13 @@
 .hl-ready .testimonial-slider_quote mark.hl { background-size: 0% .5em; transition: background-size .9s cubic-bezier(.6,.1,.3,1) .25s; }
 .hl-ready .testimonial-slider_quote mark.hl.is-drawn { background-size: 100% .5em; }
 @media (prefers-reduced-motion: reduce) { .hl-ready .testimonial-slider_quote mark.hl { transition: none; background-size: 100% .5em; } }
+
+/* Solutions tabs: the square isometric illustrations keep the original image
+   frame and show whole (the screenshots were cropped from the top-left). */
+.section_solutions-tabs img.solutions-tabs_tab-image[src*="/illustrations/"] {
+  object-fit: contain !important; object-position: center !important;
+  /* the frame is offset to bleed past the card's right and bottom edges; keep the drawing inside the visible part */
+  box-sizing: border-box; padding: 0 var(--_spacing-sizing---gap-size--medium) var(--_spacing-sizing---gap-size--medium) 0;
+  /* flat background grid lives here so it fills the whole frame, whatever its shape */
+  background: #f3f7f5 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath d='M0 .5H48M.5 0V48' stroke='%230f2d29' stroke-opacity='.08' fill='none'/%3E%3C/svg%3E") center / 48px 48px;
+}

@@ -86,6 +86,26 @@ ticker = (f'<div class="hiw-ticker" role="region" aria-label="EHRs Charta connec
           f'<div class="hiw-ticker_set">{imgs(False)}</div><div class="hiw-ticker_set" aria-hidden="true">{imgs(True)}</div></div></div>')
 s = s[:st] + f'<div class="hiw-steps">{cols}</div>' + ticker + s[en:]
 
+# Solutions tabs: abstract isometric illustrations instead of product
+# screenshots (drawn by scripts/chartahealth-illustrations.py).
+ILLOS = {'Autonomous coding': ('autonomous-coding', 'a clinical note becoming accurate codes'),
+         'Revenue discovery': ('revenue-discovery', 'layers of records with missed revenue highlighted'),
+         'Payer compliance': ('payer-compliance', 'stacked claims checked line by line'),
+         'Clinical quality': ('clinical-quality', 'quality measures trending up'),
+         'Risk adjustment': ('risk-adjustment', 'risk scores with an under-captured condition lifted')}
+def illo(m):
+    tab = re.findall(r'data-w-tab="([^"]*)"', s[:m.start()])
+    name = tab[-1] if tab else None
+    if name not in ILLOS or name in done:
+        return m.group(0)
+    done.add(name)
+    f, alt = ILLOS[name]
+    return (f'<img src="/chartahealth/illustrations/{f}.svg" loading="lazy" width="960" height="960" '
+            f'alt="Abstract illustration: {alt}" class="solutions-tabs_tab-image"/>')
+done = set()
+s = re.sub(r'<img[^>]*class="solutions-tabs_tab-image[^"]*"[^>]*>', illo, s)
+assert done == set(ILLOS), done
+
 # Hand-drawn yellow highlights on the key phrase of each testimonial.
 for phrase in ['changed the entire work capabilities',
                'audit 100% of claims prepayment',
