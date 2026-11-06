@@ -121,17 +121,34 @@
 @media (prefers-reduced-motion: reduce) { .hl-ready .testimonial-slider_quote mark.hl { transition: none; background-size: 100% .5em; } }
 
 
-/* Solutions tabs, tighter: no image outline, the copy at the top and the
-   button at the bottom of the text column, and the illustration filling the
-   right side at the height of the tab list. */
-.section_solutions-tabs .solutions-tabs_tab-content { align-items: stretch; gap: 2rem; }
-.section_solutions-tabs .solutions-tabs_tab-text-wrapper { justify-content: space-between !important; gap: 2rem; height: auto !important; }
+/* Solutions tabs: one fixed box size for every tab, no image outline, copy at
+   the top, the button pinned 20px from the bottom, and the illustration
+   centered vertically on the right. The illustration animates in whenever its
+   tab becomes active (Webflow shows the pane, which restarts the animation). */
+.section_solutions-tabs .solutions-tabs_tabs { height: 31rem; }
+.section_solutions-tabs .solutions-tabs_tabs-content,
+.section_solutions-tabs .solutions-tabs_tab-pane,
+.section_solutions-tabs .solutions-tabs_tab-content { height: 100% !important; }
+.section_solutions-tabs .solutions-tabs_tab-content { position: relative; align-items: center; gap: 2rem; overflow: hidden; }
+.section_solutions-tabs .solutions-tabs_tab-text-wrapper { position: relative; align-self: stretch; height: 100% !important; justify-content: flex-start !important; padding-bottom: 6rem !important; }
+.section_solutions-tabs .solutions-tabs_tab-text-wrapper > .margin-top { position: absolute; left: 0; bottom: 20px; margin: 0 !important; padding: 0 !important; padding-left: inherit !important; }
 .section_solutions-tabs img.solutions-tabs_tab-image[src*="/illustrations/"] {
   border: 0 !important; position: static !important; inset: auto !important;
-  width: 55% !important; max-width: none !important; height: auto !important; max-height: none !important; aspect-ratio: auto !important;
-  object-fit: contain !important; object-position: center !important; flex: none; align-self: stretch; min-height: 0;
+  width: 55% !important; max-width: none !important; height: 88% !important; max-height: none !important; aspect-ratio: auto !important;
+  object-fit: contain !important; object-position: center !important; flex: none; align-self: center;
 }
-@media (max-width: 767px) {
-  .section_solutions-tabs .solutions-tabs_tab-content { flex-direction: column; }
-  .section_solutions-tabs img.solutions-tabs_tab-image[src*="/illustrations/"] { width: 100% !important; aspect-ratio: 5 / 4 !important; }
+.section_solutions-tabs .w--tab-active img.solutions-tabs_tab-image[src*="/illustrations/"] { animation: illo-in .8s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes illo-in {
+  from { opacity: 0; transform: translateY(28px) scale(.94); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .section_solutions-tabs .w--tab-active img.solutions-tabs_tab-image { animation: none !important; } }
+@media (max-width: 991px) {
+  .section_solutions-tabs .solutions-tabs_tabs { height: auto; }
+  .section_solutions-tabs .solutions-tabs_tabs-content { height: 46rem !important; }
+  .section_solutions-tabs .solutions-tabs_tab-content { flex-direction: column; align-items: stretch; gap: 0; }
+  .section_solutions-tabs .solutions-tabs_tab-text-wrapper { height: auto !important; flex: none !important; padding-bottom: 0 !important; position: static; }
+  .section_solutions-tabs img.solutions-tabs_tab-image[src*="/illustrations/"] { width: 100% !important; height: auto !important; flex: 1 1 auto; min-height: 0; margin-bottom: 5rem; }
+  /* the pane's own side padding (1.43rem) plus the text column's */
+  .section_solutions-tabs .solutions-tabs_tab-text-wrapper > .margin-top { left: 1.43rem; }
 }
