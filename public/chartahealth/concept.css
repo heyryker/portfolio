@@ -99,29 +99,13 @@
 }
 @media (prefers-reduced-motion: reduce) { .hiw-ticker_track { animation: none; } }
 
-/* The brick grid from Charta's social graphics, used quietly in a few spots:
-   the hero (fading in from the bottom), the logo band, the solutions section
-   and the closing CTA (fading in from the right). */
+/* The grid from Charta's social graphics (clean rows and columns, a few
+   dotted cells), covering whole sections: hero, logo band, solutions, and the
+   closing CTA with the footer. Centered so the columns sit symmetrically. */
 .section_home-hero, .section_logo-component, .section_solutions-tabs, .footer_component { position: relative; isolation: isolate; }
 .section_home-hero::before, .section_logo-component::before, .section_solutions-tabs::before, .footer_component::before {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background-size: 640px 168px;
+  background-size: 640px 168px; background-position: center top;
 }
-.section_home-hero::before {
-  background-image: url(/chartahealth/grid-light.svg); background-position: center bottom;
-  -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 70%); mask-image: linear-gradient(to top, #000 0%, transparent 70%);
-}
-.section_solutions-tabs::before {
-  background-image: url(/chartahealth/grid-light.svg);
-  -webkit-mask-image: linear-gradient(to bottom, #000, transparent 45%); mask-image: linear-gradient(to bottom, #000, transparent 45%);
-}
-.section_logo-component::before {
-  background-image: url(/chartahealth/grid-dark.svg); background-position: left center;
-  -webkit-mask-image: linear-gradient(to right, #000, transparent 75%); mask-image: linear-gradient(to right, #000, transparent 75%);
-}
-.footer_component::before {
-  background-image: url(/chartahealth/grid-dark.svg); background-position: right top;
-  -webkit-mask-image: linear-gradient(to left, #000, transparent 55%), linear-gradient(to bottom, #000, transparent 70%);
-  -webkit-mask-composite: source-in; mask-image: linear-gradient(to left, #000, transparent 55%), linear-gradient(to bottom, #000, transparent 70%);
-  mask-composite: intersect;
-}
+.section_home-hero::before, .section_solutions-tabs::before { background-image: url(/chartahealth/grid-light.svg); }
+.section_logo-component::before, .footer_component::before { background-image: url(/chartahealth/grid-dark.svg); }
