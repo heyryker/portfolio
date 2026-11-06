@@ -102,14 +102,22 @@ ILLOS = {'Autonomous coding': ('autonomous-coding', 'a clinical note becoming ac
          'Clinical quality': ('clinical-quality', 'quality measures trending up'),
          'Risk adjustment': ('risk-adjustment', 'risk scores with an under-captured condition lifted')}
 def illo(m):
-    tab = re.findall(r'data-w-tab="([^"]*)"', s[:m.start()])
-    name = tab[-1] if tab else None
-    if name not in ILLOS or name in done:
-        return m.group(0)
+    # The tab panes hold a static image, and a hidden CMS list (used by the
+    # Finsweet tabs script) holds another copy per tab; swap both. CMS images
+    # name their tab at the start of the alt text.
+    tag = m.group(0)
+    alt = (re.search(r'alt="([^"]*)"', tag) or [None, ''])[1]
+    name = next((k for k in ILLOS if alt.startswith(k)), None)
+    if not name:
+        tab = re.findall(r'data-w-tab="([^"]*)"', s[:m.start()])
+        name = tab[-1] if tab else None
+    if name not in ILLOS:
+        return tag
     done.add(name)
-    f, alt = ILLOS[name]
+    f, desc = ILLOS[name]
+    cls = re.search(r'class="([^"]*)"', tag)[1]
     return (f'<img src="{v(f"/chartahealth/illustrations/{f}.svg")}" loading="lazy" width="960" height="960" '
-            f'alt="Abstract illustration: {alt}" class="solutions-tabs_tab-image"/>')
+            f'alt="Abstract illustration: {desc}" class="{cls}"/>')
 done = set()
 s = re.sub(r'<img[^>]*class="solutions-tabs_tab-image[^"]*"[^>]*>', illo, s)
 assert done == set(ILLOS), done
