@@ -215,6 +215,7 @@
   };
 
   var recent = []; // the last two kinds drawn
+  var sinceSmiley = 0; // marks drawn since the last smiley
   function rel(r, box, m) { return { l: r.left - box.left - m, t: r.top - box.top - m, r: r.right - box.left + m, b: r.bottom - box.top + m }; }
   function hits(a, list) {
     for (var i = 0; i < list.length; i++) { var o = list[i]; if (a.l < o.r && a.r > o.l && a.t < o.b && a.b > o.t) return true; }
@@ -247,7 +248,7 @@
     // never a kind drawn in the last two marks
     var kind = pick(['arrow', 'arrow', 'celebrate', 'celebrate', 'zigzag', 'star', 'scribble', 'scribble']
       .filter(function (k) { return recent.indexOf(k) < 0; }));
-    if (Math.random() < .06 && recent.indexOf('smiley') < 0) kind = 'smiley'; // smiley faces are a rare treat
+    if (sinceSmiley > 14 && Math.random() < .2) kind = 'smiley'; // smiley faces are a rare treat
 
     for (var tries = 0; tries < 50; tries++) {
       var s, scale, rot, cx, cy, over = false;
@@ -295,12 +296,16 @@
         if (horiz) { cx = rnd(c.l + len / 2 + 10, c.r - len / 2 - 10); cy = c.b; rot = rnd(-4, 4); }
         else { len = Math.min(len, c.b - img - 30); scale = len / s.w; cy = rnd(img + len / 2 + 10, c.b - len / 2 - 10); cx = Math.random() < .5 ? c.l : c.r; rot = 90 + rnd(-4, 4); }
       }
-      var w = s.w * scale, h = s.h * scale, half = Math.max(w, h) / 2;
-      var bb = { l: cx - half, t: cy - half, r: cx + half, b: cy + half };
-      var tight = { l: cx - half * .75, t: cy - half * .75, r: cx + half * .75, b: cy + half * .75 };
+      // the rotated mark's real footprint, so long thin marks (zigzags) aren't treated as squares
+      var w = s.w * scale, h = s.h * scale, co = Math.abs(Math.cos(rad(rot))), si = Math.abs(Math.sin(rad(rot)));
+      var hw = (w * co + h * si) / 2, hh = (w * si + h * co) / 2;
+      var bb = { l: cx - hw, t: cy - hh, r: cx + hw, b: cy + hh };
+      var k = kind === 'arrow' || kind === 'celebrate' ? .5 : .8; // arrow tips and corner ticks sit right by their card
+      var tight = { l: cx - hw * k, t: cy - hh * k, r: cx + hw * k, b: cy + hh * k };
       if (!inView(bb) || hits(tight, avoid) || hits(bb, live)) continue;
       if (kind !== 'zigzag' && hits(tight, cardsPad)) continue;
       recent = [kind].concat(recent).slice(0, 2);
+      sinceSmiley = kind === 'smiley' ? 0 : sinceSmiley + 1;
       return { host: host, s: s, w: w, h: h, x: cx - w / 2, y: cy - h / 2, rot: rot, scale: scale, over: over, box: bb };
     }
     return null;
