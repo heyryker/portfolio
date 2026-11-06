@@ -198,11 +198,12 @@
       return { w: 100, h: Math.max(60, y + 10), paths: [d] };
     },
     tangle: function () {
-      var d = 'M' + pt(20, 40), steps = 60, cx = 50, cy = 38;
-      for (var i = 1; i <= steps; i++) {
-        var t = i / steps * Math.PI * 2 * rnd(4.6, 5.4) / 1, r = 14 + 12 * Math.sin(i * .37);
-        cx += rnd(-1.4, 1.6); cy += rnd(-1, 1);
-        d += ' L' + (cx + Math.cos(t * 1.03) * (r + 6)).toFixed(1) + ' ' + (cy + Math.sin(t) * r * .8).toFixed(1);
+      var d = '', steps = 160, turns = rnd(4.5, 6), drift = rnd(-1, 1), ph = rnd(0, 6);
+      for (var i = 0; i <= steps; i++) {
+        var k = i / steps, t = k * turns * Math.PI * 2;
+        var cx = 30 + k * 50, cy = 40 + Math.sin(k * 5 + ph) * 6 * drift; // loops travel left to right
+        var rx = 16 + 6 * Math.sin(k * 9 + ph), ry = 20 + 5 * Math.cos(k * 7);
+        d += (i ? ' L' : 'M') + (cx + Math.cos(t) * rx).toFixed(1) + ' ' + (cy + Math.sin(t) * ry).toFixed(1);
       }
       return { w: 110, h: 80, paths: [d] };
     },
