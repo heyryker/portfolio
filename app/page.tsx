@@ -5,6 +5,7 @@ import { Icon } from "@/components/Icon";
 import { NameAndTime } from "@/components/NameAndTime";
 import { ProjectCards } from "@/components/ProjectCards";
 import { SiteMenu } from "@/components/SiteMenu";
+import { MeepleRelease } from "@/components/MeepleRelease";
 import { SiteFooter } from "@/components/SiteFooter";
 import { LandingMarker } from "@/components/work/LandingMarker";
 import { getProjectCards } from "@/lib/projects";
@@ -51,6 +52,7 @@ export default async function Home() {
       </main>
       <LandingMarker />
       <SiteFooter />
+      <MeepleRelease />
     </div>
   );
 }

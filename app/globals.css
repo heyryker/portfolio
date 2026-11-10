@@ -656,11 +656,11 @@ a.name-time-name:focus-visible {
   color: var(--color-muted);
 }
 
-/* On phones the links reach the bottom-left corner, where the whistle is
-   fixed; lift them clear of it. */
+/* On phones the links reach the bottom-left corner, where the meeple button
+   is fixed; lift them clear of it. */
 @media (max-width: 640px) {
   .site-footer-links {
-    /* The whistle: 22px from the bottom, 56px tall. */
+    /* The meeple button: 12px from the bottom, 52px tall. */
     padding-bottom: 88px;
   }
 }
@@ -677,7 +677,7 @@ a.name-time-name:focus-visible {
 }
 
 /* With the note below them, the links hand their bottom padding (and the
-   whistle clearance on phones) to the note. */
+   meeple button clearance on phones) to the note. */
 .site-footer:has(.site-footer-note) .site-footer-links {
   padding-bottom: 12px;
 }
@@ -1103,137 +1103,126 @@ html:has(.site-menu[open]) {
 }
 
 /*
- * The whistle (components/MeepleField.tsx): a round floating button fixed to
- * the bottom-left corner, mirroring the home mark in the top-left, so it's in
- * reach wherever the visitor has scrolled. Below the case-study overlay (z-50).
- * The one meeple trick that isn't hidden, so it looks like a button and nudges
- * now and then until it's been blown.
+ * The meeple button (components/MeepleRelease.tsx): round and gray like the
+ * menu button, fixed in the bottom-left corner across from it. Hovering
+ * shows a pill that says what it does. Below the project screen (z-50).
  */
-.whistle {
+.meeple-release {
   position: fixed;
-  left: 22px;
-  bottom: 22px;
-  z-index: 30;
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--color-bg);
-  box-shadow:
-    0 6px 16px rgb(34 31 32 / 0.18),
-    0 1px 3px rgb(34 31 32 / 0.12);
-  cursor: pointer;
-  transition:
-    transform 150ms,
-    box-shadow 150ms;
+  left: 12px;
+  bottom: 12px;
+  z-index: 46;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
 }
 
-/* Meeple yellow, outlined in ink so it holds up against the white button. */
-.whistle-icon {
-  width: 34px;
-  height: 34px;
-  color: var(--color-meeple-yellow);
-  stroke: var(--color-ink-soft);
-  stroke-width: 44px;
-  stroke-linejoin: round;
-  paint-order: stroke;
-  overflow: visible;
-  transform-origin: 45% 60%;
+.meeple-release-button {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background: var(--card-bg);
+  color: var(--color-ink);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background-color 200ms;
+}
+
+.meeple-release-button:hover,
+.meeple-release-button:focus-visible {
+  background: var(--color-accent);
+}
+
+.meeple-release-icon {
+  width: 18px;
+  height: 24px;
+  fill: currentColor;
+  shape-rendering: crispEdges;
+}
+
+.meeple-release-eye {
+  fill: var(--card-bg);
+}
+
+.meeple-release-button:hover .meeple-release-eye,
+.meeple-release-button:focus-visible .meeple-release-eye {
+  fill: var(--color-accent);
+}
+
+/* A hop on hover, as if it wants out. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .meeple-release-button:not([data-out]):hover .meeple-release-icon {
+    animation: meeple-hop 520ms steps(3) infinite;
+  }
+}
+
+/* While they're out, the button is empty: only a faint meeple is left. */
+.meeple-release-button[data-out] .meeple-release-icon {
+  opacity: 0.25;
+}
+
+.meeple-release-tip {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--card-bg);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  white-space: nowrap;
+  color: var(--color-ink);
+  opacity: 0;
+  translate: -6px 0;
+  transition:
+    opacity 160ms,
+    translate 160ms;
+}
+
+/* Not on touch screens, where a tap would leave it showing. */
+.meeple-release-button:focus-visible + .meeple-release-tip {
+  opacity: 1;
+  translate: 0 0;
 }
 
 @media (hover: hover) {
-  .whistle:hover {
-    transform: translateY(-2px);
-    box-shadow:
-      0 10px 22px rgb(34 31 32 / 0.22),
-      0 2px 4px rgb(34 31 32 / 0.12);
+  .meeple-release-button:hover + .meeple-release-tip {
+    opacity: 1;
+    translate: 0 0;
   }
 }
 
-.whistle:active {
-  transform: translateY(1px);
-}
-
-/* A little tilt every few seconds, until it's been tried. */
-.whistle:not([data-used]) .whistle-icon {
-  animation: whistle-nudge 6s 3s infinite;
-}
-
-.whistle[data-blowing] .whistle-icon {
-  animation: whistle-blow 700ms steps(2) both;
-}
-
-/* Three short blasts out of the mouthpiece (top right), in pixel dashes. */
-.whistle-toot {
-  position: absolute;
-  left: 50px;
-  top: 2px;
-  width: 10px;
-  height: 18px;
-  opacity: 0;
+/* The meeples' canvas: over the page, under the button and the project
+   screen, and never in the way of a click. */
+.meeple-release-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
   pointer-events: none;
-  background:
-    linear-gradient(var(--color-ink-soft), var(--color-ink-soft)) 0 0 / 6px 2px,
-    linear-gradient(var(--color-ink-soft), var(--color-ink-soft)) 2px 8px / 8px 2px,
-    linear-gradient(var(--color-ink-soft), var(--color-ink-soft)) 0 16px / 6px 2px;
-  background-repeat: no-repeat;
+  image-rendering: pixelated;
 }
 
-.whistle[data-blowing] .whistle-toot {
-  animation: whistle-toot 700ms steps(1) both;
-}
-
-@keyframes whistle-nudge {
-  0%,
-  12%,
-  100% {
-    transform: rotate(0);
-  }
-  3%,
-  9% {
-    transform: rotate(-14deg);
-  }
-  6% {
-    transform: rotate(8deg);
-  }
-}
-
-@keyframes whistle-blow {
+@keyframes meeple-hop {
   0%,
   100% {
-    transform: rotate(0);
-  }
-  25%,
-  75% {
-    transform: rotate(-10deg);
+    translate: 0 0;
   }
   50% {
-    transform: rotate(4deg);
+    translate: 0 -4px;
   }
 }
 
-@keyframes whistle-toot {
-  0%,
-  100% {
-    opacity: 0;
-  }
-  10%,
-  30%,
-  50%,
-  70% {
-    opacity: 1;
-  }
-  20%,
-  40%,
-  60% {
-    opacity: 0;
+/* On narrower screens the landing cards reach the bottom-left corner, so
+   their pile stops above the button. */
+@media (max-width: 900px) {
+  .landing-cards .project-cards {
+    --pile-bottom: 76px;
   }
 }
 
 /*
  * The GA cookie notice (components/CookieNotice.tsx), only for visitors in
- * Europe. Bottom right, away from the whistle in the bottom left, and above
+ * Europe. Bottom right, away from the meeple button in the bottom left, and above
  * the meeples but below the case study overlay (z-50) and the menu.
  */
 .cookie-notice {
@@ -1282,7 +1271,7 @@ html:has(.site-menu[open]) {
 }
 
 @media (max-width: 640px) {
-  /* Clear the whistle (22px + 56px tall) by sitting above it, full width. */
+  /* Clear the meeple button (12px + 52px tall) by sitting above it, full width. */
   .cookie-notice {
     left: 16px;
     right: 16px;
