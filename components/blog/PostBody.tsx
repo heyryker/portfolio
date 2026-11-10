@@ -2,6 +2,7 @@ import { evaluate } from "@mdx-js/mdx";
 import type { MDXComponents } from "mdx/types";
 import Image from "next/image";
 import * as runtime from "react/jsx-runtime";
+import { slideComponents, withoutMedia } from "@/components/project/slides";
 
 /*
  * Renders a post's MDX at build time. Text sits in a readable column; figures
@@ -77,7 +78,13 @@ const components: MDXComponents = {
   Gallery,
 };
 
-export async function PostBody({ source }: { source: string }) {
+/**
+ * `part="text"` renders the write-up without its images, and `part="slides"`
+ * only the images, as slides for the project view's strip
+ * (components/project/slides.tsx).
+ */
+export async function PostBody({ source, part }: { source: string; part?: "text" | "slides" }) {
   const { default: Content } = await evaluate(source, { ...runtime });
-  return <Content components={components} />;
+  const use = part === "slides" ? slideComponents : part === "text" ? withoutMedia(components) : components;
+  return <Content components={use} />;
 }

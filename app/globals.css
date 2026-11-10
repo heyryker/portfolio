@@ -93,106 +93,38 @@ body {
 }
 
 /*
- * The landing page (app/page.tsx), in Times New Roman: a left-aligned intro,
- * then every case study and blog post as one long feed of big images. Times New Roman is a system font, so there's nothing
- * to download and no font swap to shift the layout.
+ * The centered header (components/SiteHeader.tsx, `centered`): on the
+ * landing page and in the project views, "Ryker Marble" in the sans serif in
+ * the middle of the top, with the menu button on the right. On the landing
+ * page today's date and my time in Utah sit under it.
  */
-.landing-intro,
-.feed {
-  font-family: "Times New Roman", Times, serif;
+.site-header-centered {
+  display: flex;
+  justify-content: center;
+  padding: 22px calc(var(--page-gutter) + 56px) 0;
 }
 
-.landing-intro {
+.site-header-name {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-end;
-  min-height: 62svh;
-  padding: 120px var(--page-gutter) 56px;
-  text-align: left;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  justify-content: center;
+  text-align: center;
 }
 
-.landing-intro-title {
-  font-size: clamp(56px, 10vw, 136px);
-  font-weight: 400;
-  line-height: 0.95;
-  letter-spacing: -0.025em;
+.site-header-wordmark {
+  font-family: var(--font-sans);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   color: var(--color-ink);
 }
 
-/* One sentence per line: what I am, what I do, then where, in italics. */
-.landing-intro-blurb {
-  margin-top: 28px;
-  font-size: clamp(19px, 1.75vw, 23px);
-  line-height: 1.4;
-  color: var(--color-ink-soft);
-  text-wrap: balance;
-}
-
-/* "Based in Utah." in the yellow accent, at Ryker's ask. A short aside, so it's
-   the one place yellow carries type on white, despite the low contrast. */
-.landing-intro-place {
-  display: inline-grid;
-  justify-items: start;
-  color: var(--color-accent);
-  cursor: default;
-  outline-offset: 4px;
-}
-
-/* "Based in Utah.*" and "*Willing to relocate." stacked in one cell; hovering
-   (or tapping, or tabbing to it) crossfades to the second. */
-.landing-intro-place-home,
-.landing-intro-place-move {
-  grid-area: 1 / 1;
-  transition:
-    opacity 250ms,
-    transform 250ms;
-}
-
-.landing-intro-place-move {
-  opacity: 0;
-  transform: translateY(6px);
-}
-
-.landing-intro-place:hover .landing-intro-place-home,
-.landing-intro-place:focus .landing-intro-place-home {
-  opacity: 0;
-  transform: translateY(-6px);
-}
-
-.landing-intro-place:hover .landing-intro-place-move,
-.landing-intro-place:focus .landing-intro-place-move {
-  opacity: 1;
-  transform: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .landing-intro-place-home,
-  .landing-intro-place-move {
-    transition: none;
-    transform: none;
-  }
-}
-
-.landing-intro-links {
-  display: flex;
-  gap: 32px;
-  margin-top: 28px;
-  font-size: clamp(18px, 1.6vw, 21px);
-}
-
-.landing-intro-links a {
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.22em;
-  transition:
-    color 200ms,
-    text-decoration-color 200ms;
-}
-
-.landing-intro-links a:hover,
-.landing-intro-links a:focus-visible {
-  color: var(--color-ink);
+a.site-header-wordmark:hover,
+a.site-header-wordmark:focus-visible {
   text-decoration-line: underline;
   text-decoration-color: var(--color-accent);
   text-decoration-thickness: 0.32em;
@@ -200,27 +132,53 @@ body {
   text-decoration-skip-ink: none;
 }
 
+/* The date and time under the name (components/LocalClock.tsx). */
+.local-clock {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 0.5em;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .local-clock-colon {
+    animation: local-clock-blink 2s steps(1, end) infinite;
+  }
+}
+
+@keyframes local-clock-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
 /*
- * The landing page's project feed (components/ProjectFeed.tsx), after studio
- * sites like Porto Rocha's: every project as a big image, one full width and
+ * The landing page's cards (components/ProjectFeed.tsx), after studio sites
+ * like Porto Rocha's: every project as a big image card, one full width and
  * then two side by side, all the way down. Square corners like the rest of
  * the site. Hovering eases the image in a touch and puts the yellow marker
  * under the name.
  */
 .feed {
-  padding: 0 var(--page-gutter) 96px;
+  padding: 56px var(--page-gutter) 96px;
+  font-family: var(--font-sans);
 }
 
 .feed-list {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 48px 24px;
+  gap: 40px 24px;
 }
 
 @media (min-width: 768px) {
   .feed-list {
     grid-template-columns: 1fr 1fr;
-    row-gap: 72px;
+    row-gap: 64px;
   }
 
   .feed-item[data-wide] {
@@ -261,13 +219,15 @@ body {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 2px 14px;
-  margin-top: 14px;
-  font-size: clamp(18px, 1.6vw, 22px);
-  line-height: 1.25;
+  justify-content: space-between;
+  gap: 2px 16px;
+  margin-top: 12px;
+  font-size: 15px;
+  line-height: 1.3;
 }
 
 .feed-name {
+  font-weight: 600;
   color: var(--color-ink);
 }
 
@@ -281,7 +241,6 @@ body {
 }
 
 .feed-detail {
-  font-style: italic;
   color: var(--color-muted);
 }
 
@@ -297,51 +256,308 @@ body {
 }
 
 /*
- * My local time in Utah (components/LocalClock.tsx), in the landing page
- * header: centered on wider screens, beside the menu button on phones.
+ * The project view (components/project/ProjectView.tsx), for case studies
+ * and blog posts: a strip of every image across the top, the write-up below.
+ * Opening one from a card slides it up (.case-wipe-in), and the strip slides
+ * in from the right while the write-up rises a little after it.
  */
-.local-clock {
-  position: absolute;
-  top: 22px;
-  right: calc(var(--page-gutter) + 44px + 12px);
-  display: flex;
-  align-items: center;
-  gap: 0.6em;
-  height: 44px;
-  font-family: "Times New Roman", Times, serif;
-  font-size: 17px;
-  line-height: 1;
-  color: var(--color-ink);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+.project {
+  --strip-h: min(62svh, 640px);
+  min-height: 100svh;
+  background: var(--color-bg);
+  font-family: var(--font-sans);
 }
 
-.local-clock-zone {
+@media not all and (min-width: 768px) {
+  .project {
+    --strip-h: min(46svh, 420px);
+  }
+}
+
+.project-back {
+  position: absolute;
+  top: 22px;
+  left: var(--page-gutter);
+  z-index: 31;
+  display: flex;
+  align-items: center;
+  height: 44px;
+}
+
+.project-back-link {
+  display: inline-flex;
+  gap: 0.4em;
+  font-size: 15px;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.project-back-link:hover,
+.project-back-link:focus-visible {
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 0.32em;
+  text-underline-offset: -0.14em;
+  text-decoration-skip-ink: none;
+}
+
+.project-gallery {
+  position: relative;
+  margin-top: 32px;
+}
+
+.project-gallery-strip {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  cursor: grab;
+  outline-offset: -2px;
+}
+
+.project-gallery-strip::-webkit-scrollbar {
   display: none;
+}
+
+.project-gallery-strip[data-dragging] {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.project-gallery-track {
+  display: flex;
+  gap: 16px;
+  width: max-content;
+  padding-inline: var(--page-gutter);
+}
+
+/* min-content: the caption wraps at the image's width. */
+.project-slide {
+  flex: none;
+  width: min-content;
+}
+
+/* Every slide is the strip's height and as wide as its own proportions. */
+.project-slide-media {
+  display: block;
+  height: var(--strip-h);
+  width: auto;
+  max-width: none;
+  object-fit: cover;
+  background: #f3f3f3;
+}
+
+/* On phones a wide image is cropped to most of the screen's width, so the
+   next one always peeks in from the right. */
+@media not all and (min-width: 768px) {
+  .project-slide-media {
+    max-width: calc(100vw - var(--page-gutter) * 2 - 32px);
+  }
+}
+
+.project-slide-video {
+  aspect-ratio: 16 / 9;
+}
+
+.project-slide-video > div,
+.project-slide-video video {
+  height: 100%;
+}
+
+.project-slide-caption {
+  min-height: 1.4em;
+  max-width: 60ch;
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.4;
   color: var(--color-muted);
 }
 
-@media (min-width: 768px) {
-  .local-clock {
-    right: auto;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 19px;
+.project-gallery-arrows {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 4px var(--page-gutter) 0;
+}
+
+.project-gallery-arrow {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-ink);
+  cursor: pointer;
+  transition: background-color 200ms;
+}
+
+.project-gallery-arrow:hover,
+.project-gallery-arrow:focus-visible {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+/* Phones swipe the strip, so no arrows. */
+@media not all and (min-width: 768px) {
+  .project-gallery-arrows {
+    display: none;
+  }
+}
+
+.project-content {
+  display: grid;
+  gap: 40px;
+  padding: 48px var(--page-gutter) 0;
+}
+
+@media (min-width: 1024px) {
+  .project-content {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 64px;
   }
 
-  .local-clock-zone {
-    display: inline;
+  .project-head {
+    position: sticky;
+    top: 32px;
+    align-self: start;
   }
+}
+
+.project-eyebrow {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.project-title {
+  margin-top: 12px;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.project-summary {
+  margin-top: 16px;
+  font-size: 19px;
+  line-height: 1.45;
+  color: var(--color-ink-soft);
+  text-wrap: pretty;
+}
+
+.project-meta {
+  display: grid;
+  gap: 10px;
+  margin-top: 28px;
+  border-top: 1px solid #e8e8e8;
+  padding-top: 16px;
+  font-size: 15px;
+}
+
+.project-meta > div {
+  display: grid;
+  grid-template-columns: 6em 1fr;
+  gap: 12px;
+}
+
+.project-meta dt {
+  color: var(--color-muted);
+}
+
+/* The write-up's own column rules (case-col margins) don't apply here. */
+.project-body {
+  min-width: 0;
+}
+
+.project-body .case-col {
+  margin-inline: 0;
+  max-width: 660px;
+}
+
+.project-body > :first-child {
+  margin-top: 0;
+}
+
+/* "## The brief" in a case study (see CaseStudy.tsx). */
+.project-section {
+  margin: 48px 0 12px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.project-footer {
+  margin: 96px var(--page-gutter) 0;
+  border-top: 1px solid #e8e8e8;
+  padding: 40px 0 64px;
+}
+
+.project-next {
+  display: block;
+}
+
+.project-next-kicker {
+  display: block;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.project-next-name {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.project-next:hover .project-next-name,
+.project-next:focus-visible .project-next-name {
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 0.32em;
+  text-underline-offset: -0.14em;
+  text-decoration-skip-ink: none;
+}
+
+.project-contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 40px;
+  font-size: 17px;
+}
+
+.project-contact a {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .local-clock-colon {
-    animation: local-clock-blink 2s steps(1, end) infinite;
+  .case-wipe-in .project-gallery-track {
+    animation: project-strip-in 1100ms cubic-bezier(0.2, 0.8, 0.2, 1) 150ms both;
+  }
+
+  .case-wipe-in .project-content {
+    animation: project-content-in 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 350ms both;
   }
 }
 
-@keyframes local-clock-blink {
-  50% {
+@keyframes project-strip-in {
+  from {
+    transform: translateX(45vw);
+    opacity: 0;
+  }
+}
+
+@keyframes project-content-in {
+  from {
+    transform: translateY(48px);
     opacity: 0;
   }
 }

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/JsonLd";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, WEBSITE_ID, pageMetadata, person } from "@/lib/site";
-import { LandingIntro } from "@/components/LandingIntro";
 import { ProjectFeed, type FeedItem } from "@/components/ProjectFeed";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -57,9 +56,8 @@ export default async function Home() {
           ],
         }}
       />
-      <SiteHeader sticky />
+      <SiteHeader centered clock />
       <main>
-        <LandingIntro />
         <ProjectFeed items={[...cases, ...posts]} />
       </main>
       <LandingMarker />
