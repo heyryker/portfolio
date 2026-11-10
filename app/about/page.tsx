@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CopyEmail } from "@/components/CopyEmail";
+import { Icon } from "@/components/Icon";
 import { JsonLd } from "@/components/JsonLd";
 import { PixelPortrait } from "@/components/PixelPortrait";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -22,11 +23,11 @@ const CONTACT = [
   { label: "GITHUB", value: "github.com/heyryker", href: PROFILES.github },
 ];
 
-/** A bracketed section label, on the 44px rhythm. */
+/** A section label, on the 44px rhythm. Inter 500 caps, like the landing name. */
 function SectionLabel({ children, id }: { children: React.ReactNode; id?: string }) {
   return (
-    <h2 id={id} className="flex h-11 items-center text-sm tracking-[0.08em] text-muted uppercase">
-      [{children}]
+    <h2 id={id} className="flex h-11 items-center text-sm font-medium tracking-[0.04em] text-muted uppercase">
+      {children}
     </h2>
   );
 }
@@ -45,17 +46,19 @@ export default function AboutPage() {
       />
       <div className="bg-graph relative h-[calc(var(--grid-cell)*6)] md:h-[calc(var(--grid-cell)*3)]">
         <SiteHeader />
+        {/* A gray pill like the landing's Resume pill, centered on the 44px name row. */}
         <Link
           href="/"
-          className="absolute -mx-2 -my-1 bg-bg px-2 py-1 top-[34px] left-[200px] text-sm tracking-[0.08em] text-muted uppercase transition-colors hover:text-ink focus-visible:text-ink md:top-[33px] md:left-[236px]"
+          className="menu-pill absolute top-[22px] left-[184px] h-11! gap-[0.4em] px-4! text-[15px]! md:left-[232px]"
         >
-          [&larr; BACK]
+          <Icon name="arrow_back" className="size-[0.9em] text-[#767676]" />
+          Back
         </Link>
       </div>
 
       <main className="mx-auto max-w-[968px] px-[22px] pt-11 pb-22 md:px-11">
-        <p className="text-sm tracking-[0.08em] text-ink uppercase">HEY [I&rsquo;M] RYKER</p>
-        <h1 className="mt-5 text-[clamp(32px,5.2vw,56px)] leading-[1.05] font-extrabold tracking-[-0.015em] text-balance">
+        <p className="text-sm font-medium tracking-[0.04em] text-ink uppercase">HEY [I&rsquo;M] RYKER</p>
+        <h1 className="mt-5 text-[clamp(32px,5.2vw,56px)] leading-[1.1] font-medium tracking-[-0.02em] text-balance">
           I&rsquo;m a brand designer interested in strategy, craft and art direction.
         </h1>
 
@@ -80,20 +83,15 @@ export default function AboutPage() {
             </p>
             <p className="text-muted">Based in Utah.</p>
             <div className="flex flex-wrap gap-3 pt-3">
-              <a
-                href={RESUME}
-                download="Ryker-Marble-Resume.pdf"
-                className="inline-flex h-11 items-center bg-accent px-5 text-sm font-semibold tracking-[0.08em] text-ink uppercase transition-colors hover:bg-ink hover:text-white focus-visible:bg-ink focus-visible:text-white"
-              >
-                Download PDF
+              {/* Gray pills, the same as the landing's Resume pill (.menu-pill). */}
+              <a href={RESUME} download="Ryker-Marble-Resume.pdf" className="menu-pill gap-[0.4em]">
+                Download resume
+                <Icon name="download" className="size-[0.9em] text-[#767676]" />
               </a>
-              <a
-                href={RESUME}
-                target="_blank"
-                rel="noopener"
-                className="inline-flex h-11 items-center border border-ink px-5 text-sm font-semibold tracking-[0.08em] uppercase transition-colors hover:border-ink hover:marker focus-visible:marker"
-              >
+              <a href={RESUME} target="_blank" rel="noopener" className="menu-pill gap-[0.4em]">
                 View in browser
+                <Icon name="arrow_outward" className="size-[0.9em] text-[#767676]" />
+                <span className="sr-only"> (PDF, opens in a new tab)</span>
               </a>
             </div>
           </div>
@@ -110,7 +108,7 @@ export default function AboutPage() {
           <dl className="mt-2 divide-y divide-grid border-y border-grid">
             {CONTACT.map(({ label, value, href }) => (
               <div key={label} className="grid items-center gap-x-6 py-3 sm:grid-cols-[120px_1fr]">
-                <dt className="text-sm tracking-[0.08em] text-muted uppercase">[{label}]</dt>
+                <dt className="text-sm font-medium tracking-[0.04em] text-muted uppercase">{label}</dt>
                 <dd className="flex flex-wrap items-center gap-x-4">
                   <a
                     href={href}
@@ -132,9 +130,9 @@ export default function AboutPage() {
             {EXPERIENCE.map((job) => (
               <li key={job.role + job.org} className="grid gap-x-6 py-3 sm:grid-cols-[1fr_auto]">
                 <span>
-                  <span className="font-semibold">{job.role}</span>, {job.org}
+                  <span className="font-medium">{job.role}</span>, {job.org}
                 </span>
-                <span className="font-serif text-xs leading-6 text-muted">{job.years}</span>
+                <span className="text-sm leading-6 text-muted tabular-nums">{job.years}</span>
               </li>
             ))}
           </ul>
@@ -144,13 +142,13 @@ export default function AboutPage() {
           <SectionLabel id="education">EDUCATION</SectionLabel>
           <ul className="mt-2 divide-y divide-grid border-y border-grid">
             <li className="py-3">
-              <span className="font-semibold">{EDUCATION.school}</span>, {EDUCATION.degrees}
+              <span className="font-medium">{EDUCATION.school}</span>, {EDUCATION.degrees}
             </li>
           </ul>
         </section>
 
         {/* TODO(ryker): approve line */}
-        <p className="mt-22 font-serif text-xs text-muted">
+        <p className="mt-22 text-sm text-muted">
           Designed by Ryker. Animated by five very small coworkers.
         </p>
       </main>
