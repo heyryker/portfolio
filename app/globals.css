@@ -816,6 +816,14 @@ html:has(.site-menu[open]) {
   transition: background-color 200ms;
 }
 
+/* The home link at the top of the open menu reads like the name on the
+   landing page: Inter 500, uppercase. */
+.menu-bar .menu-pill {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
 .menu-pill:hover,
 .menu-pill:focus-visible {
   background: var(--color-accent);
@@ -911,9 +919,13 @@ html:has(.site-menu[open]) {
   display: flex;
   align-items: center;
   height: 44px;
-  font-family: "Times New Roman", Times, serif;
-  font-size: 21px;
+  /* The landing name's treatment (.name-time-name). */
+  font-family: var(--font-sans);
+  font-size: 20px;
+  font-weight: 500;
   line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   color: var(--color-ink);
   transition:
     opacity 300ms,

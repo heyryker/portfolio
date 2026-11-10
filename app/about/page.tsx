@@ -47,7 +47,7 @@ export default function AboutPage() {
         <SiteHeader />
         <Link
           href="/"
-          className="absolute -mx-2 -my-1 bg-bg px-2 py-1 top-[34px] left-[164px] text-sm tracking-[0.08em] text-muted uppercase transition-colors hover:text-ink focus-visible:text-ink md:top-[33px] md:left-[200px]"
+          className="absolute -mx-2 -my-1 bg-bg px-2 py-1 top-[34px] left-[200px] text-sm tracking-[0.08em] text-muted uppercase transition-colors hover:text-ink focus-visible:text-ink md:top-[33px] md:left-[236px]"
         >
           [&larr; BACK]
         </Link>
