@@ -25,7 +25,7 @@ function Caption({ children }: { children?: React.ReactNode }) {
   return <figcaption className="project-slide-caption">{children}</figcaption>;
 }
 
-/** One image in the gallery, shown whole inside the gallery's frame. */
+/** One image in the gallery, filling the gallery's frame. */
 export function ImageSlide({ src, alt, caption, width = 2400, height = 1350, priority }: SlideProps & { priority?: boolean }) {
   return (
     <figure className="project-slide">
@@ -53,7 +53,7 @@ function VideoSlide({ src, poster, alt, caption }: SlideProps & { poster?: strin
     <figure className="project-slide">
       {src ? (
         <div className="project-slide-media project-slide-video">
-          <LazyVideo src={src} poster={poster} alt={alt} className="h-full w-full object-contain" />
+          <LazyVideo src={src} poster={poster} alt={alt} className="h-full w-full object-cover" />
         </div>
       ) : (
         <Placeholder label={alt.replace(/^TODO\(ryker\):\s*/i, "")} className="project-slide-media" />

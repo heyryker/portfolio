@@ -364,7 +364,7 @@ a.name-time-name:focus-visible {
   }
 }
 
-/* One image at a time, shown whole, in a rounded gray frame. */
+/* One image at a time, filling a rounded frame. */
 .project-gallery {
   position: relative;
 }
@@ -388,18 +388,21 @@ a.name-time-name:focus-visible {
 }
 
 .project-slide {
+  position: relative;
   flex: none;
   width: 100%;
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
 
+/* Full bleed: each image fills the rounded frame edge to edge (Ryker's
+   call), cropping a little off whichever sides don't fit 16:10. */
 .project-slide-media {
   display: block;
   width: 100%;
   height: auto;
   aspect-ratio: 16 / 10;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .project-slide-video {
@@ -414,11 +417,19 @@ a.name-time-name:focus-visible {
   display: none;
 }
 
+/* Captions float on the image's bottom-left corner, so every slide is
+   just the image and the frame never grows. */
 .project-slide-caption {
-  padding: 0 24px 16px;
-  font-size: 14px;
-  line-height: 1.4;
-  color: #767676;
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  max-width: calc(100% - 88px);
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.9);
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--color-ink);
 }
 
 .project-gallery-controls {
