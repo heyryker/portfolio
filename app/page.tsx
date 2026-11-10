@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/JsonLd";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, WEBSITE_ID, pageMetadata, person } from "@/lib/site";
+import { RESUME, SITE_DESCRIPTION, SITE_NAME, SITE_URL, WEBSITE_ID, pageMetadata, person } from "@/lib/site";
+import { Icon } from "@/components/Icon";
 import { NameAndTime } from "@/components/NameAndTime";
 import { ProjectCards } from "@/components/ProjectCards";
 import { SiteMenu } from "@/components/SiteMenu";
@@ -37,6 +38,13 @@ export default async function Home() {
       </header>
       <main className="landing">
         <NameAndTime heading />
+        <p className="landing-actions">
+          <a href={RESUME} target="_blank" rel="noopener" className="menu-pill">
+            Resume
+            <Icon name="arrow_outward" className="size-[0.9em] text-[#767676]" />
+            <span className="sr-only"> (PDF, opens in a new tab)</span>
+          </a>
+        </p>
         <section aria-label="Projects" className="landing-cards">
           <ProjectCards items={cards} />
         </section>
