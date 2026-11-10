@@ -47,9 +47,12 @@ export function ProjectCards({
       const listTop = list.getBoundingClientRect().top;
       const bottom = scrollSelf ? list.getBoundingClientRect().bottom : window.innerHeight;
       const gap = parseFloat(getComputedStyle(list).rowGap) || 0;
-      // Room under the pile, which the landing page grows on narrow screens to
-      // clear the meeple button (`--pile-bottom` in globals.css).
-      const padBottom = parseFloat(getComputedStyle(list).getPropertyValue("--pile-bottom")) || (scrollSelf ? 12 : 16);
+      // Room under the pile. The landing page sets `--pile-bottom` on narrow
+      // screens (globals.css) to keep the whole pile clear of the meeple
+      // button, so there it counts from the deepest peeking card, not the
+      // front one.
+      const clearance = parseFloat(getComputedStyle(list).getPropertyValue("--pile-bottom"));
+      const padBottom = clearance ? clearance + PILE * PEEK : scrollSelf ? 12 : 16;
       cards.forEach((card, i) => {
         // Where the card sits in the list, ignoring any transform.
         const top = listTop + card.offsetTop - (scrollSelf ? list.scrollTop : 0);
