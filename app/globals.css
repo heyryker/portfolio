@@ -1300,3 +1300,246 @@ html:has(.site-menu[open]) {
     max-width: none;
   }
 }
+
+/* Topic tags (components/TagPills.tsx): small light gray pills. */
+.tag-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #e6e6e6;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1;
+  color: #4a4a4a;
+  white-space: nowrap;
+  transition: background-color 200ms;
+}
+
+a.tag-pill:hover,
+a.tag-pill:focus-visible {
+  background: var(--color-accent);
+  color: var(--color-ink);
+}
+
+/* In the Role / Client / Year list, the pills line up with the other values. */
+.project-meta dd .tag-pills {
+  margin-top: -4px;
+}
+
+/*
+ * The blog index (app/blog/page.tsx, components/blog/BlogBrowser.tsx): the
+ * landing page's top, then a search box and tag filters over a grid of the
+ * same gray cards (1 column on phones, 2 on tablets, 3 on wide screens).
+ */
+.blog-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(72px, 12svh, 128px) 12px 64px;
+}
+
+.blog-heading {
+  margin-top: clamp(40px, 7svh, 72px);
+  font-family: var(--font-sans);
+  font-size: clamp(30px, 3vw, 42px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  text-align: center;
+}
+
+.blog-intro {
+  margin-top: 8px;
+  font-size: clamp(16px, 1.5vw, 20px);
+  color: #767676;
+  text-align: center;
+}
+
+.blog-filters {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  margin-top: clamp(32px, 6svh, 56px);
+}
+
+.blog-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 520px);
+  height: 52px;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: var(--card-bg);
+  font-family: var(--font-sans);
+  transition: box-shadow 200ms;
+}
+
+.blog-search:focus-within {
+  box-shadow: 0 0 0 2px var(--color-ink);
+}
+
+.blog-search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  font-size: 17px;
+  color: var(--color-ink);
+  outline: none;
+}
+
+.blog-search input::placeholder {
+  color: #767676;
+}
+
+.blog-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 900px;
+}
+
+.blog-tag {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #ececec;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: #4a4a4a;
+  cursor: pointer;
+  transition: background-color 200ms, color 200ms;
+}
+
+.blog-tag:hover,
+.blog-tag:focus-visible {
+  background: #e0e0e0;
+  color: var(--color-ink);
+}
+
+.blog-tag[aria-pressed="true"] {
+  background: var(--color-accent);
+  color: var(--color-ink);
+}
+
+.blog-count {
+  margin: 28px 0 12px;
+  font-size: 13px;
+  color: #767676;
+  text-align: center;
+}
+
+/* Phones: the tag filters scroll sideways in one row instead of wrapping. */
+@media (max-width: 639px) {
+  .blog-filters {
+    justify-items: stretch;
+  }
+
+  .blog-tags {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    margin-inline: -12px;
+    padding-inline: 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .blog-tag {
+    flex: none;
+  }
+}
+
+.blog-grid {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .blog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .blog-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.blog-grid > li[hidden] {
+  display: none;
+}
+
+.blog-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  padding: clamp(14px, 1.6vw, 20px);
+  border-radius: var(--card-radius);
+  background: var(--card-bg);
+  font-family: var(--font-sans);
+  transition: background-color 200ms;
+}
+
+.blog-card:hover,
+.blog-card:focus-visible {
+  background: var(--card-bg-hover);
+}
+
+.blog-card-thumb {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #e8e8e8;
+}
+
+.blog-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.blog-card-date {
+  font-size: 13px;
+  color: #767676;
+}
+
+.blog-card-title {
+  font-size: clamp(17px, 1.5vw, 20px);
+  line-height: 1.25;
+  color: var(--color-ink);
+}
+
+.blog-card-summary {
+  font-size: 15px;
+  line-height: 1.4;
+  color: #767676;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.blog-empty {
+  margin-top: 24px;
+  text-align: center;
+  color: #767676;
+}
+
+.blog-empty button {
+  margin-left: 4px;
+  color: var(--color-ink);
+  text-decoration: underline;
+  cursor: pointer;
+}

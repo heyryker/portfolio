@@ -1,5 +1,6 @@
 import { AiSummary } from "@/components/AiSummary";
 import { CopyEmail } from "@/components/CopyEmail";
+import { TagPills } from "@/components/TagPills";
 import { getProjectCards } from "@/lib/projects";
 import { ProjectView } from "@/components/project/ProjectView";
 import { ImageSlide } from "@/components/project/slides";
@@ -44,7 +45,9 @@ export async function BlogPost({ post }: { post: Post }) {
             <dl className="project-meta">
               <div>
                 <dt>Tags</dt>
-                <dd>{post.tags.join(", ")}</dd>
+                <dd>
+                  <TagPills tags={post.tags} link />
+                </dd>
               </div>
             </dl>
           )}
