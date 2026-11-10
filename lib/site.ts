@@ -12,7 +12,7 @@ export const SITE_TITLE = "Ryker Marble: Brand & Creative Lead";
 export const SITE_DESCRIPTION =
   "Ryker Marble is a brand and creative lead in Utah, working across strategy, craft and art direction for B2B SaaS, cybersecurity, Web3 and fintech brands.";
 
-export const OG_IMAGE_ALT = "RYKER MARBLE, Brand & Creative Lead in Utah, above a row of case study cards.";
+export const OG_IMAGE_ALT = "RYKER MARBLE";
 
 export const EMAIL = "rykermarble@gmail.com";
 export const RESUME = "/resume/ryker-marble-resume.pdf";
