@@ -1,4 +1,5 @@
 import { HomeName } from "@/components/HomeName";
+import { LocalClock } from "@/components/LocalClock";
 import { SiteMenu } from "@/components/SiteMenu";
 
 /**
@@ -8,6 +9,8 @@ import { SiteMenu } from "@/components/SiteMenu";
  * the name only slides in once the intro's "Hi, I'm Ryker" has scrolled away.
  * No background behind it (Ryker's call). Everywhere else the name is
  * always there and the bar scrolls with the page.
+ *
+ * The landing page also shows my local time in Utah (components/LocalClock).
  */
 export function SiteHeader({ sticky = false }: { sticky?: boolean }) {
   return (
@@ -16,6 +19,7 @@ export function SiteHeader({ sticky = false }: { sticky?: boolean }) {
       data-sticky={sticky ? "" : undefined}
     >
       <HomeName revealAfter={sticky ? "landing-intro-title" : undefined} />
+      {sticky && <LocalClock />}
       <SiteMenu />
     </header>
   );

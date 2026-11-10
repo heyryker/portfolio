@@ -2,8 +2,8 @@ import { EMAIL, RESUME } from "@/lib/site";
 
 /**
  * The landing page's opening: "Hi, I'm Ryker", a line about what I do, and
- * underlined links to the two things a hiring manager came for. Centered and
- * set in Times New Roman, with plenty of white around it.
+ * underlined links to the two things a hiring manager came for. Left-aligned on
+ * the page margin and set in Times New Roman, above the project feed.
  * Styles live in globals.css under `.landing-intro`.
  */
 export function LandingIntro() {

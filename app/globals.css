@@ -54,6 +54,9 @@
    */
   --meeple-px: 11px;
   --grid-cell: calc(var(--meeple-px) * 4);
+  /* Side margin of the header and the landing page, matching the name and
+     the menu button. */
+  --page-gutter: 22px;
 }
 
 /*
@@ -65,6 +68,12 @@
 @media not all and (min-width: 720px) and (min-height: 520px) {
   :root {
     --grid-cell: calc(var(--meeple-px) * 2);
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --page-gutter: 53px;
   }
 }
 
@@ -84,26 +93,23 @@ body {
 }
 
 /*
- * The landing page (app/page.tsx), redesigned in 2026-11 to be quieter:
- * a centered intro in Times New Roman, then every case study and blog post
- * in one rack of cards. Times New Roman is a system font, so there's nothing
+ * The landing page (app/page.tsx), in Times New Roman: a left-aligned intro,
+ * then every case study and blog post as one long feed of big images. Times New Roman is a system font, so there's nothing
  * to download and no font swap to shift the layout.
  */
 .landing-intro,
-.case-stack-section,
-.all-work,
-.showcase {
+.feed {
   font-family: "Times New Roman", Times, serif;
 }
 
 .landing-intro {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 60svh;
-  padding: 120px 24px 48px;
-  text-align: center;
+  align-items: flex-start;
+  justify-content: flex-end;
+  min-height: 62svh;
+  padding: 120px var(--page-gutter) 56px;
+  text-align: left;
 }
 
 .landing-intro-title {
@@ -127,7 +133,7 @@ body {
    the one place yellow carries type on white, despite the low contrast. */
 .landing-intro-place {
   display: inline-grid;
-  justify-items: center;
+  justify-items: start;
   color: var(--color-accent);
   cursor: default;
   outline-offset: 4px;
@@ -175,8 +181,7 @@ body {
   font-size: clamp(18px, 1.6vw, 21px);
 }
 
-.landing-intro-links a,
-.showcase-pause {
+.landing-intro-links a {
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.22em;
@@ -186,9 +191,7 @@ body {
 }
 
 .landing-intro-links a:hover,
-.landing-intro-links a:focus-visible,
-.showcase-pause:hover,
-.showcase-pause:focus-visible {
+.landing-intro-links a:focus-visible {
   color: var(--color-ink);
   text-decoration-line: underline;
   text-decoration-color: var(--color-accent);
@@ -198,436 +201,148 @@ body {
 }
 
 /*
- * The case study stack (components/CaseStack.tsx): image cards tipped toward
- * the viewer like records in a crate, running down the page with the front card at the
- * bottom. Each card sits --step below the one behind it; the upright card
- * stands straight, and the cards in front of it (--after: 1) drop by
- * --reveal to show it. Square corners, at Ryker's ask.
+ * The landing page's project feed (components/ProjectFeed.tsx), after studio
+ * sites like Porto Rocha's: every project as a big image, one full width and
+ * then two side by side, all the way down. Square corners like the rest of
+ * the site. Hovering eases the image in a touch and puts the yellow marker
+ * under the name.
  */
-.case-stack-section {
-  padding: 24px 12px 0;
+.feed {
+  padding: 0 var(--page-gutter) 96px;
 }
 
-.case-stack {
-  --w: min(1080px, 100vw - 24px);
-  --h: calc(var(--w) * 0.6);
-  --step: calc(var(--h) * 0.22);
-  /* Just enough that the front card, dropped below a flipped one, still ends
-     at the bottom of the box. */
-  --reveal: calc(var(--h) * 0.48);
-  --count: 4;
-  /* Negative tips the tops toward the viewer, so the cards come forward. */
-  --tilt: -40deg;
-  position: relative;
-  width: var(--w);
-  /* Tall enough for the front card standing upright, so a flipped card never
-     hangs over the toggle or the footer. At rest the cards spread out to fill
-     it (--rest-step), showing more of each image; with one up they close to
-     --step and the ones in front drop by --reveal. Tipped, each card looks
-     about 0.56 of its height, so a rest step of 0.38 leaves the front card's
-     bottom right at the bottom of the box, with even overlaps all the way. */
-  --rest-step: calc(var(--h) * 0.38);
-  height: calc(var(--h) * 1.04 + (var(--count) - 1) * var(--step));
-  margin: 0 auto;
+.feed-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 48px 24px;
 }
 
-.case-stack-card {
-  position: absolute;
-  inset-inline: 0;
-  top: 0;
-  height: var(--h);
-  z-index: var(--i);
-  /* Hinged at the top, so each title strip stays put and the stack hangs right under its heading. */
-  transform-origin: 50% 0;
-  /* Each card has its own perspective, seen from its own top edge, so every
-     card looks the same however far down the stack it sits (a shared one
-     foreshortened the lower cards more and left uneven gaps). It scales with
-     the card (1100px on a full-size one), so phones see the same shape. */
-  transform: translateY(calc(var(--i) * var(--gap, var(--rest-step)) + var(--after) * var(--reveal)))
-    perspective(calc(var(--h) * 1.7)) rotateX(var(--lean, var(--tilt)));
-  transition: transform 650ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
+@media (min-width: 768px) {
+  .feed-list {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 72px;
+  }
 
-.case-stack[data-up] .case-stack-card {
-  --gap: var(--step);
-}
-
-.case-stack-card[data-upright] {
-  --lean: 0deg;
-}
-
-/*
- * On load (and when switching back from All work), the cards deal in from the
- * back: each swings down from above, nearly flat, into its place. Animated on
- * the link inside each card so the card's own transform (the flips) is free.
- */
-@media (prefers-reduced-motion: no-preference) {
-  .case-stack-link {
-    animation: case-stack-deal 1100ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-    animation-delay: calc(var(--i) * 130ms);
-    transform-origin: 50% 0;
+  .feed-item[data-wide] {
+    grid-column: 1 / -1;
   }
 }
 
-@keyframes case-stack-deal {
-  from {
-    opacity: 0;
-    transform: perspective(1100px) translateY(-60px) rotateX(-50deg);
-  }
-  60% {
-    opacity: 1;
-  }
+.feed-link {
+  display: block;
+  outline-offset: 6px;
 }
 
-.case-stack-link {
+.feed-media {
   position: relative;
   display: block;
-  height: 100%;
   overflow: hidden;
-  background: #f5f5f7;
-  box-shadow:
-    0 1px 2px rgb(0 0 0 / 0.08),
-    0 -10px 24px -14px rgb(0 0 0 / 0.3),
-    0 24px 48px -20px rgb(0 0 0 / 0.3);
-  -webkit-user-drag: none;
+  aspect-ratio: 4 / 3;
+  background: #f3f3f3;
 }
 
-.case-stack-link img {
+@media (min-width: 768px) {
+  .feed-item[data-wide] .feed-media {
+    aspect-ratio: 16 / 8;
+  }
+}
+
+.feed-image {
   object-fit: cover;
+  transition: transform 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* The title, over the top of the image, so it reads on the strip that peeks. */
-.case-stack-title {
-  position: absolute;
-  inset: 0 0 auto;
-  padding: 14px 18px 36px;
-  background: linear-gradient(rgb(0 0 0 / 0.55), transparent);
-  font-size: clamp(18px, 2vw, 26px);
-  line-height: 1.2;
-  color: #fff;
-  text-shadow: 0 1px 8px rgb(0 0 0 / 0.3);
+.feed-link:hover .feed-image,
+.feed-link:focus-visible .feed-image {
+  transform: scale(1.025);
 }
 
-.case-stack-name,
-.case-stack-area {
-  display: block;
+.feed-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 14px;
+  margin-top: 14px;
+  font-size: clamp(18px, 1.6vw, 22px);
+  line-height: 1.25;
 }
 
-.case-stack-area {
-  margin-top: 2px;
-  font-size: 0.72em;
+.feed-name {
+  color: var(--color-ink);
+}
+
+.feed-link:hover .feed-name,
+.feed-link:focus-visible .feed-name {
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 0.32em;
+  text-underline-offset: -0.14em;
+  text-decoration-skip-ink: none;
+}
+
+.feed-detail {
   font-style: italic;
-  opacity: 0.85;
-}
-
-.case-stack-card[data-upright] .case-stack-name {
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
+  color: var(--color-muted);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .case-stack-card {
+  .feed-image {
     transition: none;
   }
-}
 
-/*
- * The toggle under the work (components/WorkSection.tsx): Featured (the case
- * study stack) or All work (the carousel). The chosen one is in ink and
- * underlined; the other is muted. It fades in once scrolled to.
- */
-.all-work {
-  position: relative;
-  z-index: 10;
-  padding: 24px 0 72px;
-  text-align: center;
-}
-
-.work-toggle {
-  display: inline-flex;
-  gap: 28px;
-  font-size: clamp(18px, 1.6vw, 21px);
-  opacity: 0;
-  transform: translateY(8px);
-  transition:
-    opacity 600ms,
-    transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.work-toggle[data-shown] {
-  opacity: 1;
-  transform: none;
-}
-
-.work-toggle button,
-.work-toggle-link {
-  color: var(--color-muted);
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.22em;
-  cursor: pointer;
-  transition:
-    color 200ms,
-    text-decoration-color 200ms;
-}
-
-.work-toggle button[aria-pressed="true"],
-.work-toggle-link {
-  color: var(--color-ink);
-  text-decoration-color: currentColor;
-  cursor: default;
-}
-
-.work-toggle button:hover,
-.work-toggle button:focus-visible {
-  color: var(--color-ink);
-  text-decoration-line: underline;
-  text-decoration-color: var(--color-accent);
-  text-decoration-thickness: 0.32em;
-  text-underline-offset: -0.14em;
-  text-decoration-skip-ink: none;
-}
-
-/* The carousel runs edge to edge, past the section's side padding. */
-.case-stack-section .showcase {
-  margin-inline: -12px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .work-toggle {
-    opacity: 1;
+  .feed-link:hover .feed-image,
+  .feed-link:focus-visible .feed-image {
     transform: none;
   }
 }
 
 /*
- * The showcase (components/Showcase.tsx): the intro, then every case study
- * and blog post. By default, which is what reduced motion and no-JS get,
- * it's the intro followed by a still grid of tiles with titles.
+ * My local time in Utah (components/LocalClock.tsx), in the landing page
+ * header: centered on wider screens, beside the menu button on phones.
  */
-.showcase {
-  --card-w: min(420px, 32vw);
-  --card-h: calc(var(--card-w) * 0.75);
-  position: relative;
-}
-
-@media not all and (min-width: 860px) {
-  .showcase {
-    --card-w: 70vw;
-  }
-}
-
-
-.showcase-rack {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(280px, 40vw), 1fr));
-  gap: 32px 24px;
-  max-width: 1312px;
-  margin-inline: auto;
-  padding: 0 16px 64px;
-}
-
-.showcase-tile {
-  display: block;
-  -webkit-user-drag: none;
-}
-
-.showcase-image {
-  position: relative;
-  display: block;
-  aspect-ratio: 4 / 3;
-  overflow: hidden;
-  background: #f5f5f7;
-}
-
-/* Square, like the case study cards. Only shown with the moving rack. */
-.showcase-arrow {
-  display: none;
-}
-
-.showcase-image img {
-  object-fit: cover;
-}
-
-.showcase-text {
-  display: block;
-}
-
-.showcase-name {
-  display: block;
-  margin-top: 12px;
-  font-size: 19px;
-  line-height: 1.25;
+.local-clock {
+  position: absolute;
+  top: 22px;
+  right: calc(var(--page-gutter) + 44px + 12px);
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  height: 44px;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1;
   color: var(--color-ink);
-  text-wrap: balance;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.showcase-tile:hover .showcase-name,
-.showcase-tile:focus-visible .showcase-name,
-.showcase-caption .showcase-name:hover {
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
-}
-
-.showcase-caption {
+.local-clock-zone {
   display: none;
+  color: var(--color-muted);
 }
 
-/*
- * The rack. The stage is a fixed height from the card size, with the title
- * above the rack and the lifted card's title below it; the script places
- * each card from the centre. In the CSS rather than switched on by the script
- * so the server renders the same frame (no layout shift). Cards stay hidden
- * until placed.
- */
+@media (min-width: 768px) {
+  .local-clock {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 19px;
+  }
+
+  .local-clock-zone {
+    display: inline;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
-  .showcase-stage {
-    position: relative;
-    height: calc(var(--card-h) + 220px);
-    /* Sideways only: the case study cards drop in from above the rack when
-       All work opens, and shouldn't be cut off on the way. */
-    overflow-x: clip;
-  }
-
-
-  .showcase-rack {
-    position: absolute;
-    inset: 0;
-    display: block;
-    max-width: none;
-    padding: 0;
-    perspective: 1400px;
-    perspective-origin: 50% 45%;
-    /* Sideways swipes flip the rack; up and down still scroll the page. */
-    touch-action: pan-y;
-  }
-
-  /* Once the cards are in, they share one 3D space, so the browser layers
-     them by how near they really are. (Layering by z-index swapped
-     neighbours in a single frame halfway through each step, which read as a
-     glitch.) While they fly in they're layered by z-index, so cards on
-     different paths don't cut through each other. */
-  .showcase:not([data-entering]) .showcase-rack {
-    transform-style: preserve-3d;
-  }
-
-  .showcase-card {
-    position: absolute;
-    top: calc(50% - var(--card-h) / 2);
-    left: calc(50% - var(--card-w) / 2);
-    width: var(--card-w);
-    transform-style: preserve-3d;
-    will-change: transform;
-  }
-
-  .showcase:not([data-ready]) .showcase-card {
-    opacity: 0;
-  }
-
-  .showcase-card .showcase-image {
-    box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.08),
-      0 24px 48px -16px rgb(0 0 0 / 0.28);
-  }
-
-  /* Cards away from the lifted one dim a little. */
-  .showcase-card .showcase-image img {
-    transition: filter 300ms;
-  }
-  .showcase-card:not([data-active]) .showcase-image img {
-    filter: saturate(0.85) brightness(0.97);
-  }
-
-  .showcase-text {
-    display: none;
-  }
-
-  /* While the cards fly in (Showcase sets data-entering), the caption and the
-     side buttons stay out of the way, then fade in. */
-  .showcase[data-entering] .showcase-caption,
-  .showcase[data-entering] .showcase-arrow {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .showcase-caption {
-    transition: opacity 400ms;
-    position: absolute;
-    inset-inline: 0;
-    top: calc(50% + var(--card-h) / 2 + 40px);
-    display: block;
-    padding: 0 24px;
-    text-align: center;
-  }
-
-  .showcase-arrow {
-    position: absolute;
-    z-index: 1;
-    top: calc(50% - 24px);
-    display: grid;
-    place-items: center;
-    width: 48px;
-    height: 48px;
-    border: 0;
-    background: rgb(255 255 255 / 0.9);
-    color: var(--color-ink);
-    cursor: pointer;
-    transition:
-      opacity 200ms,
-      color 200ms,
-      border-color 200ms;
-  }
-
-  .showcase-arrow[data-step="-1"] {
-    left: max(16px, 4vw);
-  }
-
-  .showcase-arrow[data-step="1"] {
-    right: max(16px, 4vw);
-  }
-
-  .showcase-arrow svg {
-    width: 22px;
-    height: 22px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.5;
-  }
-
-  /* On hover the arrow itself turns yellow (Ryker's call), heavier so it
-     still reads on white. */
-  .showcase-arrow:hover {
-    color: var(--color-accent);
-  }
-
-  .showcase-arrow:hover svg {
-    stroke-width: 2.5;
-  }
-
-  .showcase-arrow:disabled {
-    opacity: 0.3;
-    cursor: default;
-    pointer-events: none;
-  }
-
-  .showcase-caption-inner {
-    display: block;
-    animation: showcase-caption 400ms ease-out;
-  }
-
-  .showcase-caption .showcase-name {
-    display: inline-block;
-    font-size: clamp(20px, 2.2vw, 28px);
+  .local-clock-colon {
+    animation: local-clock-blink 2s steps(1, end) infinite;
   }
 }
 
-@keyframes showcase-caption {
-  from {
+@keyframes local-clock-blink {
+  50% {
     opacity: 0;
-    transform: translateY(6px);
   }
 }
 
