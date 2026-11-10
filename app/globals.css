@@ -147,6 +147,15 @@ a.name-time-name:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
+/* Logan's weather under the time, smaller and gray (LocalClock.tsx). */
+.local-weather {
+  display: block;
+  margin-top: 0.5em;
+  font-size: 0.5em;
+  letter-spacing: 0;
+  color: var(--color-muted);
+}
+
 /* The resume pill under my name and time. */
 .landing-actions {
   display: flex;
