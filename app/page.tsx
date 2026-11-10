@@ -1,44 +1,19 @@
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/JsonLd";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, WEBSITE_ID, pageMetadata, person } from "@/lib/site";
-import { LandingIntro } from "@/components/LandingIntro";
-import type { ShowcaseItem } from "@/components/Showcase";
-import { WorkSection } from "@/components/WorkSection";
+import { RESUME, SITE_DESCRIPTION, SITE_NAME, SITE_URL, WEBSITE_ID, pageMetadata, person } from "@/lib/site";
+import { Icon } from "@/components/Icon";
+import { NameAndTime } from "@/components/NameAndTime";
+import { ProjectCards } from "@/components/ProjectCards";
+import { SiteMenu } from "@/components/SiteMenu";
+import { MeepleRelease } from "@/components/MeepleRelease";
 import { SiteFooter } from "@/components/SiteFooter";
-import { SiteHeader } from "@/components/SiteHeader";
 import { LandingMarker } from "@/components/work/LandingMarker";
-import { getPosts } from "@/lib/blog";
-import { CASE_STUDIES, loadCaseStudy } from "@/lib/work";
+import { getProjectCards } from "@/lib/projects";
 
 export const metadata: Metadata = pageMetadata({ description: SITE_DESCRIPTION, path: "/" });
 
 export default async function Home() {
-  // The case studies lead; the carousel has them first, then the blog, newest first.
-  const cases: ShowcaseItem[] = (
-    await Promise.all(
-      CASE_STUDIES.map(async ({ slug, name, area }): Promise<ShowcaseItem | undefined> => {
-        const { meta } = await loadCaseStudy(slug);
-        const image = meta.hero?.kind === "video" ? meta.hero.poster : meta.hero?.src;
-        if (!image) return undefined;
-        return {
-          href: `/work/${slug}`,
-          title: meta.title,
-          image,
-          alt: meta.hero?.alt ?? "",
-          summary: meta.summary,
-          name,
-          area,
-        };
-      }),
-    )
-  ).filter((c): c is ShowcaseItem => !!c);
-
-  const posts: ShowcaseItem[] = getPosts().map((p) => ({
-    href: `/blog/${p.slug}`,
-    title: p.title,
-    image: p.cover,
-    alt: p.coverAlt,
-  }));
+  const cards = await getProjectCards();
 
   return (
     <div className="relative overflow-x-clip">
@@ -59,13 +34,25 @@ export default async function Home() {
           ],
         }}
       />
-      <SiteHeader sticky />
-      <main>
-        <LandingIntro />
-        <WorkSection cases={cases} all={[...cases, ...posts]} />
+      <header className="landing-top">
+        <SiteMenu />
+      </header>
+      <main className="landing">
+        <NameAndTime heading />
+        <p className="landing-actions">
+          <a href={RESUME} target="_blank" rel="noopener" className="menu-pill">
+            Resume
+            <Icon name="arrow_outward" className="size-[0.9em] text-[#767676]" />
+            <span className="sr-only"> (PDF, opens in a new tab)</span>
+          </a>
+        </p>
+        <section aria-label="Projects" className="landing-cards">
+          <ProjectCards items={cards} />
+        </section>
       </main>
       <LandingMarker />
       <SiteFooter />
+      <MeepleRelease />
     </div>
   );
 }

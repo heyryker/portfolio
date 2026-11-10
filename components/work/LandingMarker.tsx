@@ -10,8 +10,8 @@ export function landingWasShown() {
 }
 
 /**
- * Rendered on the landing page so a case study opened over it knows that
- * "close" can simply go back in history.
+ * Rendered on the landing page and the blog index, so a project opened over
+ * either knows that "close" can simply go back in history.
  */
 export function LandingMarker() {
   useEffect(() => {

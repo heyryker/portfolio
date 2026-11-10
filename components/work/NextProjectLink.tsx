@@ -3,20 +3,20 @@
 import Link from "next/link";
 import { markNextProject } from "./wipe";
 
-/** "Next: [BRAND GUIDES]": wipes the next case study up over this one (§7). */
-export function NextProjectLink({ slug, label }: { slug: string; label: string }) {
+/** "Next project: TRON DAO": slides the next project up over this one (§7). */
+export function NextProjectLink({ href, label, kicker = "Next project" }: { href: string; label: string; kicker?: string }) {
   return (
     <Link
-      href={`/work/${slug}`}
+      href={href}
       // Replace, so closing (or the back button) still lands on the page the
-      // first case study was opened from.
+      // first project was opened from.
       replace
       onClick={markNextProject}
-      className="group inline-flex items-baseline gap-4 bg-bg pr-2 text-[clamp(32px,5.2vw,56px)] leading-[1.1] font-extrabold tracking-[-0.015em]"
+      className="project-next group"
     >
-      <span>Next:</span>
-      <span className="text-muted transition-colors group-hover:marker group-focus-visible:marker">
-        [{label}]
+      <span className="project-next-kicker">{kicker}</span>
+      <span className="project-next-name">
+        {label} <span aria-hidden="true">&rarr;</span>
       </span>
     </Link>
   );

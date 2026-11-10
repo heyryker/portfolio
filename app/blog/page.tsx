@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { BlogHeader } from "@/components/blog/BlogHeader";
 import { JsonLd } from "@/components/JsonLd";
+import { LandingMarker } from "@/components/work/LandingMarker";
 import { formatDate, getPosts } from "@/lib/blog";
 import { SITE_URL, WEBSITE_ID, absoluteUrl, pageMetadata, person } from "@/lib/site";
 
@@ -33,6 +34,8 @@ export default function BlogIndex() {
         }}
       />
       <BlogHeader back={{ href: "/", label: "BACK" }} />
+      {/* Posts open over this page, so closing one can come back here. */}
+      <LandingMarker />
 
       <main className="mx-auto max-w-[968px] px-[22px] pt-11 pb-22 md:px-11">
         <p className="text-sm tracking-[0.08em] text-ink uppercase">[BLOG]</p>
