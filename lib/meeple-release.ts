@@ -14,7 +14,8 @@ import { MEEPLES, MEEPLE_BLOCKS, type MeepleConfig } from "./meeples";
  *    them, the Shy One plants flowers as fast as it can, the Watcher sings,
  *    and the Sleepy One naps on top of a card. Partway through, they all stop
  *    for a song together.
- * 4. Home: they run back into the button one by one, and the flowers wilt.
+ * 4. Home: a pixel cop car drives in, picks them up one by one and pulls
+ *    into the button, and the flowers wilt.
  *
  * Everything is drawn on one canvas over the page that ignores the pointer,
  * so the page underneath stays clickable the whole time. The cards and links
@@ -47,6 +48,9 @@ type Lasso = {
   loop: Vec;
 };
 
+/** The cop car that rounds them up, by its bottom center. */
+type Car = { x: number; y: number; vx: number; vy: number; face: 1 | -1; t: number; target: Meeple | null; parked: boolean };
+
 type Meeple = {
   cfg: MeepleConfig;
   /** Top-left of the body, in viewport coordinates. */
@@ -76,9 +80,9 @@ const BURST = 1.0;
 const GATHER = 2.15;
 const CHORUS_START = 8.6;
 const CHORUS_END = 10.4;
-const RUN_END = 16;
+const RUN_END = 14;
 /** In case one gets stuck on the way home. */
-const HOME_LIMIT = 6;
+const HOME_LIMIT = 14;
 
 const GRAVITY = 1100;
 const CONFETTI = 110;
@@ -101,6 +105,29 @@ const Z_GLYPH = ["XXXX", "..X.", ".X..", "XXXX"];
 const SEED = ["DDD"];
 const SPROUT = ["L.L", ".S.", ".S."];
 const BLOOM = [".P.", "PCP", ".P.", ".S.", "LS.", ".S."];
+
+// The cop car, facing right, in pixels a bit smaller than a meeple's. R/B the light bar, K
+// black, W white, G window glass, Y headlight, L tail light, T tyre, S hub.
+const CAR = [
+  "........RB........",
+  ".....KKKKKKKK.....",
+  "....KGGGKGGGGK....",
+  "...KGGGGKGGGGGK...",
+  ".KKKKKKKKKKKKKKKKK",
+  "LWWWWWWWWWWWWWWWWY",
+  "KWWWWWWWWWWWWWWWWK",
+  "KKKTTTKKKKKKTTTKKK",
+  "...TST......TST...",
+];
+const CAR_COLORS: Record<string, string> = {
+  K: "#221F20",
+  W: "#FFFFFF",
+  G: "#BFE3FB",
+  Y: "#FBEC5A",
+  L: "#E05A32",
+  T: "#221F20",
+  S: "#A1A3A6",
+};
 
 const SONGS = ["LA LA LAAA", "OOH OOH", "FA LA LA", "MI MI MI"];
 
@@ -130,6 +157,7 @@ export class MeepleRelease {
   private last = 0;
   private frame = 0;
   private returning = -1;
+  private car: Car | null = null;
   private captured = false;
   private assembled = false;
   private done = false;
@@ -297,12 +325,13 @@ export class MeepleRelease {
       if (!this.assembled) this.assemble();
       if (this.returning < 0 && t >= RUN_END) this.goHome();
       for (const m of this.meeples) if (!m.home) this.think(m, dt);
-      this.collide();
+      if (this.returning < 0) this.collide();
+      if (this.car) this.drive(this.car, dt);
     }
     this.updateConfetti(dt);
     this.updateBits(dt);
     if (this.returning >= 0) {
-      if (this.meeples.every((m) => m.home) && !this.specks.length && !this.flowers.length) this.finish();
+      if (!this.car && this.meeples.every((m) => m.home) && !this.specks.length && !this.flowers.length) this.finish();
       else if (t - this.returning > HOME_LIMIT) this.finish();
     }
   }
@@ -405,7 +434,51 @@ export class MeepleRelease {
     this.confetti = [];
     // Wilting one after another (a negative wilt is a delay; -1 is in bloom).
     this.flowers.forEach((f, i) => (f.wilt = -Math.min(0.8, i * 0.01) - 0.001));
-    this.meeples[Math.floor(Math.random() * 5)].bubble = { text: "AWW", t: 0, life: 1.2 };
+    this.meeples[Math.floor(Math.random() * 5)].bubble = { text: "UH OH", t: 0, life: 1.4 };
+    // In from the left, along the bottom, lights going.
+    this.car = { x: -80, y: this.vh - 24, vx: 0, vy: 0, face: 1, t: 0, target: null, parked: false };
+  }
+
+  /**
+   * The cop car: it drives to whichever meeple is nearest, scoops it up, and
+   * when it has all five it pulls into the button.
+   */
+  private drive(car: Car, dt: number) {
+    car.t += dt;
+    const left = this.meeples.filter((m) => !m.home);
+    if (car.target?.home || (car.target && !left.includes(car.target))) car.target = null;
+    if (!car.target && left.length) {
+      car.target = left.reduce((a, b) =>
+        Math.hypot(a.x + this.W / 2 - car.x, a.y + this.H - car.y) < Math.hypot(b.x + this.W / 2 - car.x, b.y + this.H - car.y) ? a : b,
+      );
+    }
+    const o = this.origin();
+    const goal = car.target ? { x: car.target.x + this.W / 2, y: car.target.y + this.H } : { x: o.x, y: o.y + 26 };
+    const dx = goal.x - car.x;
+    const dy = goal.y - car.y;
+    const d = Math.hypot(dx, dy);
+    const speed = 640 * Math.min(1, d / 90 + 0.25);
+    const k = Math.min(1, dt * 5);
+    car.vx += ((d ? (dx / d) * speed : 0) - car.vx) * k;
+    car.vy += ((d ? (dy / d) * speed : 0) - car.vy) * k;
+    car.x += car.vx * dt;
+    car.y += car.vy * dt;
+    if (Math.abs(car.vx) > 40) car.face = car.vx > 0 ? 1 : -1;
+    if (Math.random() < dt * 0.4) this.speck(car.x - car.face * 40, car.y - 4, "#C9C9C9");
+
+    if (car.target && d < 22) {
+      const m = car.target;
+      m.home = true;
+      m.bubble = null;
+      this.puff(m.x + this.W / 2, m.y + this.H / 2, m.cfg.hex, 8);
+      car.target = null;
+    } else if (!car.target && !left.length && d < 26) {
+      // Into the button, five passengers and all.
+      this.puff(o.x, o.y, "#E05A32", 6);
+      this.puff(o.x, o.y, "#58B9F8", 6);
+      for (let i = 0; i < 5; i++) window.setTimeout(() => this.opts.onHome?.(), i * 130);
+      this.car = null;
+    }
   }
 
   // ------------------------------------------------------------------- brain
@@ -415,13 +488,14 @@ export class MeepleRelease {
     m.noteT -= dt;
 
     if (this.returning >= 0) {
-      const o = this.origin();
-      const d = this.steer(m, o.x - this.W / 2, o.y - this.H / 2, m.cfg.id === "red" ? 620 : 480, dt);
-      if (d < 18) {
-        m.home = true;
-        this.puff(o.x, o.y, m.cfg.hex, 8);
-        this.opts.onHome?.();
-      }
+      // Busted: they stop where they are, watch the car and hop nervously.
+      m.vx *= 0.85;
+      m.vy *= 0.85;
+      m.x += m.vx * dt;
+      m.y += m.vy * dt;
+      const car = this.car;
+      if (car) m.look = { x: clamp((car.x - m.x - this.W / 2) / 120, -1, 1), y: clamp((car.y - m.y - this.H) / 160, -1, 1) };
+      if (m.hop < 0 && Math.random() < dt * 1.5) m.hop = 0;
       return;
     }
 
@@ -796,7 +870,53 @@ export class MeepleRelease {
     }
     ctx.globalAlpha = 1;
 
+    if (this.car) this.drawCar(this.car);
+
     for (const m of this.meeples) if (!m.home && m.bubble) this.drawBubble(m);
+  }
+
+  /**
+   * A black-and-white pixel cop car, facing the way it drives, with the light
+   * bar flashing red and blue and the meeples it has picked up in the back window.
+   */
+  private drawCar(car: Car) {
+    const u = Math.round(this.P * 0.7);
+    const w = CAR[0].length * u;
+    const h = CAR.length * u;
+    const x0 = Math.round(car.x - w / 2);
+    const y0 = Math.round(car.y - h + Math.round(Math.sin(car.t * 30)) * 0.5);
+    const flash = Math.floor(car.t / 0.16) % 2 === 0;
+    const aboard = this.meeples.filter((m) => m.home);
+    // The flash glows around the light bar.
+    const lights = CAR[0].indexOf("R");
+    const lx = car.face > 0 ? x0 + lights * u : x0 + w - (lights + 2) * u;
+    this.ctx.globalAlpha = 0.25;
+    this.rect(lx - u * (flash ? 2 : 0), y0 - u, u * 3, u * 3, "#E05A32");
+    this.rect(lx + u * (flash ? 0 : 1), y0 - u, u * 3, u * 3, "#58B9F8");
+    this.ctx.globalAlpha = 1;
+    let pane = 0;
+    CAR.forEach((row, ry) =>
+      [...row].forEach((ch, i) => {
+        if (ch === ".") return;
+        const rx = car.face > 0 ? i : row.length - 1 - i;
+        let c = CAR_COLORS[ch];
+        if (ch === "R") c = flash ? "#E05A32" : "#5E1A0A";
+        if (ch === "B") c = flash ? "#1D4E70" : "#58B9F8";
+        if (ch === "G") {
+          // Riders show in the windows, back to front.
+          const m = aboard[pane++];
+          if (m) c = m.cfg.hex;
+        }
+        this.rect(x0 + rx * u, y0 + ry * u, u, u, c);
+      }),
+    );
+    if (Math.floor(car.t / 1.2) % 2 === 0) {
+      this.ctx.font = "600 10px Inter, ui-sans-serif, system-ui, sans-serif";
+      this.ctx.fillStyle = INK;
+      this.ctx.textAlign = "center";
+      this.ctx.textBaseline = "alphabetic";
+      this.ctx.fillText("WEE-OO", Math.round(car.x), y0 - u - 4);
+    }
   }
 
   private drawBlocks(m: Meeple) {
