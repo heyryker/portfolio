@@ -1,14 +1,19 @@
 import { getPosts } from "@/lib/blog";
 import { EDUCATION, EMAIL, EXPERIENCE, PROFILES, RESUME, SITE_DESCRIPTION, absoluteUrl } from "@/lib/site";
 import { publishedCaseStudies } from "@/lib/published";
+import { loadCaseStudy } from "@/lib/work";
 
 /*
  * /llms.txt (https://llmstxt.org): a plain Markdown summary of the site for
  * answer engines and AI assistants, built from the same data as the pages.
  */
 
-export function GET() {
-  const caseStudies = publishedCaseStudies();
+export async function GET() {
+  const caseStudies = await Promise.all(
+    publishedCaseStudies().map(async (c) => ({ ...c, meta: (await loadCaseStudy(c.slug)).meta })),
+  );
+  const known = (v: string) => !v.startsWith("TODO");
+  const tagList = (tags: readonly string[] | undefined) => (tags?.length ? ` Tags: ${tags.join(", ")}.` : "");
   const lines = [
     "# Ryker Marble",
     "",
@@ -20,6 +25,7 @@ export function GET() {
     "",
     `- [About and contact](${absoluteUrl("/about")}): bio, experience, education and contact details`,
     `- [Resume (PDF)](${absoluteUrl(RESUME)})`,
+    `- [Projects](${absoluteUrl("/")}): the home page lists every case study and blog post as a card`,
     `- [Blog](${absoluteUrl("/blog")}): process notes and side projects`,
     `- [Village](${absoluteUrl("/village")}): a playful pixel town where the site's five meeples live`,
     "",
@@ -27,13 +33,16 @@ export function GET() {
       ? [
           "## Case studies",
           "",
-          ...caseStudies.map(({ slug, label }) => `- [${label}](${absoluteUrl(`/work/${slug}`)})`),
+          ...caseStudies.map(({ slug, area, meta }) => {
+            const details = [meta.role, meta.client, meta.year].filter(known).join(", ");
+            return `- [${meta.seoTitle ?? meta.title}](${absoluteUrl(`/work/${slug}`)}) (${area}; ${details}): ${meta.summary}${tagList(meta.tags)}`;
+          }),
           "",
         ]
       : []),
     "## Blog posts",
     "",
-    ...getPosts().map((p) => `- [${p.title}](${absoluteUrl(`/blog/${p.slug}`)}) (${p.date}): ${p.summary}`),
+    ...getPosts().map((p) => `- [${p.title}](${absoluteUrl(`/blog/${p.slug}`)}) (${p.date}): ${p.summary}${tagList(p.tags)}`),
     "",
     "## Experience",
     "",

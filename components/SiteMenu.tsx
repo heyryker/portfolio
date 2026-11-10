@@ -11,6 +11,7 @@ const CONJURE = "https://conjure-inky.vercel.app/";
 
 const LINKS = [
   { href: "/about", label: "About" },
+  { href: "/blog", label: "Blog" },
   { href: "/village", label: "Village" },
 ] as const;
 

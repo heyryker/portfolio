@@ -4,7 +4,7 @@ import { BlogPost } from "@/components/blog/BlogPost";
 import { JsonLd } from "@/components/JsonLd";
 import { WipeOnLeave } from "@/components/work/WipeOnLeave";
 import { getPost, getPosts } from "@/lib/blog";
-import { SITE_NAME, SITE_URL, WEBSITE_ID, absoluteUrl, pageMetadata, person } from "@/lib/site";
+import { SITE_NAME, SITE_URL, WEBSITE_ID, absoluteUrl, pageKeywords, pageMetadata, person } from "@/lib/site";
 
 export function generateStaticParams() {
   return getPosts().map(({ slug }) => ({ slug }));
@@ -17,6 +17,7 @@ export async function generateMetadata({ params }: PageProps<"/blog/[slug]">): P
     title: post.title,
     description: post.summary,
     path: `/blog/${post.slug}`,
+    keywords: pageKeywords(post.tags),
     openGraph: {
       type: "article",
       publishedTime: post.date,
@@ -49,6 +50,7 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
               datePublished: post.date,
               image: absoluteUrl(post.cover),
               keywords: post.tags.join(", "),
+              about: post.tags.map((name) => ({ "@type": "Thing", name })),
               inLanguage: "en-US",
               author: person,
               publisher: { "@id": person["@id"] },

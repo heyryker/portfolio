@@ -1,5 +1,6 @@
 import { AiSummary } from "@/components/AiSummary";
 import { CopyEmail } from "@/components/CopyEmail";
+import { TagPills } from "@/components/TagPills";
 import { getProjectCards } from "@/lib/projects";
 import { ProjectView } from "@/components/project/ProjectView";
 import { ImageSlide, slideComponents, withoutMedia } from "@/components/project/slides";
@@ -68,6 +69,14 @@ export async function CaseStudy({ slug }: { slug: CaseStudySlug }) {
                 <dd>{value}</dd>
               </div>
             ))}
+            {meta.tags?.length ? (
+              <div>
+                <dt>Tags</dt>
+                <dd>
+                  <TagPills tags={meta.tags} />
+                </dd>
+              </div>
+            ) : null}
           </dl>
           {meta.aiSummary && (
             <div className="mt-6">

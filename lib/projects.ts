@@ -9,6 +9,8 @@ export type ProjectCard = {
   title: string;
   /** One line under the title. */
   summary: string;
+  /** Topics, for the landing page's structured data. */
+  tags: string[];
 };
 
 /**
@@ -22,9 +24,9 @@ export async function getProjectCards(): Promise<ProjectCard[]> {
       const { meta } = await loadCaseStudy(slug);
       const image = meta.hero?.kind === "video" ? meta.hero.poster : meta.hero?.src;
       if (!image) return undefined;
-      return { href: `/work/${slug}`, image, title: name, summary: meta.summary };
+      return { href: `/work/${slug}`, image, title: name, summary: meta.summary, tags: meta.tags ?? [] };
     }),
   );
-  const posts = getPosts().map((p) => ({ href: `/blog/${p.slug}`, image: p.cover, title: p.title, summary: p.summary }));
+  const posts = getPosts().map((p) => ({ href: `/blog/${p.slug}`, image: p.cover, title: p.title, summary: p.summary, tags: p.tags }));
   return [...cases.filter((c): c is ProjectCard => !!c), ...posts];
 }

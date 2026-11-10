@@ -12,7 +12,7 @@ export const SITE_TITLE = "Ryker Marble: Brand & Creative Lead";
 export const SITE_DESCRIPTION =
   "Ryker Marble is a brand and creative lead in Utah, working across strategy, craft and art direction for B2B SaaS, cybersecurity, Web3 and fintech brands.";
 
-export const OG_IMAGE_ALT = "HEY [I'M] RYKER. Ryker Marble, brand and creative lead.";
+export const OG_IMAGE_ALT = "RYKER MARBLE, Brand & Creative Lead in Utah, above a row of case study cards.";
 
 export const EMAIL = "rykermarble@gmail.com";
 export const RESUME = "/resume/ryker-marble-resume.pdf";
@@ -45,6 +45,16 @@ export const PROFILES = {
   github: "https://github.com/heyryker",
 } as const;
 
+/**
+ * Meta keywords for a page: its own tags first, then who it was for, then my
+ * name, with duplicates dropped. Google ignores the tag, but Bing and some
+ * answer engines still read it, and it costs nothing.
+ */
+export function pageKeywords(...groups: (string | readonly string[] | undefined)[]) {
+  const all = [...groups.flat(), SITE_NAME].filter((k): k is string => !!k && !k.startsWith("TODO"));
+  return [...new Map(all.map((k) => [k.toLowerCase(), k])).values()];
+}
+
 export function absoluteUrl(path: string) {
   return new URL(path, SITE_URL).toString();
 }
@@ -58,12 +68,14 @@ export function pageMetadata({
   title,
   description,
   path,
+  keywords,
   openGraph,
 }: {
   /** Leave out for the home page, which uses the full site title. */
   title?: string;
   description: string;
   path: string;
+  keywords?: string[];
   openGraph?: Metadata["openGraph"];
 }): Metadata {
   const fullTitle = title ? `${title} | ${SITE_NAME}` : SITE_TITLE;
@@ -73,6 +85,7 @@ export function pageMetadata({
   return {
     ...(title && { title }),
     description,
+    ...(keywords?.length && { keywords }),
     alternates: { canonical: path },
     openGraph: {
       type: "website",
@@ -110,9 +123,14 @@ export const person = {
     "Brand guidelines",
     "Art direction",
     "Motion design art direction",
+    "Brand systems",
+    "Logo design",
     "Event identity",
+    "Environmental design",
+    "Presentation design",
     "Email design",
     "Editorial design",
+    "Data visualization",
   ],
   sameAs: [PROFILES.linkedin, PROFILES.github],
 } as const;
