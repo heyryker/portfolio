@@ -25,7 +25,7 @@ const timeFormat = new Intl.DateTimeFormat("en-US", {
  * name (after studio sites like Porto Rocha's, which show the date and the
  * time in their city). It tells a recruiter at a glance whether I'm awake.
  *
- * A third line gives the weather in Logan, where I live.
+ * Under it, smaller and gray, the weather in Logan, where I live.
  *
  * The time depends on the visitor's clock, so the server renders a blank of
  * the same shape and the client fills it in after hydration; nothing shifts.
@@ -67,9 +67,8 @@ export function LocalClock() {
           Wednesday, September 30
           <br />
           Utah, 10:00:00 AM
-          <br />
-          Logan, 34°F and partly cloudy
         </span>
+        <span className="local-weather invisible">34°F and partly cloudy</span>
       </p>
     );
   }
@@ -82,15 +81,16 @@ export function LocalClock() {
         Utah, {timeFormat.format(now)}
       </time>
       {weather !== null && (
-        <>
-          <br />
-          {/* Kept invisible (same shape) until the weather arrives, so the line doesn't pop in and push things down. */}
-          <span className={weather ? undefined : "invisible"} aria-hidden={weather ? undefined : true}>
-            {weather
-              ? `Logan, ${weather.temperature}°F${weather.conditions ? ` and ${weather.conditions}` : ""}`
-              : "Logan, 34°F and partly cloudy"}
-          </span>
-        </>
+        // Kept invisible (same shape) until the weather arrives, so the line
+        // doesn't pop in and push things down.
+        <span
+          className={weather ? "local-weather" : "local-weather invisible"}
+          aria-hidden={weather ? undefined : true}
+        >
+          {weather
+            ? `${weather.temperature}°F${weather.conditions ? ` and ${weather.conditions}` : ""}`
+            : "34°F and partly cloudy"}
+        </span>
       )}
     </p>
   );
