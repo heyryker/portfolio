@@ -1,41 +1,17 @@
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/JsonLd";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, WEBSITE_ID, pageMetadata, person } from "@/lib/site";
-import { ProjectFeed, type FeedItem } from "@/components/ProjectFeed";
+import { NameAndTime } from "@/components/NameAndTime";
+import { ProjectCards } from "@/components/ProjectCards";
+import { SiteMenu } from "@/components/SiteMenu";
 import { SiteFooter } from "@/components/SiteFooter";
-import { SiteHeader } from "@/components/SiteHeader";
 import { LandingMarker } from "@/components/work/LandingMarker";
-import { getPosts } from "@/lib/blog";
-import { CASE_STUDIES, loadCaseStudy } from "@/lib/work";
+import { getProjectCards } from "@/lib/projects";
 
 export const metadata: Metadata = pageMetadata({ description: SITE_DESCRIPTION, path: "/" });
 
 export default async function Home() {
-  // The case studies lead the feed, then the blog, newest first.
-  const cases: FeedItem[] = (
-    await Promise.all(
-      CASE_STUDIES.map(async ({ slug, name, area }): Promise<FeedItem | undefined> => {
-        const { meta } = await loadCaseStudy(slug);
-        const image = meta.hero?.kind === "video" ? meta.hero.poster : meta.hero?.src;
-        if (!image) return undefined;
-        return {
-          href: `/work/${slug}`,
-          image,
-          alt: meta.hero?.alt ?? "",
-          name,
-          detail: area,
-        };
-      }),
-    )
-  ).filter((c): c is FeedItem => !!c);
-
-  const posts: FeedItem[] = getPosts().map((p) => ({
-    href: `/blog/${p.slug}`,
-    image: p.cover,
-    alt: p.coverAlt,
-    name: p.title,
-    detail: `Blog, ${p.date.slice(0, 4)}`,
-  }));
+  const cards = await getProjectCards();
 
   return (
     <div className="relative overflow-x-clip">
@@ -56,9 +32,14 @@ export default async function Home() {
           ],
         }}
       />
-      <SiteHeader centered clock />
-      <main>
-        <ProjectFeed items={[...cases, ...posts]} />
+      <header className="landing-top">
+        <SiteMenu />
+      </header>
+      <main className="landing">
+        <NameAndTime heading />
+        <section aria-label="Projects" className="landing-cards">
+          <ProjectCards items={cards} />
+        </section>
       </main>
       <LandingMarker />
       <SiteFooter />

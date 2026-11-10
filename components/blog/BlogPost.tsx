@@ -1,5 +1,6 @@
 import { AiSummary } from "@/components/AiSummary";
 import { CopyEmail } from "@/components/CopyEmail";
+import { getProjectCards } from "@/lib/projects";
 import { ProjectView } from "@/components/project/ProjectView";
 import { ImageSlide } from "@/components/project/slides";
 import { NextProjectLink } from "@/components/work/NextProjectLink";
@@ -12,10 +13,13 @@ import { PostBody } from "./PostBody";
  * figure in the strip on top, the date, title and write-up underneath. Used
  * on the post's own URL and in the overlay that slides up from a card.
  */
-export function BlogPost({ post }: { post: Post }) {
+export async function BlogPost({ post }: { post: Post }) {
+  const cards = await getProjectCards();
   const next = nextPost(post.slug);
   return (
     <ProjectView
+      href={`/blog/${post.slug}`}
+      cards={cards}
       title={post.title}
       slides={
         <>

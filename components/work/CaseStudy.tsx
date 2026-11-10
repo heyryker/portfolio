@@ -1,5 +1,6 @@
 import { AiSummary } from "@/components/AiSummary";
 import { CopyEmail } from "@/components/CopyEmail";
+import { getProjectCards } from "@/lib/projects";
 import { ProjectView } from "@/components/project/ProjectView";
 import { ImageSlide, slideComponents, withoutMedia } from "@/components/project/slides";
 import { useMDXComponents } from "@/mdx-components";
@@ -16,6 +17,7 @@ import { NextProjectLink } from "./NextProjectLink";
  */
 export async function CaseStudy({ slug }: { slug: CaseStudySlug }) {
   const { Body, meta } = await loadCaseStudy(slug);
+  const cards = await getProjectCards();
   const next = nextCaseStudy(slug);
   const nextName = CASE_STUDIES.find((c) => c.slug === next.slug)!.name;
   const area = CASE_STUDIES.find((c) => c.slug === slug)!.area;
@@ -31,6 +33,8 @@ export async function CaseStudy({ slug }: { slug: CaseStudySlug }) {
 
   return (
     <ProjectView
+      href={`/work/${slug}`}
+      cards={cards}
       title={meta.title}
       slides={
         <>

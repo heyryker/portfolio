@@ -5,8 +5,8 @@ import { LazyVideo } from "@/components/work/LazyVideo";
 import { Placeholder } from "@/components/work/Placeholder";
 
 /*
- * The top half of a project view (components/project/ProjectView.tsx) is a
- * strip of every image and video in the project, in the order the MDX lists
+ * The top of a project screen (components/project/ProjectView.tsx) shows
+ * every image and video in the project, one at a time, in the order the MDX lists
  * them. Rather than keeping a second list of assets in sync by hand, the same
  * MDX body is rendered twice: once with `slideComponents`, where the media
  * blocks become slides and all the text renders as nothing, and once with
@@ -25,7 +25,7 @@ function Caption({ children }: { children?: React.ReactNode }) {
   return <figcaption className="project-slide-caption">{children}</figcaption>;
 }
 
-/** One image in the strip, at the strip's height and its own width. */
+/** One image in the gallery, shown whole inside the gallery's frame. */
 export function ImageSlide({ src, alt, caption, width = 2400, height = 1350, priority }: SlideProps & { priority?: boolean }) {
   return (
     <figure className="project-slide">
@@ -36,14 +36,12 @@ export function ImageSlide({ src, alt, caption, width = 2400, height = 1350, pri
           width={width}
           height={height}
           priority={priority}
-          // The strip is at most ~62% of the screen tall, so even wide images
-          // rarely need more than the screen's width.
-          sizes="(min-width: 768px) 90vw, 100vw"
+          // The right column is 60% of a wide screen, all of a phone's.
+          sizes="(min-width: 1024px) 60vw, 100vw"
           className="project-slide-media"
-          style={{ aspectRatio: `${width} / ${height}` }}
         />
       ) : (
-        <Placeholder label={alt.replace(/^TODO\(ryker\):\s*/i, "")} className="project-slide-media aspect-[4/3]" />
+        <Placeholder label={alt.replace(/^TODO\(ryker\):\s*/i, "")} className="project-slide-media" />
       )}
       <Caption>{caption}</Caption>
     </figure>
@@ -55,10 +53,10 @@ function VideoSlide({ src, poster, alt, caption }: SlideProps & { poster?: strin
     <figure className="project-slide">
       {src ? (
         <div className="project-slide-media project-slide-video">
-          <LazyVideo src={src} poster={poster} alt={alt} className="h-full w-full object-cover" />
+          <LazyVideo src={src} poster={poster} alt={alt} className="h-full w-full object-contain" />
         </div>
       ) : (
-        <Placeholder label={alt.replace(/^TODO\(ryker\):\s*/i, "")} className="project-slide-media aspect-video" />
+        <Placeholder label={alt.replace(/^TODO\(ryker\):\s*/i, "")} className="project-slide-media" />
       )}
       <Caption>{caption}</Caption>
     </figure>
@@ -75,7 +73,7 @@ function YouTubeSlide({ id, title, caption }: { id: string; title: string; capti
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         referrerPolicy="strict-origin-when-cross-origin"
         allowFullScreen
-        className="project-slide-media aspect-video border-0 bg-ink"
+        className="project-slide-media border-0"
       />
       <Caption>{caption}</Caption>
     </figure>

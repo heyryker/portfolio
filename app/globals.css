@@ -54,9 +54,6 @@
    */
   --meeple-px: 11px;
   --grid-cell: calc(var(--meeple-px) * 4);
-  /* Side margin of the header and the landing page, matching the name and
-     the menu button. */
-  --page-gutter: 22px;
 }
 
 /*
@@ -68,12 +65,6 @@
 @media not all and (min-width: 720px) and (min-height: 520px) {
   :root {
     --grid-cell: calc(var(--meeple-px) * 2);
-  }
-}
-
-@media (min-width: 768px) {
-  :root {
-    --page-gutter: 53px;
   }
 }
 
@@ -93,38 +84,53 @@ body {
 }
 
 /*
- * The centered header (components/SiteHeader.tsx, `centered`): on the
- * landing page and in the project views, "Ryker Marble" in the sans serif in
- * the middle of the top, with the menu button on the right. On the landing
- * page today's date and my time in Utah sit under it.
+ * The landing page and project screens, after Porto Rocha's site: soft gray
+ * cards with rounded corners on white, in the sans serif. (This replaced the
+ * square-cornered Times New Roman look in 2026-11.)
  */
-.site-header-centered {
-  display: flex;
-  justify-content: center;
-  padding: 22px calc(var(--page-gutter) + 56px) 0;
+:root {
+  --card-bg: #f4f4f4;
+  --card-bg-hover: #ececec;
+  --card-radius: 16px;
 }
 
-.site-header-name {
+/* The landing page: just the menu button in the corner. */
+.landing-top {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.landing {
+  padding: 0 12px;
+}
+
+/* "RYKER MARBLE", then the date and my time in Utah (NameAndTime.tsx). */
+.name-time {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  min-height: 44px;
-  justify-content: center;
+  gap: clamp(28px, 6svh, 56px);
   text-align: center;
 }
 
-.site-header-wordmark {
+.landing .name-time {
+  padding-top: clamp(96px, 22svh, 220px);
+}
+
+.name-time-name {
   font-family: var(--font-sans);
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  font-size: clamp(22px, 2.4vw, 30px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   color: var(--color-ink);
 }
 
-a.site-header-wordmark:hover,
-a.site-header-wordmark:focus-visible {
+a.name-time-name:hover,
+a.name-time-name:focus-visible {
   text-decoration-line: underline;
   text-decoration-color: var(--color-accent);
   text-decoration-thickness: 0.32em;
@@ -132,251 +138,292 @@ a.site-header-wordmark:focus-visible {
   text-decoration-skip-ink: none;
 }
 
-/* The date and time under the name (components/LocalClock.tsx). */
 .local-clock {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0 0.5em;
   font-family: var(--font-sans);
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--color-muted);
+  font-size: clamp(26px, 3vw, 42px);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
   font-variant-numeric: tabular-nums;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .local-clock-colon {
-    animation: local-clock-blink 2s steps(1, end) infinite;
-  }
-}
-
-@keyframes local-clock-blink {
-  50% {
-    opacity: 0;
-  }
+.landing-cards {
+  max-width: 760px;
+  margin: clamp(64px, 16svh, 160px) auto 0;
+  padding-bottom: 64px;
 }
 
 /*
- * The landing page's cards (components/ProjectFeed.tsx), after studio sites
- * like Porto Rocha's: every project as a big image card, one full width and
- * then two side by side, all the way down. Square corners like the rest of
- * the site. Hovering eases the image in a touch and puts the yellow marker
- * under the name.
+ * Project cards (components/ProjectCards.tsx). Cards below the bottom edge
+ * pile up there (transforms set from JavaScript, data-piled while they
+ * are); a soft shadow separates each from the one behind.
  */
-.feed {
-  padding: 56px var(--page-gutter) 96px;
-  font-family: var(--font-sans);
-}
-
-.feed-list {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 40px 24px;
-}
-
-@media (min-width: 768px) {
-  .feed-list {
-    grid-template-columns: 1fr 1fr;
-    row-gap: 64px;
-  }
-
-  .feed-item[data-wide] {
-    grid-column: 1 / -1;
-  }
-}
-
-.feed-link {
-  display: block;
-  outline-offset: 6px;
-}
-
-.feed-media {
+.project-cards {
   position: relative;
-  display: block;
-  overflow: hidden;
-  aspect-ratio: 4 / 3;
-  background: #f3f3f3;
-}
-
-@media (min-width: 768px) {
-  .feed-item[data-wide] .feed-media {
-    aspect-ratio: 16 / 8;
-  }
-}
-
-.feed-image {
-  object-fit: cover;
-  transition: transform 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.feed-link:hover .feed-image,
-.feed-link:focus-visible .feed-image {
-  transform: scale(1.025);
-}
-
-.feed-caption {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 2px 16px;
-  margin-top: 12px;
-  font-size: 15px;
-  line-height: 1.3;
+  flex-direction: column;
+  row-gap: 12px;
 }
 
-.feed-name {
-  font-weight: 600;
+.project-card-item {
+  position: relative;
+  transform-origin: 50% 100%;
+  will-change: transform;
+}
+
+.project-card-item[data-piled] .project-card {
+  box-shadow: 0 -1px 0 rgb(0 0 0 / 0.04), 0 -8px 24px rgb(0 0 0 / 0.04);
+}
+
+.project-card {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(14px, 2.4vw, 24px);
+  padding: clamp(14px, 2.4vw, 32px);
+  border-radius: var(--card-radius);
+  background: var(--card-bg);
+  font-family: var(--font-sans);
+  transition: background-color 200ms;
+}
+
+.project-card:hover,
+.project-card:focus-visible {
+  background: var(--card-bg-hover);
+}
+
+.project-card:focus-visible {
+  outline-offset: 2px;
+}
+
+.project-card[aria-current="page"] {
+  background: #e6e6e6;
+}
+
+.project-card-thumb {
+  position: relative;
+  flex: none;
+  width: clamp(64px, 14vw, 128px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #e8e8e8;
+}
+
+.project-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.project-card-title {
+  font-size: clamp(17px, 1.6vw, 21px);
+  line-height: 1.25;
   color: var(--color-ink);
 }
 
-.feed-link:hover .feed-name,
-.feed-link:focus-visible .feed-name {
-  text-decoration-line: underline;
-  text-decoration-color: var(--color-accent);
-  text-decoration-thickness: 0.32em;
-  text-underline-offset: -0.14em;
-  text-decoration-skip-ink: none;
-}
-
-.feed-detail {
-  color: var(--color-muted);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .feed-image {
-    transition: none;
-  }
-
-  .feed-link:hover .feed-image,
-  .feed-link:focus-visible .feed-image {
-    transform: none;
-  }
+.project-card-summary {
+  font-size: clamp(15px, 1.5vw, 20px);
+  line-height: 1.35;
+  color: #767676;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /*
- * The project view (components/project/ProjectView.tsx), for case studies
- * and blog posts: a strip of every image across the top, the write-up below.
- * Opening one from a card slides it up (.case-wipe-in), and the strip slides
- * in from the right while the write-up rises a little after it.
+ * A project screen (components/project/ProjectView.tsx). Wide screens: a
+ * still left column (show all projects, name and time, every card) and a
+ * scrolling right column (images, then the write-up in a gray panel).
  */
 .project {
-  --strip-h: min(62svh, 640px);
   min-height: 100svh;
   background: var(--color-bg);
   font-family: var(--font-sans);
 }
 
-@media not all and (min-width: 768px) {
+@media (min-width: 1024px) {
   .project {
-    --strip-h: min(46svh, 420px);
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 12px;
+    padding: 0 12px;
   }
 }
 
-.project-back {
-  position: absolute;
-  top: 22px;
-  left: var(--page-gutter);
-  z-index: 31;
+.project-side {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 1024px) {
+  .project-side {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    padding-top: 12px;
+  }
+}
+
+.project-side-bar {
+  position: relative;
   display: flex;
   align-items: center;
-  height: 44px;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 12px 12px 0;
+}
+
+@media (min-width: 1024px) {
+  .project-side-bar {
+    padding: 0;
+  }
+}
+
+/* The menu button sits at the right end of the bar, not the page corner. */
+.project-side-bar > button {
+  position: static;
 }
 
 .project-back-link {
   display: inline-flex;
-  gap: 0.4em;
-  font-size: 15px;
+  align-items: center;
+  height: 52px;
+  padding: 0 24px;
+  border-radius: 999px;
+  background: var(--card-bg);
+  font-size: 17px;
   color: var(--color-ink);
   cursor: pointer;
+  transition: background-color 200ms;
 }
 
 .project-back-link:hover,
 .project-back-link:focus-visible {
-  text-decoration-line: underline;
-  text-decoration-color: var(--color-accent);
-  text-decoration-thickness: 0.32em;
-  text-underline-offset: -0.14em;
-  text-decoration-skip-ink: none;
+  background: var(--color-accent);
 }
 
+/* The name, time and cards only show beside the work on wide screens. */
+.project-side-name,
+.project-side-cards {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .project-side-name {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    padding: 24px 0;
+  }
+
+  .project-side-name .local-clock {
+    font-size: clamp(24px, 2.4vw, 38px);
+  }
+
+  .project-side-cards {
+    display: block;
+    flex: 0 1 auto;
+    max-height: 48svh;
+    min-height: 0;
+  }
+
+  .project-side-cards .project-cards {
+    max-height: 48svh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    padding-bottom: 12px;
+  }
+
+  .project-side-cards .project-cards::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.project-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+}
+
+@media (min-width: 1024px) {
+  .project-main {
+    padding: 12px 0;
+  }
+}
+
+/* One image at a time, shown whole, in a rounded gray frame. */
 .project-gallery {
   position: relative;
-  margin-top: 32px;
 }
 
 .project-gallery-strip {
+  display: flex;
   overflow-x: auto;
+  scroll-snap-type: x mandatory;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
-  cursor: grab;
-  outline-offset: -2px;
+  border-radius: var(--card-radius);
+  background: var(--card-bg);
 }
 
 .project-gallery-strip::-webkit-scrollbar {
   display: none;
 }
 
-.project-gallery-strip[data-dragging] {
-  cursor: grabbing;
-  user-select: none;
+.project-gallery-strip:focus-visible {
+  outline-offset: 2px;
 }
 
-.project-gallery-track {
-  display: flex;
-  gap: 16px;
-  width: max-content;
-  padding-inline: var(--page-gutter);
-}
-
-/* min-content: the caption wraps at the image's width. */
 .project-slide {
   flex: none;
-  width: min-content;
+  width: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
-/* Every slide is the strip's height and as wide as its own proportions. */
 .project-slide-media {
   display: block;
-  height: var(--strip-h);
-  width: auto;
-  max-width: none;
-  object-fit: cover;
-  background: #f3f3f3;
-}
-
-/* On phones a wide image is cropped to most of the screen's width, so the
-   next one always peeks in from the right. */
-@media not all and (min-width: 768px) {
-  .project-slide-media {
-    max-width: calc(100vw - var(--page-gutter) * 2 - 32px);
-  }
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: contain;
 }
 
 .project-slide-video {
-  aspect-ratio: 16 / 9;
+  position: relative;
 }
 
-.project-slide-video > div,
-.project-slide-video video {
+.project-slide-video > div {
   height: 100%;
 }
 
-.project-slide-caption {
-  min-height: 1.4em;
-  max-width: 60ch;
-  margin-top: 10px;
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--color-muted);
+.project-slide-caption:empty {
+  display: none;
 }
 
-.project-gallery-arrows {
+.project-slide-caption {
+  padding: 0 24px 16px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #767676;
+}
+
+.project-gallery-controls {
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 4px var(--page-gutter) 0;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding-top: 10px;
+  font-size: 14px;
+  color: #767676;
+  font-variant-numeric: tabular-nums;
 }
 
 .project-gallery-arrow {
@@ -384,72 +431,52 @@ a.site-header-wordmark:focus-visible {
   place-items: center;
   width: 44px;
   height: 44px;
-  border: 1px solid var(--color-ink);
+  border-radius: 999px;
+  background: var(--card-bg);
+  color: var(--color-ink);
   cursor: pointer;
   transition: background-color 200ms;
 }
 
 .project-gallery-arrow:hover,
 .project-gallery-arrow:focus-visible {
-  border-color: var(--color-accent);
   background: var(--color-accent);
 }
 
-/* Phones swipe the strip, so no arrows. */
-@media not all and (min-width: 768px) {
-  .project-gallery-arrows {
-    display: none;
-  }
-}
-
-.project-content {
-  display: grid;
-  gap: 40px;
-  padding: 48px var(--page-gutter) 0;
-}
-
-@media (min-width: 1024px) {
-  .project-content {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: 64px;
-  }
-
-  .project-head {
-    position: sticky;
-    top: 32px;
-    align-self: start;
-  }
+.project-panel {
+  padding: clamp(20px, 2.6vw, 36px);
+  border-radius: var(--card-radius);
+  background: var(--card-bg);
 }
 
 .project-eyebrow {
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-muted);
+  font-size: clamp(16px, 1.5vw, 20px);
+  color: #767676;
 }
 
 .project-title {
-  margin-top: 12px;
-  font-size: clamp(32px, 4vw, 52px);
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.025em;
+  margin-top: 8px;
+  font-size: clamp(30px, 3vw, 42px);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
   text-wrap: balance;
 }
 
 .project-summary {
   margin-top: 16px;
-  font-size: 19px;
-  line-height: 1.45;
-  color: var(--color-ink-soft);
+  font-size: clamp(20px, 2vw, 28px);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
   text-wrap: pretty;
 }
 
 .project-meta {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   margin-top: 28px;
-  border-top: 1px solid #e8e8e8;
+  border-top: 1px solid #e2e2e2;
   padding-top: 16px;
   font-size: 15px;
 }
@@ -461,17 +488,18 @@ a.site-header-wordmark:focus-visible {
 }
 
 .project-meta dt {
-  color: var(--color-muted);
+  color: #767676;
 }
 
-/* The write-up's own column rules (case-col margins) don't apply here. */
 .project-body {
+  margin-top: 40px;
   min-width: 0;
 }
 
+/* The write-up's own column rules (case-col margins) don't apply here. */
 .project-body .case-col {
   margin-inline: 0;
-  max-width: 660px;
+  max-width: 680px;
 }
 
 .project-body > :first-child {
@@ -480,17 +508,15 @@ a.site-header-wordmark:focus-visible {
 
 /* "## The brief" in a case study (see CaseStudy.tsx). */
 .project-section {
-  margin: 48px 0 12px;
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-muted);
+  margin: 40px 0 8px;
+  font-size: 15px;
+  color: #767676;
 }
 
 .project-footer {
-  margin: 96px var(--page-gutter) 0;
-  border-top: 1px solid #e8e8e8;
-  padding: 40px 0 64px;
+  margin-top: 56px;
+  border-top: 1px solid #e2e2e2;
+  padding-top: 28px;
 }
 
 .project-next {
@@ -499,19 +525,16 @@ a.site-header-wordmark:focus-visible {
 
 .project-next-kicker {
   display: block;
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-muted);
+  font-size: 15px;
+  color: #767676;
 }
 
 .project-next-name {
   display: inline-block;
-  margin-top: 8px;
-  font-size: clamp(28px, 4vw, 48px);
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.025em;
+  margin-top: 6px;
+  font-size: clamp(24px, 2.6vw, 36px);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
   text-wrap: balance;
 }
 
@@ -529,7 +552,7 @@ a.site-header-wordmark:focus-visible {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 16px;
-  margin-top: 40px;
+  margin-top: 28px;
   font-size: 17px;
 }
 
@@ -538,24 +561,26 @@ a.site-header-wordmark:focus-visible {
   text-underline-offset: 0.2em;
 }
 
+/* Opening from a card: the work slides in from the right as the screen
+   rises, and the panel follows a beat later. */
 @media (prefers-reduced-motion: no-preference) {
-  .case-wipe-in .project-gallery-track {
-    animation: project-strip-in 1100ms cubic-bezier(0.2, 0.8, 0.2, 1) 150ms both;
+  .case-wipe-in .project-gallery {
+    animation: project-slide-in 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 120ms both;
   }
 
-  .case-wipe-in .project-content {
-    animation: project-content-in 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 350ms both;
+  .case-wipe-in .project-panel {
+    animation: project-rise-in 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 280ms both;
   }
 }
 
-@keyframes project-strip-in {
+@keyframes project-slide-in {
   from {
-    transform: translateX(45vw);
+    transform: translateX(12vw);
     opacity: 0;
   }
 }
 
-@keyframes project-content-in {
+@keyframes project-rise-in {
   from {
     transform: translateY(48px);
     opacity: 0;

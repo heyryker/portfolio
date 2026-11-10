@@ -1,74 +1,62 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/Icon";
 
 /**
- * The strip of images along the top of a project view. It scrolls sideways:
- * with a trackpad or a swipe, by dragging with the mouse, with the arrow
- * buttons, or with the arrow keys once it has focus. Vertical scrolling is
- * left alone, so the page always scrolls down to the write-up.
+ * The project's images and videos, one at a time, across the top of the
+ * right column. Swipe or scroll sideways, use the arrows, or the arrow keys
+ * once it has focus; the count shows where you are. Vertical scrolling is
+ * left alone, so the page always scrolls on to the write-up.
  */
 export function ProjectGallery({ label, children }: { label: string; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
-  const drag = useRef<{ x: number; left: number; moved: boolean } | null>(null);
+  const [index, setIndex] = useState(0);
+  const [count, setCount] = useState(0);
 
-  const step = (dir: 1 | -1) => {
+  useEffect(() => {
+    const strip = ref.current;
+    if (!strip) return;
+    const update = () => {
+      const slides = strip.querySelectorAll(".project-slide").length;
+      setCount(slides);
+      setIndex(Math.min(slides - 1, Math.round(strip.scrollLeft / Math.max(1, strip.clientWidth))));
+    };
+    update();
+    strip.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      strip.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
+  const go = (to: number) => {
     const strip = ref.current;
     if (!strip) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    strip.scrollBy({ left: dir * strip.clientWidth * 0.8, behavior: reduced ? "auto" : "smooth" });
+    const target = (to + count) % count;
+    strip.scrollTo({ left: target * strip.clientWidth, behavior: reduced ? "auto" : "smooth" });
   };
 
   return (
     <div className="project-gallery">
-      <div
-        ref={ref}
-        role="region"
-        aria-label={label}
-        tabIndex={0}
-        className="project-gallery-strip"
-        onPointerDown={(e) => {
-          if (e.pointerType !== "mouse" || e.button !== 0) return;
-          const strip = e.currentTarget;
-          drag.current = { x: e.clientX, left: strip.scrollLeft, moved: false };
-        }}
-        onPointerMove={(e) => {
-          const d = drag.current;
-          if (!d) return;
-          const dx = e.clientX - d.x;
-          if (!d.moved && Math.abs(dx) < 6) return;
-          if (!d.moved) {
-            d.moved = true;
-            e.currentTarget.setPointerCapture(e.pointerId);
-            e.currentTarget.dataset.dragging = "";
-          }
-          e.currentTarget.scrollLeft = d.left - dx;
-        }}
-        onPointerUp={(e) => {
-          drag.current = null;
-          delete e.currentTarget.dataset.dragging;
-        }}
-        onPointerCancel={(e) => {
-          drag.current = null;
-          delete e.currentTarget.dataset.dragging;
-        }}
-        // A drag shouldn't also click a video's sound button or drag an image.
-        onClickCapture={(e) => {
-          if (e.currentTarget.dataset.dragging !== undefined) e.stopPropagation();
-        }}
-        onDragStart={(e) => e.preventDefault()}
-      >
-        <div className="project-gallery-track">{children}</div>
+      <div ref={ref} role="region" aria-label={label} tabIndex={0} className="project-gallery-strip">
+        {children}
       </div>
-      <div className="project-gallery-arrows">
-        <button type="button" aria-label="Previous images" onClick={() => step(-1)} className="project-gallery-arrow">
-          <Icon name="arrow_back" className="size-5" />
-        </button>
-        <button type="button" aria-label="Next images" onClick={() => step(1)} className="project-gallery-arrow">
-          <Icon name="arrow_forward" className="size-5" />
-        </button>
-      </div>
+      {count > 1 && (
+        <div className="project-gallery-controls">
+          <button type="button" aria-label="Previous image" onClick={() => go(index - 1)} className="project-gallery-arrow">
+            <Icon name="arrow_back" className="size-5" />
+          </button>
+          <span className="project-gallery-count" aria-live="polite">
+            {index + 1} / {count}
+          </span>
+          <button type="button" aria-label="Next image" onClick={() => go(index + 1)} className="project-gallery-arrow">
+            <Icon name="arrow_forward" className="size-5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
