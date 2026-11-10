@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/JsonLd";
-import { RESUME, SITE_DESCRIPTION, SITE_NAME, SITE_URL, WEBSITE_ID, pageMetadata, person } from "@/lib/site";
+import { RESUME, SITE_DESCRIPTION, SITE_NAME, SITE_URL, WEBSITE_ID, absoluteUrl, pageKeywords, pageMetadata, person } from "@/lib/site";
 import { Icon } from "@/components/Icon";
 import { NameAndTime } from "@/components/NameAndTime";
 import { ProjectCards } from "@/components/ProjectCards";
@@ -10,7 +10,11 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { LandingMarker } from "@/components/work/LandingMarker";
 import { getProjectCards } from "@/lib/projects";
 
-export const metadata: Metadata = pageMetadata({ description: SITE_DESCRIPTION, path: "/" });
+export const metadata: Metadata = pageMetadata({
+  description: SITE_DESCRIPTION,
+  path: "/",
+  keywords: pageKeywords(person.jobTitle, "Brand designer", "Creative lead", "Art director", "Portfolio", person.knowsAbout),
+});
 
 export default async function Home() {
   const cards = await getProjectCards();
@@ -30,6 +34,34 @@ export default async function Home() {
               description: SITE_DESCRIPTION,
               inLanguage: "en-US",
               publisher: { "@id": person["@id"] },
+            },
+            // The landing page is the project list: name every card, so
+            // crawlers and answer engines see the whole body of work in one
+            // place even though the projects open as overlays.
+            {
+              "@type": "CollectionPage",
+              "@id": `${SITE_URL}/#projects`,
+              url: SITE_URL,
+              name: `${SITE_NAME}: projects`,
+              isPartOf: { "@id": WEBSITE_ID },
+              about: { "@id": person["@id"] },
+              mainEntity: {
+                "@type": "ItemList",
+                numberOfItems: cards.length,
+                itemListElement: cards.map((card, i) => ({
+                  "@type": "ListItem",
+                  position: i + 1,
+                  item: {
+                    "@type": card.href.startsWith("/blog/") ? "BlogPosting" : "CreativeWork",
+                    url: absoluteUrl(card.href),
+                    name: card.title,
+                    description: card.summary,
+                    image: absoluteUrl(card.image),
+                    ...(card.tags.length && { keywords: card.tags.join(", ") }),
+                    creator: { "@id": person["@id"] },
+                  },
+                })),
+              },
             },
           ],
         }}

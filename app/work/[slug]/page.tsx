@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { JsonLd } from "@/components/JsonLd";
 import { CaseStudy } from "@/components/work/CaseStudy";
 import { WipeOnLeave } from "@/components/work/WipeOnLeave";
-import { SITE_NAME, SITE_URL, WEBSITE_ID, absoluteUrl, pageMetadata, person } from "@/lib/site";
+import { SITE_NAME, SITE_URL, WEBSITE_ID, absoluteUrl, pageKeywords, pageMetadata, person } from "@/lib/site";
 import { CASE_STUDIES, caseStudyLabel, isCaseStudy, loadCaseStudy, type CaseStudyMeta } from "@/lib/work";
 
 /*
@@ -27,11 +27,18 @@ export async function generateMetadata({ params }: PageProps<"/work/[slug]">): P
   if (!isCaseStudy(slug)) return {};
   const { meta } = await loadCaseStudy(slug);
   const image = heroImage(meta.hero);
+  const tags = meta.tags ?? [];
   return pageMetadata({
-    title: meta.title,
+    title: meta.seoTitle ?? meta.title,
     description: meta.summary,
     path: `/work/${slug}`,
-    ...(image && { openGraph: { type: "article", images: [{ url: image, alt: meta.hero?.alt }] } }),
+    keywords: pageKeywords(tags, meta.client.split(", "), "Case study"),
+    openGraph: {
+      type: "article",
+      authors: [SITE_URL],
+      tags,
+      ...(image && { images: [{ url: image, alt: meta.hero?.alt }] }),
+    },
   });
 }
 
@@ -56,9 +63,17 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
               url,
               name: meta.title,
               alternateName: caseStudyLabel(slug),
+              headline: meta.seoTitle ?? meta.title,
               description: meta.summary,
+              ...(meta.tags?.length && {
+                keywords: meta.tags.join(", "),
+                about: meta.tags.map((name) => ({ "@type": "Thing", name })),
+              }),
+              ...(known(meta.role) && { creditText: `${person.name}, ${meta.role}` }),
               ...(image && { image: absoluteUrl(image) }),
-              ...(known(meta.client) && { sourceOrganization: { "@type": "Organization", name: meta.client } }),
+              ...(known(meta.client) && {
+                sourceOrganization: meta.client.split(", ").map((name) => ({ "@type": "Organization", name })),
+              }),
               ...(known(meta.year) && { temporalCoverage: meta.year.replace("–", "/") }),
               inLanguage: "en-US",
               creator: { "@id": person["@id"] },

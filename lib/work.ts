@@ -23,6 +23,11 @@ export type CaseStudySlug = (typeof CASE_STUDIES)[number]["slug"];
  */
 export type CaseStudyMeta = {
   title: string;
+  /**
+   * The browser-tab and search-result title, when the visible title leaves
+   * out who the work was for (search engines weigh the <title> most).
+   */
+  seoTitle?: string;
   /** One line under the title. Also the page's meta description. */
   summary: string;
   /**
@@ -34,6 +39,12 @@ export type CaseStudyMeta = {
   role: string;
   client: string;
   year: string;
+  /**
+   * Topics, in sentence case: shown under Role/Client/Year, and used as the
+   * page's meta keywords, Open Graph article tags and JSON-LD keywords.
+   * Prefer words a recruiter would search ("Brand guidelines", "Web3").
+   */
+  tags?: string[];
   /** Full-bleed hero. Leave `src` out to show a marked placeholder. */
   hero?: {
     kind?: "image" | "video";

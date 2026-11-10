@@ -10,7 +10,7 @@ import { SITE_URL, WEBSITE_ID, absoluteUrl, pageMetadata, person } from "@/lib/s
 export const metadata: Metadata = pageMetadata({
   title: "Blog",
   description:
-    "Process notes from Ryker Marble: a TRON design challenge and a food truck that only exists on paper.",
+    "Process notes from Ryker Marble on event branding, trade show booths, editorial design, design challenges and side projects.",
   path: "/blog",
 });
 
@@ -30,6 +30,7 @@ export default function BlogIndex() {
             headline: post.title,
             url: absoluteUrl(`/blog/${post.slug}`),
             datePublished: post.date,
+            keywords: post.tags.join(", "),
           })),
         }}
       />

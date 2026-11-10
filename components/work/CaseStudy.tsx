@@ -61,6 +61,7 @@ export async function CaseStudy({ slug }: { slug: CaseStudySlug }) {
                 ["Role", meta.role],
                 ["Client", meta.client],
                 ["Year", meta.year],
+                ...(meta.tags?.length ? [["Tags", meta.tags.join(", ")] as const] : []),
               ] as const
             ).map(([label, value]) => (
               <div key={label}>
