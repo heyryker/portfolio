@@ -1,9 +1,9 @@
 ---
 title: "I Built This Site in a Weekend With Claude"
 date: 2026-10-11
-summary: "From a Squarespace subscription to a hand-built site with five pixel coworkers, in about 24 hours."
-cover: /blog/building-this-site/garden.webp
-coverAlt: "The heyryker.com landing page: the big HEY [I’M] RYKER headline with five small pixel meeples wandering over it, pixel flowers and grass planted around them, and the [I’M] tinted yellow where the yellow meeple is standing on it."
+summary: "From a Squarespace subscription to a hand-built site in a weekend, then two rounds of stripping it back to something calmer."
+cover: /blog/building-this-site/landing-now.webp
+coverAlt: "The current heyryker.com landing page: RYKER MARBLE in small uppercase sans serif, the live date and Utah time underneath, the weather in gray, a gray Resume pill, and the first gray project card for Lucid Hackathon."
 coverWidth: 2400
 coverHeight: 1500
 tags: [Behind the scenes]
@@ -11,7 +11,9 @@ aiSummary:
   - Ryker rebuilt his portfolio, previously on Squarespace, using Claude to write the code, GitHub to hold it and Vercel to deploy it.
   - He went from a concept on a Saturday morning to a mostly complete site about 24 hours later, reviewing every change as a pull request with a live preview.
   - Squarespace billed him $270 a year plus tax; the new site was built with a $20 a month Claude subscription, with GitHub and Vercel on their free plans.
-  - The site is meant to be fun and a little random. The five pixel meeples plant flowers, grass and carrots because Ryker loves gardening and landscaping.
+  - The first version was fun and a little random. The five pixel meeples plant flowers, grass and carrots because Ryker loves gardening and landscaping.
+  - He then refined it twice. First to a black, white and yellow look with a Times serif and a 3D stack of case studies, then to a clean Swiss style layout inspired by Porto Rocha, with his name, the live Utah time and weather, and simple gray project cards.
+  - The meeples now wait behind a button. Press it and they cause a few seconds of mischief before a pixel cop car picks them up, so the personality is there when you want it and out of the way when you don’t.
 ---
 
 For a few years, my portfolio lived on Squarespace. It did its job. It also looked a lot like every other portfolio on Squarespace, and it cost me $270 a year plus tax for the privilege.
@@ -55,7 +57,9 @@ And I didn’t trade a template for a template. I got a site that does exactly w
 
 A portfolio is supposed to be professional, and the case studies are. But I wanted the rest of the site to feel like somewhere you’d poke around for a minute longer than you meant to.
 
-That’s the meeples’ job. Each one has a personality. The yellow one is curious and follows your cursor. The green one is shy and runs away. The purple one watches. The red one is chaos. The blue one is mostly asleep, in a nightcap, and occasionally sleepwalks somewhere new. If one walks over the blue parts of my name, they take on its color. Click one and it explodes into pixels, then slowly puts itself back together.
+<Figure src="/blog/building-this-site/garden.webp" width={2400} height={1500} alt="The first heyryker.com landing page: the big HEY [I’M] RYKER headline with five small pixel meeples wandering over it, pixel flowers and grass planted around them, and the [I’M] tinted yellow where the yellow meeple is standing on it." caption="The weekend version. Five coworkers and a garden." />
+
+That’s the meeples’ job. Each one has a personality. The yellow one is curious and follows your cursor. The green one is shy and runs away. The purple one watches. The red one is chaos. The blue one is mostly asleep, in a nightcap, and occasionally sleepwalks somewhere new. In that first version, if one walked over the blue parts of my name, it took on that meeple’s color. Click one and it explodes into pixels, then slowly puts itself back together.
 
 None of that was in a plan. A lot of it came from me saying “what if they did this” halfway through something else. Having the code be fast and cheap to change meant I could say yes to the random ideas instead of saving them for a someday that never comes.
 
@@ -65,12 +69,42 @@ None of that was in a plan. A lot of it came from me saying “what if they did 
 
 Outside of design, I love gardening and landscaping. There’s something about planning a space, putting things in the ground and watching it fill in over time that scratches the same itch as building a brand.
 
-So the meeples garden too. Leave the landing page open and they’ll plant flowers, grass and carrots around the headline. The red one tramples them, because of course it does. Click the period after my name and a gold flower pops up, and all five of them gather round to cheer.
+So the meeples garden too. In the first version, if you left the landing page open they’d plant flowers, grass and carrots around the headline. The red one trampled them, because of course it did. Click the period after my name and a gold flower popped up, and all five of them gathered round to cheer.
 
 They even have a village now, with houses, a big shared garden in the middle and a few cows, sheep and bunnies. It has absolutely nothing to do with my resume, and it might be my favorite page on the site.
 
+## Then I kept going
+
+The weekend version was fun. It was also loud. A big headline, a garden, five characters and a blue accent all asking for attention at once. When I looked at it as a hiring manager would, the work was the quietest thing on the page.
+
+That bugged me, because it isn’t how I design. I believe in Swiss design: a clear grid, one good typeface, lots of white space and nothing on the page that isn’t doing a job. The personality should be in the details, not shouting over the work. So I ran two more rounds, each one taking something away.
+
+### Round one: black, white and one yellow
+
+<Figure src="/blog/building-this-site/landing-serif.webp" width={2400} height={1500} alt="The second version of the landing page: a large Times serif headline reading Hi, I’m Ryker, a short line about building brand systems, Based in Utah in yellow italics, underlined Resume and Email me links, and below them a 3D stack of case study cards angled away from the viewer, starting with the SixFifty editorial report." caption="Round one. A serif hello and a stack of case studies you could flip through." />
+
+I dropped the blue and moved to black and white with a single yellow accent, used as a highlight and never as text. The pixel font gave way to a Times serif. The meeples moved out to their own village, and the case studies became a stack of cards you could flip through.
+
+It felt more grown up, but the stack was still the show. You had to play with it to find the work.
+
+### Round two: a grid, a clock and gray cards
+
+<Figure src="/blog/building-this-site/project-view.webp" width={2400} height={1500} alt="The current project view: on the left, my name, the live Utah date and time and the list of gray project cards with TRON DAO highlighted; on the right, a large full-bleed image of the TRON brand guidelines site on a desktop monitor, arrows to step through the images, and the case study title and summary in a gray panel underneath." caption="Round two. Everything sits in two columns, and the work gets the big side." />
+
+For the latest version I took a lot of cues from the website of [Porto Rocha](https://portorocha.com), the design studio. It’s about as simple as a portfolio gets: a name, a little context and the work in plain cards. Credit where it’s due, it’s the reference I showed Claude.
+
+My name now sits at the top in a plain uppercase sans serif. Under it is the date and time in Utah, ticking, with today’s weather in gray. It’s a small thing, but it tells you I’m a real person somewhere, and that it’s probably snowing. Below that are gray cards for every case study and post, all the same size, all on the same grid. Open one and the work takes the big half of the screen, with the list still there on the left.
+
+### Where the personality went
+
+<Figure src="/blog/building-this-site/meeples-released.webp" width={2400} height={1500} alt="The current landing page mid-mischief: the purple meeple in a top hat singing LA LA LAAA above my name, the yellow one lassoing the Resume button, the blue one napping in a nightcap, the red one with horns, and the green one planting a trail of pixel flowers down the right side of the page." caption="Press the little button in the corner and you get about twelve seconds of this." />
+
+I didn’t want to lose the fun, just put it where it belongs. So the meeples live behind a small button in the bottom corner. Press it and they burst onto the page and get to work: the purple one sings, the yellow one lassos my Resume button, the green one plants flowers, the red one shoves cards around and the blue one naps. After a few seconds a pixel cop car drives in, sirens going, and picks them all up.
+
+That’s the balance I was after. A calm, clean page that gets out of the way of the work, with a little bit of me waiting for anyone who goes looking. Each round took minutes to try instead of weeks, which is the only reason I was willing to throw out a version I already liked.
+
 ## The takeaway
 
-The advice was right, just not how I expected. AI didn’t give me ideas. It took away the cost of trying them. When a weird idea takes minutes to see instead of a weekend, you try a lot more weird ideas, and some of them turn into tiny pixel people with a vegetable garden.
+The advice was right, just not how I expected. AI didn’t give me ideas. It took away the cost of trying them. When a weird idea takes minutes to see instead of a weekend, you try a lot more weird ideas, and some of them turn into tiny pixel people with a vegetable garden. It also makes it cheap to take things away, which turned out to matter just as much.
 
 If you’ve been sitting on a site you’re not excited about, this is your sign. Your move.
