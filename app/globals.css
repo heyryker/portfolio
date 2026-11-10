@@ -1234,7 +1234,8 @@ html:has(.site-menu[open]) {
 }
 
 /* On narrower screens the landing cards reach the bottom-left corner, so
-   their pile stops above the button. */
+   their pile, including the cards peeking out behind the front one, stops
+   above the button (52px tall, 12px from the bottom, plus 12px air). */
 @media (max-width: 900px) {
   .landing-cards .project-cards {
     --pile-bottom: 76px;
