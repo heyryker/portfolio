@@ -109,7 +109,7 @@ export const person = {
   "@id": `${SITE_URL}/#person`,
   name: "Ryker Marble",
   url: SITE_URL,
-  image: absoluteUrl("/ryker-marble.jpg"),
+  image: absoluteUrl("/ryker-marble.webp"),
   jobTitle: "Senior Brand Designer",
   description:
     "Senior brand designer and art director who builds brand systems and keeps them working at scale for enterprise SaaS and Web3 teams.",
