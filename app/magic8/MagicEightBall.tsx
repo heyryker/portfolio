@@ -3,35 +3,45 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./magic8.css";
 
-// The twenty answers from the classic toy: ten yes, five maybe, five no.
-const ANSWERS = [
-  "It is certain",
-  "It is decidedly so",
-  "Without a doubt",
-  "Yes, definitely",
-  "You may rely on it",
-  "As I see it, yes",
-  "Most likely",
-  "Outlook good",
-  "Yes",
-  "Signs point to yes",
-  "Reply hazy, try again",
-  "Ask again later",
-  "Better not tell you now",
-  "Cannot predict now",
-  "Concentrate and ask again",
-  "Don't count on it",
-  "My reply is no",
-  "My sources say no",
-  "Outlook not so good",
-  "Very doubtful",
+// Short fortunes, sized to fit the triangle (about 40 characters at most).
+const FORTUNES = [
+  "A small risk pays off this week",
+  "Someone is about to make you laugh",
+  "Say yes to the next invitation",
+  "Good news arrives by text",
+  "Your next idea is a good one",
+  "A lost thing turns up soon",
+  "Trust the first draft",
+  "Call the person you're thinking of",
+  "Luck favors the early riser tomorrow",
+  "A kind word comes back to you",
+  "You'll find what you need in plain sight",
+  "Today is good for starting over",
+  "A stranger will teach you something",
+  "Your patience is about to pay off",
+  "Take the long way home",
+  "Something you planted is about to bloom",
+  "Expect a pleasant surprise",
+  "The answer is simpler than you think",
+  "An old friend is thinking of you",
+  "Make the thing you want to see",
+  "Rest now. Big things are coming",
+  "Your hunch is right",
+  "Adventure is closer than it looks",
+  "Good things come in small packages",
+  "Leave room for dessert",
+  "You'll be glad you went",
+  "Someone admires your work",
+  "Change is coming. It looks good on you",
+  "Your next move is the right one",
+  "Today rewards the curious",
 ];
 
 type Phase = "idle" | "sinking" | "rising" | "shown";
 
 /**
  * A full-screen magic 8 ball. Tapping sinks the die into the dark liquid,
- * shakes the ball, and floats a new answer back up into the window.
+ * shakes the window, and floats a fortune back up into it.
  */
 export function MagicEightBall() {
   const [text, setText] = useState("Tap to start");
@@ -45,14 +55,14 @@ export function MagicEightBall() {
   const ask = useCallback(() => {
     if (phase === "sinking" || phase === "rising") return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let i = Math.floor(Math.random() * ANSWERS.length);
-    if (i === last.current) i = (i + 1 + Math.floor(Math.random() * (ANSWERS.length - 1))) % ANSWERS.length;
+    let i = Math.floor(Math.random() * FORTUNES.length);
+    if (i === last.current) i = (i + 1 + Math.floor(Math.random() * (FORTUNES.length - 1))) % FORTUNES.length;
     last.current = i;
     setPhase("sinking");
     const sink = reduced ? 250 : 900;
     timers.current.push(
       window.setTimeout(() => {
-        setText(ANSWERS[i]);
+        setText(FORTUNES[i]);
         setAsked(true);
         setPhase("rising");
         // Two frames so the die starts hidden, then transitions up.
@@ -70,7 +80,7 @@ export function MagicEightBall() {
         type="button"
         onClick={ask}
         className="m8-ball"
-        aria-label={asked ? "Ask again" : "Tap to start"}
+        aria-label={asked ? "Get another fortune" : "Tap to start"}
       >
         <span className="m8-gloss" aria-hidden="true" />
         <span className={`m8-window ${phase === "sinking" ? "m8-shake" : ""}`} aria-hidden="true">
@@ -89,7 +99,7 @@ export function MagicEightBall() {
         </span>
       </button>
       <p className="m8-hint" aria-live="polite">
-        {asked ? "Ask another question, then tap again." : "Think of a yes or no question."}
+        {asked ? "Tap again for another fortune." : "Tap the ball to get your fortune."}
       </p>
     </main>
   );

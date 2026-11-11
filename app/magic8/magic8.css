@@ -118,10 +118,10 @@
 .m8-answer {
   position: relative;
   /* Sit in the wide lower part of the triangle. */
-  margin-top: 30%;
-  width: 54%;
+  margin-top: 40%;
+  width: 56%;
   font-family: var(--font-inter), system-ui, sans-serif;
-  font-size: calc(var(--size) * 0.03);
+  font-size: calc(var(--size) * 0.026);
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: 0.06em;

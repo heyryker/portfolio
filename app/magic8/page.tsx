@@ -5,7 +5,7 @@ import { MagicEightBall } from "./MagicEightBall";
 // the landing rack, and asks search engines not to index it.
 export const metadata: Metadata = {
   title: "Magic 8 Ball",
-  description: "Ask a yes or no question, then tap the ball.",
+  description: "Tap the ball to get your fortune.",
   alternates: { canonical: "/magic8" },
   robots: { index: false, follow: false },
 };
