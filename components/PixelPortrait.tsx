@@ -57,14 +57,14 @@ const SHAKE = 0.3; // seconds
 const SCATTER = 1.1;
 const SETTLE_LIMIT = 4; // give up easing and snap home after this long
 
-type Cell = { gray: string; color: string };
+type Cell = { patch: string; color: string };
 type Block = { x: number; y: number; vx: number; vy: number; home: { x: number; y: number }; delay: number; from: string; to: string; landed: boolean };
 type Showing = "photo" | "pixels";
 
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
-/** Reads the photo into the grid: each cell's gray, and its color in the avatar. */
+/** Reads the photo into the grid: each cell's color in the photo, and its color in the avatar. */
 function sample(img: HTMLImageElement): Cell[] | null {
   if (!img.complete || !img.naturalWidth) return null;
   const k = 8; // subsamples per cell, each way
@@ -82,24 +82,27 @@ function sample(img: HTMLImageElement): Cell[] | null {
   ctx.drawImage(img, (w - dw) * FOCUS.x, (h - dh) * FOCUS.y, dw, dh);
   const data = ctx.getImageData(0, 0, w, h).data;
 
-  const lum: number[] = [];
+  // Each cell's average color, so a block leaves as a patch of the photo.
+  const patches: string[] = [];
   for (let cy = 0; cy < ROWS; cy++) {
     for (let cx = 0; cx < COLS; cx++) {
-      let sum = 0;
+      let r = 0;
+      let g = 0;
+      let b = 0;
       for (let y = 0; y < k; y++) {
         for (let x = 0; x < k; x++) {
           const i = ((cy * k + y) * w + cx * k + x) * 4;
-          sum += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+          r += data[i];
+          g += data[i + 1];
+          b += data[i + 2];
         }
       }
-      lum.push(sum / (k * k));
+      const n = k * k;
+      patches.push(`rgb(${Math.round(r / n)},${Math.round(g / n)},${Math.round(b / n)})`);
     }
   }
   // Each block leaves as a patch of the photo and comes home as the avatar.
-  return lum.map((l, i) => {
-    const v = Math.round(l);
-    return { gray: `rgb(${v},${v},${v})`, color: COLORS[AVATAR[Math.floor(i / COLS)][i % COLS]] };
-  });
+  return patches.map((patch, i) => ({ patch, color: COLORS[AVATAR[Math.floor(i / COLS)][i % COLS]] }));
 }
 
 export function PixelPortrait({ src, alt }: { src: StaticImageData; alt: string }) {
@@ -203,8 +206,8 @@ export function PixelPortrait({ src, alt }: { src: StaticImageData; alt: string 
         vy: Math.sin(a) * speed,
         // Home again bottom row first, so the new picture builds upward.
         delay: SHAKE + SCATTER + (1 - home.y / r0.height) * 0.7 + rand(0, 0.3),
-        from: to === "pixels" ? c.gray : c.color,
-        to: to === "pixels" ? c.color : c.gray,
+        from: to === "pixels" ? c.patch : c.color,
+        to: to === "pixels" ? c.color : c.patch,
         landed: false,
       };
     });

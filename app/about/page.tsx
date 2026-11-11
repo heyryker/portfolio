@@ -6,7 +6,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { PixelPortrait } from "@/components/PixelPortrait";
 import { SiteHeader } from "@/components/SiteHeader";
 import { EDUCATION, EMAIL, EXPERIENCE, PROFILES, RESUME, SITE_URL, WEBSITE_ID, absoluteUrl, pageMetadata, person } from "@/lib/site";
-import portrait from "@/public/ryker-marble.jpg";
+import portrait from "@/public/ryker-marble.webp";
 
 export const metadata: Metadata = pageMetadata({
   title: "About",
@@ -116,7 +116,7 @@ export default function AboutPage() {
           {/* Click it: it bursts into pixels and comes back in the meeple colors. */}
           <PixelPortrait
             src={portrait}
-            alt="Ryker Marble, in a denim shirt over a white tee, looking off to the side. Black and white."
+            alt="Ryker Marble, smiling slightly at the camera, with tousled reddish-brown hair, a small nose ring and a hoop earring, in a gray tee against a brick wall."
           />
         </div>
 
