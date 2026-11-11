@@ -29,6 +29,9 @@ const timeFormat = new Intl.DateTimeFormat("en-US", {
  *
  * The time depends on the visitor's clock, so the server renders a blank of
  * the same shape and the client fills it in after hydration; nothing shifts.
+ * The blank's sample text lives in a data attribute drawn by CSS, not in the
+ * HTML text: crawlers and answer engines read the server HTML, and they
+ * were picking up a made-up date and "34°F and partly cloudy" as facts.
  */
 export function LocalClock() {
   const [now, setNow] = useState<Date | null>(null);
@@ -62,13 +65,9 @@ export function LocalClock() {
 
   if (!now) {
     return (
-      <p className="local-clock" aria-hidden="true">
-        <span className="invisible">
-          Wednesday, September 30
-          <br />
-          Utah, 10:00:00 AM
-        </span>
-        <span className="local-weather invisible">34°F and partly cloudy</span>
+      <p className="local-clock" aria-hidden="true" data-nosnippet="">
+        <span className="local-clock-blank invisible" data-shape={"Wednesday, September 30\nUtah, 10:00:00 AM"} />
+        <span className="local-weather local-clock-blank invisible" data-shape="34°F and partly cloudy" />
       </p>
     );
   }
@@ -84,12 +83,11 @@ export function LocalClock() {
         // Kept invisible (same shape) until the weather arrives, so the line
         // doesn't pop in and push things down.
         <span
-          className={weather ? "local-weather" : "local-weather invisible"}
+          className={weather ? "local-weather" : "local-weather local-clock-blank invisible"}
           aria-hidden={weather ? undefined : true}
+          data-shape={weather ? undefined : "34°F and partly cloudy"}
         >
-          {weather
-            ? `${weather.temperature}°F${weather.conditions ? ` and ${weather.conditions}` : ""}`
-            : "34°F and partly cloudy"}
+          {weather && `${weather.temperature}°F${weather.conditions ? ` and ${weather.conditions}` : ""}`}
         </span>
       )}
     </p>

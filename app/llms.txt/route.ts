@@ -2,6 +2,7 @@ import { getPosts } from "@/lib/blog";
 import { EDUCATION, EMAIL, EXPERIENCE, PROFILES, RESUME, SITE_DESCRIPTION, absoluteUrl } from "@/lib/site";
 import { publishedCaseStudies } from "@/lib/published";
 import { loadCaseStudy } from "@/lib/work";
+import { caseStudySource, durationSeconds, mediaInSource } from "@/lib/media";
 
 /*
  * /llms.txt (https://llmstxt.org): a plain Markdown summary of the site for
@@ -13,6 +14,16 @@ export async function GET() {
     publishedCaseStudies().map(async (c) => ({ ...c, meta: (await loadCaseStudy(c.slug)).meta })),
   );
   const known = (v: string) => !v.startsWith("TODO");
+  // Every video on the site, with the page it sits on, since a model can't
+  // watch them and the page copy only hints at what's in each one.
+  const videos = [
+    ...caseStudies.map((c) => ({ page: `/work/${c.slug}`, videos: mediaInSource(caseStudySource(c.slug)).videos })),
+    ...getPosts().map((p) => ({ page: `/blog/${p.slug}`, videos: mediaInSource(p.source).videos })),
+  ].flatMap(({ page, videos }) => videos.map((v) => ({ page, ...v })));
+  const length = (iso?: string) => {
+    const s = durationSeconds(iso);
+    return s ? `, ${s >= 60 ? `${Math.floor(s / 60)} min ${s % 60} s` : `${s} s`}` : "";
+  };
   const tagList = (tags: readonly string[] | undefined) => (tags?.length ? ` Tags: ${tags.join(", ")}.` : "");
   const lines = [
     "# Ryker Marble",
@@ -37,6 +48,16 @@ export async function GET() {
             const details = [meta.role, meta.client, meta.year].filter(known).join(", ");
             return `- [${meta.seoTitle ?? meta.title}](${absoluteUrl(`/work/${slug}`)}) (${area}; ${details}): ${meta.summary}${tagList(meta.tags)}`;
           }),
+          "",
+        ]
+      : []),
+    ...(videos.length
+      ? [
+          "## Videos",
+          "",
+          ...videos.map(
+            (v) => `- [${v.title}](${absoluteUrl(v.page)}) (${v.youtubeId ? "YouTube" : "video"}${length(v.duration)}): ${v.description}`,
+          ),
           "",
         ]
       : []),

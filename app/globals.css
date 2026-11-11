@@ -148,6 +148,13 @@ a.name-time-name:focus-visible {
 }
 
 /* Logan's weather under the time, smaller and gray (LocalClock.tsx). */
+/* LocalClock's same-shape blank: sample text drawn from data-shape, so it
+   isn't in the HTML for crawlers to read. */
+.local-clock-blank::before {
+  content: attr(data-shape);
+  white-space: pre;
+}
+
 .local-weather {
   display: block;
   margin-top: 0.5em;
