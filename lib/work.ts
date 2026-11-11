@@ -9,14 +9,18 @@ import type { MDXContent } from "mdx/types";
  * `{ slug: "email", label: "EMAIL" }` after EDITORIAL.
  */
 export const CASE_STUDIES = [
-  { slug: "hackathon", label: "EVENT BRANDING", name: "Lucid Hackathon", area: "Event branding" },
+  // Ordered so the flagship work comes first: the system other teams build
+  // on, the most original identity, then the launch with real numbers.
   { slug: "tron", label: "BRAND GUIDES", name: "TRON DAO", area: "Brand development" },
+  { slug: "hackathon", label: "EVENT BRANDING", name: "Lucid Hackathon", area: "Event branding" },
+  { slug: "lately-at-lucid", label: "PRODUCT LAUNCH", name: "Lately @ Lucid", area: "Launch campaign" },
+  { slug: "this-site", label: "DESIGN SYSTEM", name: "heyryker.com", area: "Brand system for an AI agent" },
   { slug: "ai-transformation", label: "BRAND FILM", name: "Lucid AI film", area: "Art direction" },
-  { slug: "editorial", label: "EDITORIAL", name: "SixFifty", area: "Editorial design" },
   // Motion was one study until 2026-11-11; it is now split by client.
   // /work/motion redirects to the TRON one (next.config.ts).
   { slug: "tron-partner-ads", label: "PARTNER ADS", name: "TRON DAO", area: "Motion art direction" },
   { slug: "lucid-suite", label: "PRODUCT VIDEO", name: "Lucid Suite", area: "Motion art direction" },
+  { slug: "editorial", label: "EDITORIAL", name: "SixFifty", area: "Editorial design" },
 ] as const;
 
 export type CaseStudySlug = (typeof CASE_STUDIES)[number]["slug"];

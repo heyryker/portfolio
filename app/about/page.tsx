@@ -65,8 +65,9 @@ export default function AboutPage() {
         <div className="mt-11 grid gap-11 md:grid-cols-[1fr_264px]">
           <div className="space-y-4 text-lg leading-relaxed">
             <p>
-              I&rsquo;m a senior brand designer and art director. I build brand systems and keep them
-              working at scale for enterprise SaaS and Web3 teams. Currently at{" "}
+              I&rsquo;m a senior brand designer and art director with eight years in brand design. I
+              build brand systems and keep them working at scale for enterprise SaaS and Web3 teams.
+              Currently at{" "}
               <a
                 href="https://lucid.co"
                 target="_blank"
@@ -81,7 +82,23 @@ export default function AboutPage() {
               I make complex things simple, and I go looking for the idea nobody expected. That&rsquo;s
               how I approach brand guidelines, campaigns, events and the videos that bring them to life.
             </p>
-            <p className="text-muted">Based in Utah.</p>
+            <p>
+              I take work from the first pitch, sometimes straight to the C-suite, to the system other people build
+              from: guidelines other teams use on their own, templates an agency can produce at scale and
+              storyboards a motion team can run with.
+            </p>
+            <p>
+              Lately I&rsquo;ve taught myself to design with AI: Midjourney backdrops for{" "}
+              <Link href="/work/ai-transformation" className="underline decoration-grid underline-offset-4 transition-colors hover:marker focus-visible:marker">
+                a film shot on an LED stage
+              </Link>
+              , and{" "}
+              <Link href="/work/this-site" className="underline decoration-grid underline-offset-4 transition-colors hover:marker focus-visible:marker">
+                this site
+              </Link>
+              , built by writing its brand system for an AI agent.
+            </p>
+            <p className="text-muted">Based in Utah. Open to relocating.</p>
             <div className="flex flex-wrap gap-3 pt-3">
               {/* Gray pills, the same as the landing's Resume pill (.menu-pill). */}
               <a href={RESUME} download="Ryker-Marble-Resume.pdf" className="menu-pill gap-[0.4em]">

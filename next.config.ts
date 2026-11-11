@@ -19,7 +19,11 @@ const nextConfig: NextConfig = {
   // videos. Old links land on the TRON one, which had most of the old page.
   // Not permanent, so browsers don't cache it if the slug is ever reused.
   async redirects() {
-    return [{ source: "/work/motion", destination: "/work/tron-partner-ads", permanent: false }];
+    return [
+      { source: "/work/motion", destination: "/work/tron-partner-ads", permanent: false },
+      // Lately @ Lucid moved from the blog to the case studies on 2026-11-11.
+      { source: "/blog/lately-at-lucid", destination: "/work/lately-at-lucid", permanent: false },
+    ];
   },
   partialPrefetching: true,
   // Case studies (and later the blog) are MDX files in /content, imported by
