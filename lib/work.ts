@@ -11,8 +11,10 @@ import type { MDXContent } from "mdx/types";
 export const CASE_STUDIES = [
   { slug: "hackathon", label: "EVENT BRANDING", name: "Lucid Hackathon", area: "Event branding" },
   { slug: "tron", label: "BRAND GUIDES", name: "TRON DAO", area: "Brand development" },
-  { slug: "motion", label: "MOTION", name: "TRON DAO & Lucid", area: "Motion art direction" },
+  { slug: "ai-transformation", label: "BRAND FILM", name: "Lucid AI film", area: "Art direction" },
   { slug: "editorial", label: "EDITORIAL", name: "SixFifty", area: "Editorial design" },
+  // The general Motion study sits last now that the AI film leads the video work.
+  { slug: "motion", label: "MOTION", name: "TRON DAO & Lucid", area: "Motion art direction" },
 ] as const;
 
 export type CaseStudySlug = (typeof CASE_STUDIES)[number]["slug"];
