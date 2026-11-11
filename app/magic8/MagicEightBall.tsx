@@ -90,7 +90,7 @@ export function MagicEightBall() {
     if (i === last.current) i = (i + 1 + Math.floor(Math.random() * (FORTUNES.length - 1))) % FORTUNES.length;
     last.current = i;
     setPhase("sinking");
-    const sink = reduced ? 250 : 900;
+    const sink = reduced ? 250 : 1000;
     timers.current.push(
       window.setTimeout(() => {
         setText(FORTUNES[i]);
@@ -115,7 +115,7 @@ export function MagicEightBall() {
       >
         <span className="m8-gloss" aria-hidden="true" />
         <span className={`m8-window ${phase === "sinking" ? "m8-shake" : ""}`} aria-hidden="true">
-          <span className={`m8-die ${hidden ? "m8-die-hidden" : ""} ${phase === "rising" ? "m8-no-transition" : ""}`}>
+          <span className={`m8-die ${hidden ? "m8-die-hidden" : ""} ${phase === "rising" ? "m8-die-rising" : ""}`}>
             <svg viewBox="0 0 100 88" className="m8-triangle">
               <defs>
                 <linearGradient id="m8-face" x1="0" y1="0" x2="0" y2="1">
