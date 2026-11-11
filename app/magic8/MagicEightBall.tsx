@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./magic8.css";
 
-// Short, silly fortunes, sized to fit the triangle (about 40 characters at most).
+// Short, silly fortunes (bad luck, then good luck), sized to fit the triangle (about 40 characters at most).
 const FORTUNES = [
   "Your wifi will go out at the worst time",
   "You will step in something wet. In socks",
@@ -45,6 +45,27 @@ const FORTUNES = [
   "The group chat is talking about you",
   "Ask again after coffee",
   "Outlook hazy. Wifi hazier",
+  // The good ones.
+  "You'll find $20 in an old jacket",
+  "Every light will be green today",
+  "Your fries will come with extras",
+  "You'll get the spot right by the door",
+  "Your hair will look great all day",
+  "A dog will choose you at the park",
+  "The barista will spell your name right",
+  "Your package arrives a day early",
+  "You'll get the last slice. Guilt free",
+  "Your playlist will read the room",
+  "A nap will fix everything",
+  "You'll catch the elevator just in time",
+  "Your phone will hit 100% right on time",
+  "Someone will laugh at your joke. Hard",
+  "Your plants will forgive you",
+  "The wifi will be strong wherever you go",
+  "You'll nail the parallel park first try",
+  "Free samples are in your future",
+  "Your inbox will hit zero. Briefly",
+  "Today your socks will match",
 ];
 
 type Phase = "idle" | "sinking" | "rising" | "shown";
