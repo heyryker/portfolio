@@ -19,6 +19,12 @@ type SlideProps = {
   caption?: string;
   width?: number;
   height?: number;
+  /**
+   * "contain" shows the whole image inside the frame on the gray card
+   * instead of cropping it to 16:10. For images far from 16:10, like a
+   * wide banner, where full bleed would cut off most of the piece.
+   */
+  fit?: "cover" | "contain";
 };
 
 function Caption({ children }: { children?: React.ReactNode }) {
@@ -26,7 +32,15 @@ function Caption({ children }: { children?: React.ReactNode }) {
 }
 
 /** One image in the gallery, filling the gallery's frame. */
-export function ImageSlide({ src, alt, caption, width = 2400, height = 1350, priority }: SlideProps & { priority?: boolean }) {
+export function ImageSlide({
+  src,
+  alt,
+  caption,
+  width = 2400,
+  height = 1350,
+  fit = "cover",
+  priority,
+}: SlideProps & { priority?: boolean }) {
   return (
     <figure className="project-slide">
       {src ? (
@@ -38,7 +52,7 @@ export function ImageSlide({ src, alt, caption, width = 2400, height = 1350, pri
           priority={priority}
           // The right column is 60% of a wide screen, all of a phone's.
           sizes="(min-width: 1024px) 60vw, 100vw"
-          className="project-slide-media"
+          className={`project-slide-media${fit === "contain" ? " project-slide-contain" : ""}`}
         />
       ) : (
         <Placeholder label={alt.replace(/^TODO\(ryker\):\s*/i, "")} className="project-slide-media" />
@@ -46,6 +60,15 @@ export function ImageSlide({ src, alt, caption, width = 2400, height = 1350, pri
       <Caption>{caption}</Caption>
     </figure>
   );
+}
+
+/**
+ * A blog gallery with `slide="row"` becomes one slide with its figures side
+ * by side, whole, rather than one tall phone story per slide cropped to 16:10.
+ */
+function GallerySlide({ children, slide }: { children?: React.ReactNode; slide?: "row" }) {
+  if (slide !== "row") return <Fragment>{children}</Fragment>;
+  return <div className="project-slide project-slide-row">{children}</div>;
 }
 
 function VideoSlide({ src, poster, alt, caption }: SlideProps & { poster?: string }) {
@@ -104,7 +127,7 @@ export const slideComponents: MDXComponents = {
   // Groups of figures (case study pairs, blog galleries) just add their
   // figures to the strip.
   Pair: passThrough,
-  Gallery: passThrough,
+  Gallery: GallerySlide,
   Results: nothing,
   Todo: nothing,
 };

@@ -18,7 +18,7 @@ export function ProjectGallery({ label, children }: { label: string; children: R
     const strip = ref.current;
     if (!strip) return;
     const update = () => {
-      const slides = strip.querySelectorAll(".project-slide").length;
+      const slides = strip.querySelectorAll(":scope > .project-slide").length;
       setCount(slides);
       setIndex(Math.min(slides - 1, Math.round(strip.scrollLeft / Math.max(1, strip.clientWidth))));
     };

@@ -25,6 +25,8 @@ type FigureProps = {
   caption?: string;
   /** Keep a tall image at the text column's width so it doesn't fill several screens. */
   narrow?: boolean;
+  /** Only used in the project strip: show the whole image there instead of cropping it (see ImageSlide). */
+  fit?: "cover" | "contain";
 };
 
 /** An image at the full width of the post, with an optional caption. */
@@ -51,7 +53,7 @@ function Figure({ src, alt, width, height, caption, narrow }: FigureProps) {
  */
 const GALLERY_GRID = { 2: "sm:grid-cols-2", 3: "sm:grid-cols-3", 4: "grid-cols-2 sm:grid-cols-4" } as const;
 
-function Gallery({ children, cols = 2 }: { children: React.ReactNode; cols?: 2 | 3 | 4 }) {
+function Gallery({ children, cols = 2 }: { children: React.ReactNode; cols?: 2 | 3 | 4; slide?: "row" }) {
   const grid = GALLERY_GRID[cols];
   return <div className={`blog-gallery my-11 grid gap-[22px] ${grid}`}>{children}</div>;
 }
