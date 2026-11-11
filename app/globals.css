@@ -414,6 +414,34 @@ a.name-time-name:focus-visible {
   object-fit: cover;
 }
 
+/* fit="contain": the whole image, centered on the gray card, for pieces
+   too far from 16:10 to crop (wide banners, a pop-up). */
+.project-slide-contain {
+  object-fit: contain;
+  padding: 6%;
+}
+
+/* Gallery slide="row": phone stories side by side in one 16:10 slide. */
+.project-slide-row {
+  display: flex;
+  gap: 3%;
+  aspect-ratio: 16 / 10;
+  padding: 5% 6%;
+}
+
+.project-slide-row > .project-slide {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  scroll-snap-align: none;
+}
+
+.project-slide-row .project-slide-media {
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: contain;
+}
+
 .project-slide-video {
   position: relative;
 }
