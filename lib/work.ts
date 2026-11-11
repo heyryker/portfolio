@@ -6,15 +6,17 @@ import type { MDXContent } from "mdx/types";
  *
  * Hidden until it has real copy and images: EMAIL (content/work/email.mdx is
  * still all TODO(ryker)). To bring it back, add
- * `{ slug: "email", label: "EMAIL" }` between MOTION and EDITORIAL.
+ * `{ slug: "email", label: "EMAIL" }` after EDITORIAL.
  */
 export const CASE_STUDIES = [
   { slug: "hackathon", label: "EVENT BRANDING", name: "Lucid Hackathon", area: "Event branding" },
   { slug: "tron", label: "BRAND GUIDES", name: "TRON DAO", area: "Brand development" },
   { slug: "ai-transformation", label: "BRAND FILM", name: "Lucid AI film", area: "Art direction" },
   { slug: "editorial", label: "EDITORIAL", name: "SixFifty", area: "Editorial design" },
-  // The general Motion study sits last now that the AI film leads the video work.
-  { slug: "motion", label: "MOTION", name: "TRON DAO & Lucid", area: "Motion art direction" },
+  // Motion was one study until 2026-11-11; it is now split by client.
+  // /work/motion redirects to the TRON one (next.config.ts).
+  { slug: "tron-partner-ads", label: "PARTNER ADS", name: "TRON DAO", area: "Motion art direction" },
+  { slug: "lucid-suite", label: "PRODUCT VIDEO", name: "Lucid Suite", area: "Motion art direction" },
 ] as const;
 
 export type CaseStudySlug = (typeof CASE_STUDIES)[number]["slug"];
