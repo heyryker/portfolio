@@ -69,20 +69,20 @@ export function MagicEightBall() {
       <button
         type="button"
         onClick={ask}
-        className={`m8-ball ${phase === "sinking" ? "m8-shake" : ""}`}
+        className="m8-ball"
         aria-label={asked ? "Ask again" : "Tap to start"}
       >
         <span className="m8-gloss" aria-hidden="true" />
-        <span className="m8-window" aria-hidden="true">
+        <span className={`m8-window ${phase === "sinking" ? "m8-shake" : ""}`} aria-hidden="true">
           <span className={`m8-die ${hidden ? "m8-die-hidden" : ""} ${phase === "rising" ? "m8-no-transition" : ""}`}>
             <svg viewBox="0 0 100 88" className="m8-triangle">
               <defs>
                 <linearGradient id="m8-face" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#3f6ff0" />
-                  <stop offset="1" stopColor="#1d3fb0" />
+                  <stop offset="0" stopColor="#e4d4ff" />
+                  <stop offset="1" stopColor="#b994f5" />
                 </linearGradient>
               </defs>
-              <polygon points="50,3 97,85 3,85" fill="url(#m8-face)" stroke="#7fa6ff" strokeOpacity="0.35" strokeWidth="1.2" strokeLinejoin="round" />
+              <polygon points="50,3 97,85 3,85" fill="url(#m8-face)" stroke="#f3ebff" strokeOpacity="0.5" strokeWidth="1.2" strokeLinejoin="round" />
             </svg>
             <span className="m8-answer">{text}</span>
           </span>

@@ -19,48 +19,46 @@
   user-select: none;
 }
 
+/* The ball fills the whole screen: you're looking straight into it, so the
+   purple glass gradient runs edge to edge with the window in the middle. */
 .m8-ball {
   --size: min(82vmin, 600px);
-  position: relative;
+  position: absolute;
+  inset: 0;
   display: grid;
   place-items: center;
-  width: var(--size);
-  height: var(--size);
-  border-radius: 50%;
+  width: 100%;
+  height: 100%;
   cursor: pointer;
-  /* Purple glass: a bright core falling off to deep violet at the rim. */
+  /* Purple glass: a bright sheen up top left, a violet core round the window
+     falling off to deep violet at the screen's corners. */
   background:
-    radial-gradient(circle at 38% 30%, rgba(214, 180, 255, 0.55) 0%, rgba(160, 100, 245, 0.35) 14%, transparent 40%),
-    radial-gradient(circle at 50% 55%, #6b2fc9 0%, #4c1a9a 38%, #2d0b63 66%, #170437 100%);
+    radial-gradient(ellipse 60% 45% at 26% 18%, rgba(214, 180, 255, 0.42) 0%, rgba(160, 100, 245, 0.22) 35%, transparent 70%),
+    radial-gradient(circle farthest-corner at 50% 52%, #7a3ad8 0%, #5a20b0 22%, #3c1182 45%, #22075a 70%, #12032e 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(230, 210, 255, 0.18),
-    inset 0 -24px 60px rgba(10, 0, 30, 0.65),
-    inset 0 18px 40px rgba(200, 160, 255, 0.18),
-    0 0 80px 10px rgba(120, 60, 220, 0.28),
-    0 30px 80px rgba(0, 0, 0, 0.55);
-  transition: transform 0.2s ease;
-}
-
-.m8-ball:hover {
-  transform: scale(1.01);
+    inset 0 0 160px 40px rgba(8, 0, 24, 0.55);
 }
 
 .m8-ball:focus-visible {
-  outline: 3px solid #9fc0ff;
-  outline-offset: 8px;
+  outline: none;
 }
 
-/* The glassy reflection along the top left of the ball. */
+.m8-ball:focus-visible .m8-window {
+  outline: 3px solid #d7c2ff;
+  outline-offset: calc(var(--size) * 0.04);
+}
+
+/* A glassy reflection across the top left of the screen. */
 .m8-gloss {
   position: absolute;
-  top: 6%;
-  left: 14%;
-  width: 46%;
-  height: 26%;
+  top: 4%;
+  left: 8%;
+  width: 44%;
+  height: 22%;
   border-radius: 50%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0));
-  transform: rotate(-24deg);
-  filter: blur(2px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0));
+  transform: rotate(-18deg);
+  filter: blur(14px);
   pointer-events: none;
 }
 
@@ -69,15 +67,15 @@
   position: relative;
   display: grid;
   place-items: center;
-  width: 52%;
-  height: 52%;
+  width: calc(var(--size) * 0.52);
+  height: calc(var(--size) * 0.52);
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, #0d1a4a 0%, #0a0b2e 45%, #07041a 80%);
+  background: radial-gradient(circle at 50% 50%, #1c0b46 0%, #0f0629 45%, #07031a 80%);
   box-shadow:
     0 0 0 calc(var(--size) * 0.018) #1a0540,
     0 0 0 calc(var(--size) * 0.026) rgba(190, 150, 255, 0.25),
     inset 0 10px 30px rgba(0, 0, 0, 0.85),
-    inset 0 -6px 20px rgba(80, 120, 255, 0.12);
+    inset 0 -6px 20px rgba(170, 120, 255, 0.14);
   overflow: hidden;
 }
 
@@ -114,7 +112,7 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 0 10px rgba(70, 120, 255, 0.45));
+  filter: drop-shadow(0 0 12px rgba(200, 170, 255, 0.5));
 }
 
 .m8-answer {
@@ -129,16 +127,21 @@
   letter-spacing: 0.06em;
   text-align: center;
   text-transform: uppercase;
-  color: #e2ecff;
-  text-shadow: 0 0 6px rgba(150, 190, 255, 0.6);
+  color: #2a0b5e;
   text-wrap: balance;
 }
 
 .m8-hint {
+  position: absolute;
+  bottom: max(28px, env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  margin: 0;
+  pointer-events: none;
   font-family: var(--font-inter), system-ui, sans-serif;
   font-size: 14px;
   letter-spacing: 0.02em;
-  color: rgba(205, 184, 245, 0.6);
+  color: rgba(225, 208, 255, 0.7);
   text-align: center;
   padding: 0 16px;
 }
@@ -159,5 +162,4 @@
 @media (prefers-reduced-motion: reduce) {
   .m8-shake { animation: none; }
   .m8-die, .m8-die-hidden { transform: none; filter: none; transition-duration: 0.25s; }
-  .m8-ball:hover { transform: none; }
 }
