@@ -4,6 +4,7 @@ import { BlogPost } from "@/components/blog/BlogPost";
 import { JsonLd } from "@/components/JsonLd";
 import { WipeOnLeave } from "@/components/work/WipeOnLeave";
 import { getPost, getPosts } from "@/lib/blog";
+import { imageObject, mediaInSource, videoObject } from "@/lib/media";
 import { SITE_NAME, SITE_URL, WEBSITE_ID, absoluteUrl, pageKeywords, pageMetadata, person } from "@/lib/site";
 
 export function generateStaticParams() {
@@ -34,6 +35,7 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
   const post = getPost(slug);
   if (!post) notFound();
   const url = absoluteUrl(`/blog/${slug}`);
+  const { images, videos } = mediaInSource(post.source);
 
   return (
     <>
@@ -48,7 +50,13 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
               headline: post.title,
               description: post.summary,
               datePublished: post.date,
-              image: absoluteUrl(post.cover),
+              // The cover first (what share cards and image results lead
+              // with), then every image in the post with its alt text.
+              image: [
+                imageObject({ src: post.cover, alt: post.coverAlt }),
+                ...images.filter((i) => i.src !== post.cover).map(imageObject),
+              ],
+              ...(videos.length && { video: videos.map(videoObject) }),
               keywords: post.tags.join(", "),
               about: post.tags.map((name) => ({ "@type": "Thing", name })),
               inLanguage: "en-US",

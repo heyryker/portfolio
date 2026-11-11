@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { JsonLd } from "@/components/JsonLd";
+import { caseStudySource, imageObject, mediaInSource, videoObject } from "@/lib/media";
 import { CaseStudy } from "@/components/work/CaseStudy";
 import { WipeOnLeave } from "@/components/work/WipeOnLeave";
 import { SITE_NAME, SITE_URL, WEBSITE_ID, absoluteUrl, pageKeywords, pageMetadata, person } from "@/lib/site";
@@ -48,6 +49,7 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
   const { meta } = await loadCaseStudy(slug);
   const url = absoluteUrl(`/work/${slug}`);
   const image = heroImage(meta.hero);
+  const { images, videos } = mediaInSource(caseStudySource(slug));
   // Leave TODO placeholders out of the structured data.
   const known = (value: string) => (value.startsWith("TODO") ? undefined : value);
 
@@ -70,7 +72,13 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
                 about: meta.tags.map((name) => ({ "@type": "Thing", name })),
               }),
               ...(known(meta.role) && { creditText: `${person.name}, ${meta.role}` }),
-              ...(image && { image: absoluteUrl(image) }),
+              // The hero first, then every image on the page with its alt
+              // text, so image search and answer engines know what each shows.
+              image: [
+                ...(image ? [imageObject({ src: image, alt: meta.hero?.alt ?? meta.title })] : []),
+                ...images.filter((i) => i.src !== image).map(imageObject),
+              ],
+              ...(videos.length && { video: videos.map(videoObject) }),
               ...(known(meta.client) && {
                 sourceOrganization: meta.client.split(", ").map((name) => ({ "@type": "Organization", name })),
               }),
