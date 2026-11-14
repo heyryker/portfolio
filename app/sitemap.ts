@@ -47,7 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     { url: absoluteUrl("/"), changeFrequency: "monthly", priority: 1 },
     ...caseStudies,
-    { url: absoluteUrl("/about"), changeFrequency: "monthly", priority: 0.8, images: [absoluteUrl("/ryker-marble.jpg")] },
+    { url: absoluteUrl("/about"), changeFrequency: "monthly", priority: 0.8, images: [absoluteUrl("/ryker-marble.webp")] },
     { url: absoluteUrl("/blog"), lastModified: posts[0]?.date, changeFrequency: "monthly", priority: 0.6 },
     ...posts.map((post) => {
       const { images, videos } = mediaInSource(post.source);
