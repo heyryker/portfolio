@@ -29,11 +29,9 @@ const timeFormat = new Intl.DateTimeFormat("en-US", {
  * Under it, smaller and gray, the weather in Logan, where I live.
  *
  * Hovering the block (or tapping it on a phone) swaps the date and time for
- * "Open to relocation" with the yellow highlighter, and the weather line
- * flips through the cities I'd move to, each with its own weather. The
- * yellow is the marker bar behind ink text, not yellow text: yellow letters
- * on white can't be read (see the accent note in globals.css). Screen
- * readers get the same news as a sentence, without needing the hover.
+ * "Open to relocation" in yellow, and the weather line flips through the
+ * cities I'd move to, each with its own weather. Screen readers get the same
+ * news as a sentence, without needing the hover.
  *
  * The time depends on the visitor's clock, so the server renders a blank of
  * the same shape and the client fills it in after hydration; nothing shifts.

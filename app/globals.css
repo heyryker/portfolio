@@ -189,13 +189,12 @@ a.name-time-name:focus-visible {
   opacity: 1;
 }
 
-/* The yellow highlighter, the same bar as the hover marker on links. */
+/* "Open to relocation" in the yellow accent itself. Yellow text on white is
+   low contrast, which the rest of the site avoids (see --color-accent), but
+   Ryker wants this one note in yellow; it's big type and screen readers get
+   the same news from the sr-only sentence in LocalClock.tsx. */
 .local-clock-marker {
-  text-decoration-line: underline;
-  text-decoration-color: var(--color-accent);
-  text-decoration-thickness: 0.32em;
-  text-underline-offset: -0.14em;
-  text-decoration-skip-ink: none;
+  color: var(--color-accent);
 }
 
 /* Each city fades in as the weather line flips to it. */
