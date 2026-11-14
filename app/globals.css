@@ -163,6 +163,64 @@ a.name-time-name:focus-visible {
   color: var(--color-muted);
 }
 
+/* Hovering the clock (tapping on phones) swaps the date and time for "Open to
+   relocation" in the same spot: both sit in one grid cell, so the box keeps
+   the clock's size and nothing below moves. */
+.local-clock-swap {
+  display: grid;
+}
+
+.local-clock-now,
+.local-clock-relocate {
+  grid-area: 1 / 1;
+  transition: opacity 180ms ease;
+}
+
+.local-clock-relocate {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.local-clock[data-relocating] .local-clock-now {
+  opacity: 0;
+}
+
+.local-clock[data-relocating] .local-clock-relocate {
+  opacity: 1;
+}
+
+/* "Open to relocation" in the yellow accent itself. Yellow text on white is
+   low contrast, which the rest of the site avoids (see --color-accent), but
+   Ryker wants this one note in yellow; it's big type and screen readers get
+   the same news from the sr-only sentence in LocalClock.tsx. */
+.local-clock-marker {
+  color: var(--color-accent);
+}
+
+/* Each city fades in as the weather line flips to it. */
+.local-weather-city {
+  display: inline-block;
+  animation: local-weather-flip 260ms ease;
+}
+
+@keyframes local-weather-flip {
+  from {
+    opacity: 0;
+    transform: translateY(0.35em);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .local-clock-now,
+  .local-clock-relocate {
+    transition: none;
+  }
+
+  .local-weather-city {
+    animation: none;
+  }
+}
+
 /* The resume pill under my name and time. */
 .landing-actions {
   display: flex;
