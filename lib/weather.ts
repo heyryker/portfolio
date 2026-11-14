@@ -1,4 +1,5 @@
 import { cacheLife } from "next/cache";
+import { RELOCATION_CITIES } from "@/lib/relocation";
 
 /** Logan, Utah (Cache Valley), where I live. */
 const LOGAN = { latitude: 41.737, longitude: -111.834 };
@@ -33,38 +34,62 @@ function describe(code: number, isDay: boolean): string {
   return "";
 }
 
+export type CityWeather = LoganWeather & { name: string };
+
+export type SiteWeather = LoganWeather & {
+  /** Same order as RELOCATION_CITIES; a city Open-Meteo skipped is left out. */
+  cities: CityWeather[];
+};
+
+type OpenMeteoCurrent = {
+  current?: { temperature_2m?: number; weather_code?: number; is_day?: number };
+};
+
+function read(data: OpenMeteoCurrent | undefined): LoganWeather | null {
+  const current = data?.current;
+  if (typeof current?.temperature_2m !== "number" || typeof current.weather_code !== "number") {
+    return null;
+  }
+  return {
+    temperature: Math.round(current.temperature_2m),
+    conditions: describe(current.weather_code, current.is_day !== 0),
+  };
+}
+
 /**
- * Current weather in Logan from Open-Meteo (free, no key). Cached on the
- * server so Open-Meteo is asked at most every 15 minutes no matter how many
- * people visit; every visitor in between gets the cached answer. Returns
- * null when Open-Meteo can't be reached, and the line under my name simply
- * leaves the weather out.
+ * Current weather in Logan, plus the relocation cities, from Open-Meteo
+ * (free, no key) in one request: Open-Meteo takes a list of coordinates and
+ * answers with a list. Cached on the server so Open-Meteo is asked at most
+ * every 15 minutes no matter how many people visit; every visitor in between
+ * gets the cached answer. Returns null when Open-Meteo can't be reached (or
+ * has nothing for Logan), and the line under my name simply leaves the
+ * weather out.
  */
-export async function getLoganWeather(): Promise<LoganWeather | null> {
+export async function getSiteWeather(): Promise<SiteWeather | null> {
   "use cache";
   cacheLife({ stale: 300, revalidate: 900, expire: 86_400 });
 
+  const places = [LOGAN, ...RELOCATION_CITIES];
   const url = new URL("https://api.open-meteo.com/v1/forecast");
-  url.searchParams.set("latitude", String(LOGAN.latitude));
-  url.searchParams.set("longitude", String(LOGAN.longitude));
+  url.searchParams.set("latitude", places.map((place) => place.latitude).join(","));
+  url.searchParams.set("longitude", places.map((place) => place.longitude).join(","));
   url.searchParams.set("current", "temperature_2m,weather_code,is_day");
   url.searchParams.set("temperature_unit", "fahrenheit");
-  url.searchParams.set("timezone", "America/Denver");
+  url.searchParams.set("timezone", "auto");
 
   try {
     const response = await fetch(url, { signal: AbortSignal.timeout(4000) });
     if (!response.ok) return null;
-    const data = (await response.json()) as {
-      current?: { temperature_2m?: number; weather_code?: number; is_day?: number };
-    };
-    const current = data.current;
-    if (typeof current?.temperature_2m !== "number" || typeof current.weather_code !== "number") {
-      return null;
-    }
-    return {
-      temperature: Math.round(current.temperature_2m),
-      conditions: describe(current.weather_code, current.is_day !== 0),
-    };
+    const data = (await response.json()) as OpenMeteoCurrent | OpenMeteoCurrent[];
+    const list = Array.isArray(data) ? data : [data];
+    const logan = read(list[0]);
+    if (!logan) return null;
+    const cities: CityWeather[] = [];
+    RELOCATION_CITIES.forEach((city, i) => {
+      const weather = read(list[i + 1]);
+      if (weather) cities.push({ name: city.name, ...weather });
+    });
+    return { ...logan, cities };
   } catch {
     return null;
   }
