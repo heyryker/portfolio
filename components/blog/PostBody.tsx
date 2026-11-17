@@ -27,6 +27,8 @@ type FigureProps = {
   narrow?: boolean;
   /** Only used in the project strip: show the whole image there instead of cropping it (see ImageSlide). */
   fit?: "cover" | "contain";
+  /** Only used in the project strip: extend the image's background to fill the frame (see ImageSlide). */
+  bg?: string;
 };
 
 /** An image at the full width of the post, with an optional caption. */

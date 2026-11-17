@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Fragment } from "react";
 import { LazyVideo } from "@/components/work/LazyVideo";
 import { Placeholder } from "@/components/work/Placeholder";
+import { SlideZoom } from "./SlideZoom";
 
 /*
  * The top of a project screen (components/project/ProjectView.tsx) shows
@@ -25,6 +26,14 @@ type SlideProps = {
    * wide banner, where full bleed would cut off most of the piece.
    */
   fit?: "cover" | "contain";
+  /**
+   * Extends the image's own background to fill the frame instead of
+   * cropping: the whole image, centered, on this color (or any CSS
+   * background, e.g. a two-tone gradient when the top and bottom edges
+   * differ). For pieces on a flat background, like guideline pages and
+   * screenshots, where a crop would cut off text at the edges.
+   */
+  bg?: string;
 };
 
 function Caption({ children }: { children?: React.ReactNode }) {
@@ -39,21 +48,26 @@ export function ImageSlide({
   width = 2400,
   height = 1350,
   fit = "cover",
+  bg,
   priority,
 }: SlideProps & { priority?: boolean }) {
+  const frame = bg ? " project-slide-extend" : fit === "contain" ? " project-slide-contain" : "";
   return (
     <figure className="project-slide">
       {src ? (
-        <Image
-          src={src}
-          alt={alt}
-          width={width}
-          height={height}
-          priority={priority}
-          // The right column is 60% of a wide screen, all of a phone's.
-          sizes="(min-width: 1024px) 60vw, 100vw"
-          className={`project-slide-media${fit === "contain" ? " project-slide-contain" : ""}`}
-        />
+        <SlideZoom src={src} alt={alt}>
+          <Image
+            src={src}
+            alt={alt}
+            width={width}
+            height={height}
+            priority={priority}
+            // The right column is 60% of a wide screen, all of a phone's.
+            sizes="(min-width: 1024px) 60vw, 100vw"
+            className={`project-slide-media${frame}`}
+            style={bg ? { background: bg } : undefined}
+          />
+        </SlideZoom>
       ) : (
         <Placeholder label={alt.replace(/^TODO\(ryker\):\s*/i, "")} className="project-slide-media" />
       )}
