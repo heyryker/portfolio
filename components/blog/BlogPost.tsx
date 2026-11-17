@@ -29,6 +29,7 @@ export async function BlogPost({ post }: { post: Post }) {
             alt={post.coverAlt}
             width={post.coverWidth}
             height={post.coverHeight}
+            fit={post.coverFit}
             priority
           />
           <PostBody source={post.source} part="slides" />

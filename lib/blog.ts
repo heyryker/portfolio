@@ -24,6 +24,8 @@ type PostMeta = {
   coverAlt: string;
   coverWidth: number;
   coverHeight: number;
+  /** "contain" shows the whole cover in the project strip instead of cropping it to 16:10. */
+  coverFit?: "contain";
   /** Shown as [BRACKET] tags. */
   tags: string[];
   /** Points for the "AI summary" button (components/AiSummary.tsx). */
@@ -85,6 +87,7 @@ function readPost(slug: string): Post {
     coverAlt: str("coverAlt"),
     coverWidth: Number(str("coverWidth")),
     coverHeight: Number(str("coverHeight")),
+    ...(data.coverFit === "contain" && { coverFit: "contain" as const }),
     tags: Array.isArray(data.tags) ? data.tags : [],
     aiSummary: Array.isArray(data.aiSummary) ? data.aiSummary : [],
     source: body,

@@ -486,6 +486,67 @@ a.name-time-name:focus-visible {
   padding: 6%;
 }
 
+/* bg="…": the image's own background extended to fill the frame, so
+   nothing is cropped and the piece still reads as full bleed. */
+.project-slide-extend {
+  object-fit: contain;
+  padding: 2.5%;
+}
+
+/* Every image slide is a button that opens the image larger
+   (components/project/SlideZoom.tsx). */
+.project-slide-zoom {
+  display: block;
+  width: 100%;
+  padding: 0;
+  cursor: zoom-in;
+}
+
+.project-slide-row .project-slide-zoom {
+  height: 100%;
+}
+
+.slide-zoom {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: #fff;
+  cursor: zoom-out;
+}
+
+.slide-zoom::backdrop {
+  background: #fff;
+}
+
+.slide-zoom[open] {
+  display: grid;
+  place-items: center;
+}
+
+.slide-zoom-image {
+  width: 100%;
+  height: 100%;
+  padding: 72px 12px 12px;
+  object-fit: contain;
+}
+
+@media (min-width: 640px) {
+  .slide-zoom-image {
+    padding: 72px 72px 24px;
+  }
+}
+
+.slide-zoom .slide-zoom-close {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+}
+
 /* Gallery slide="row": phone stories side by side in one 16:10 slide. */
 .project-slide-row {
   display: flex;
@@ -532,6 +593,18 @@ a.name-time-name:focus-visible {
   font-size: 13px;
   line-height: 1.35;
   color: var(--color-ink);
+}
+
+/* On phones a floating caption covers too much of the work, so it sits
+   under the image instead. */
+@media (max-width: 639px) {
+  .project-slide-caption {
+    position: static;
+    max-width: none;
+    padding: 10px 14px 12px;
+    border-radius: 0;
+    background: none;
+  }
 }
 
 .project-gallery-controls {
