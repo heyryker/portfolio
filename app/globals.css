@@ -1085,6 +1085,12 @@ html:has(.site-menu[open]) {
   background: var(--color-accent);
 }
 
+/* On a project screen's gray panel (the copy-email pill, About's resume
+   pills), a gray pill would vanish, so it turns white there. */
+.project-panel .menu-pill:not(:hover, :focus-visible) {
+  background: #fff;
+}
+
 .menu-body {
   max-width: 760px;
   margin: 0 auto;

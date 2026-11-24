@@ -2,7 +2,7 @@ import { NameAndTime } from "@/components/NameAndTime";
 import { ProjectCards } from "@/components/ProjectCards";
 import { SiteMenu } from "@/components/SiteMenu";
 import { CloseCaseStudy } from "@/components/work/CloseCaseStudy";
-import type { ProjectCard } from "@/lib/projects";
+import { ABOUT_CARD, type ProjectCard } from "@/lib/projects";
 import { ProjectGallery } from "./ProjectGallery";
 
 /**
@@ -45,7 +45,7 @@ export function ProjectView({
           <NameAndTime />
         </div>
         <nav aria-label="All projects" className="project-side-cards">
-          <ProjectCards items={cards} current={href} scrollSelf />
+          <ProjectCards items={[ABOUT_CARD, ...cards]} current={href} scrollSelf />
         </nav>
       </aside>
       <div className="project-main">
