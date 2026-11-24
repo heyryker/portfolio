@@ -10,13 +10,12 @@ import type { MDXContent } from "mdx/types";
  */
 export const CASE_STUDIES = [
   // Ordered so the flagship work comes first: the system other teams build
-  // on, the most original identity, then the launch with real numbers.
-  // Editorial sits fourth because interviewers gravitate to it; this site's
-  // own build is last.
+  // on, the most original identity, then editorial (interviewers gravitate
+  // to it), then the launch with real numbers. This site's own build is last.
   { slug: "tron", label: "BRAND GUIDES", name: "TRON DAO", area: "Brand development" },
   { slug: "hackathon", label: "EVENT BRANDING", name: "Lucid Hackathon", area: "Event branding" },
-  { slug: "lately-at-lucid", label: "PRODUCT LAUNCH", name: "Lately @ Lucid", area: "Launch campaign" },
   { slug: "editorial", label: "EDITORIAL", name: "SixFifty", area: "Editorial design" },
+  { slug: "lately-at-lucid", label: "PRODUCT LAUNCH", name: "Lately @ Lucid", area: "Launch campaign" },
   { slug: "ai-transformation", label: "BRAND FILM", name: "Lucid AI film", area: "Art direction" },
   // Motion was one study until 2026-11-11; it is now split by client.
   // /work/motion redirects to the TRON one (next.config.ts).
