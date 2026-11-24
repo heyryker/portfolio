@@ -6,7 +6,7 @@ import { PROFILES, RESUME } from "@/lib/site";
 
 /**
  * One click listener for the whole site, so links in server components
- * (menu, footer, case studies, About) are tracked without each needing to be
+ * (footer, case studies, About) are tracked without each needing to be
  * a client component. It only reads the clicked link; it never changes or
  * delays navigation.
  */

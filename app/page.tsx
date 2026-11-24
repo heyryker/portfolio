@@ -4,7 +4,6 @@ import { RESUME, SITE_DESCRIPTION, SITE_NAME, SITE_URL, WEBSITE_ID, absoluteUrl,
 import { Icon } from "@/components/Icon";
 import { NameAndTime } from "@/components/NameAndTime";
 import { ProjectCards } from "@/components/ProjectCards";
-import { SiteMenu } from "@/components/SiteMenu";
 import { MeepleRelease } from "@/components/MeepleRelease";
 import { SiteFooter } from "@/components/SiteFooter";
 import { LandingMarker } from "@/components/work/LandingMarker";
@@ -69,9 +68,6 @@ export default async function Home() {
           ],
         }}
       />
-      <header className="landing-top">
-        <SiteMenu />
-      </header>
       <main className="landing">
         <NameAndTime heading />
         <p className="landing-actions">

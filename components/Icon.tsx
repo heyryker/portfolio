@@ -6,7 +6,6 @@
  * @material-symbols/svg-700/sharp/<name>.svg.
  */
 const PATHS = {
-  menu: "M95-203v-95h771v95H95Zm0-230v-94h771v94H95Zm0-229v-95h771v95H95Z",
   close:
     "m249-183-66-66 231-231-231-231 66-66 231 231 231-231 66 66-231 231 231 231-66 66-231-231-231 231Z",
   // Drawn to match the set (Sharp, 700): a 94-unit stem and a square-cut head.

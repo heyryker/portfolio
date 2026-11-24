@@ -3,7 +3,6 @@ import { BlogBrowser, type BlogCard } from "@/components/blog/BlogBrowser";
 import { JsonLd } from "@/components/JsonLd";
 import { NameAndTime } from "@/components/NameAndTime";
 import { SiteFooter } from "@/components/SiteFooter";
-import { SiteMenu } from "@/components/SiteMenu";
 import { LandingMarker } from "@/components/work/LandingMarker";
 import { formatDate, getPosts } from "@/lib/blog";
 import { SITE_NAME, SITE_URL, WEBSITE_ID, absoluteUrl, pageKeywords, pageMetadata, person } from "@/lib/site";
@@ -73,9 +72,6 @@ export default function BlogIndex() {
           })),
         }}
       />
-      <header className="landing-top">
-        <SiteMenu />
-      </header>
       {/* Posts open over this page, so closing one can come back here. */}
       <LandingMarker />
       <main className="blog-page">
