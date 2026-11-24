@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { MeepleRelease as Release } from "@/lib/meeple-release";
 
@@ -9,6 +10,12 @@ import { MeepleRelease as Release } from "@/lib/meeple-release";
  * pull themselves together and make a nuisance of themselves for a while
  * before running back in (lib/meeple-release.ts). Pressed again while they're
  * out, it calls them home early.
+ *
+ * While they're out, a second round button with a little pixel house pops up
+ * beside it: the way to the village (/village). It's the only way in from the
+ * site now that there's no menu, and it goes again once the cop car has
+ * brought everyone home (Ryker's call, 2026-11-24). The page itself stays
+ * live and in the sitemap.
  *
  * The meeples are decorative and drawn on a canvas that ignores the pointer,
  * so the button is the only part a keyboard or screen reader meets.
@@ -64,8 +71,26 @@ export function MeepleRelease() {
           <rect x="17" y="2" width="2" height="4" className="meeple-release-eye" />
         </svg>
       </button>
-      <span aria-hidden="true" className="meeple-release-tip">
-        {out ? "Call them home" : "Release the meeples"}
+      {out && (
+        <Link href="/village" aria-label="Visit the meeples' village" className="meeple-village-button">
+          {/* A pixel house on the meeple's 11-unit grid: stepped roof, door. */}
+          <svg viewBox="0 0 55 55" aria-hidden="true" className="meeple-village-icon">
+            <rect x="22" y="0" width="11" height="11" />
+            <rect x="11" y="11" width="33" height="11" />
+            <rect x="0" y="22" width="55" height="11" />
+            <rect x="0" y="33" width="22" height="22" />
+            <rect x="33" y="33" width="22" height="22" />
+          </svg>
+        </Link>
+      )}
+      {/* Both tips share one spot, so each starts just right of the buttons. */}
+      <span aria-hidden="true" className="meeple-release-tips">
+        <span className="meeple-release-tip" data-tip="release">
+          {out ? "Call them home" : "Release the meeples"}
+        </span>
+        <span className="meeple-release-tip" data-tip="village">
+          Visit the village
+        </span>
       </span>
     </div>
   );

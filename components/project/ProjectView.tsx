@@ -1,6 +1,5 @@
 import { NameAndTime } from "@/components/NameAndTime";
 import { ProjectCards } from "@/components/ProjectCards";
-import { SiteMenu } from "@/components/SiteMenu";
 import { CloseCaseStudy } from "@/components/work/CloseCaseStudy";
 import { ABOUT_CARD, type ProjectCard } from "@/lib/projects";
 import { ProjectGallery } from "./ProjectGallery";
@@ -39,7 +38,6 @@ export function ProjectView({
       <aside className="project-side">
         <div className="project-side-bar">
           <CloseCaseStudy />
-          <SiteMenu />
         </div>
         <div className="project-side-name">
           <NameAndTime />
