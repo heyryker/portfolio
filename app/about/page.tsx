@@ -5,7 +5,7 @@ import { Icon } from "@/components/Icon";
 import { JsonLd } from "@/components/JsonLd";
 import { PixelPortrait } from "@/components/PixelPortrait";
 import { SiteHeader } from "@/components/SiteHeader";
-import { EDUCATION, EMAIL, EXPERIENCE, PROFILES, RESUME, SITE_URL, WEBSITE_ID, absoluteUrl, pageMetadata, person } from "@/lib/site";
+import { ABOUT_HEADLINE, EDUCATION, EMAIL, EXPERIENCE, PROFILES, RESUME, SITE_URL, WEBSITE_ID, absoluteUrl, pageMetadata, person } from "@/lib/site";
 import portrait from "@/public/ryker-marble.webp";
 
 export const metadata: Metadata = pageMetadata({
@@ -59,7 +59,7 @@ export default function AboutPage() {
       <main className="mx-auto max-w-[968px] px-[22px] pt-11 pb-22 md:px-11">
         <p className="text-sm font-medium tracking-[0.04em] text-ink uppercase">HEY [I&rsquo;M] RYKER</p>
         <h1 className="mt-5 text-[clamp(32px,5.2vw,56px)] leading-[1.1] font-medium tracking-[-0.02em] text-balance">
-          I&rsquo;m a brand designer interested in strategy, craft and art direction.
+          {ABOUT_HEADLINE}
         </h1>
 
         <div className="mt-11 grid gap-11 md:grid-cols-[1fr_264px]">

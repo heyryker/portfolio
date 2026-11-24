@@ -17,6 +17,9 @@ export const OG_IMAGE_ALT = "RYKER MARBLE";
 export const EMAIL = "rykermarble@gmail.com";
 export const RESUME = "/resume/ryker-marble-resume.pdf";
 
+/** The /about headline, also the About card's line at the top of the landing list. */
+export const ABOUT_HEADLINE = "I’m a brand designer interested in strategy, craft and art direction.";
+
 /*
  * Google Analytics 4 measurement ID (G-…). It's public by design (it ships in
  * every page), so it lives here rather than in a Vercel env var. Empty means

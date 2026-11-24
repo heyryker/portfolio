@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Icon } from "@/components/Icon";
 import type { ProjectCard } from "@/lib/projects";
 import { markNextProject } from "@/components/work/wipe";
 
@@ -24,17 +25,25 @@ const SHRINK = 0.05;
  * `scrollSelf` makes the list its own scroll area (the left column of a
  * project screen), piling against its own bottom edge instead of the
  * window's. `current` marks the card of the project that's open.
+ *
+ * `initial` shows only that many cards at first, with a "+ More projects"
+ * pill under them that brings in the rest. The others are still in the HTML
+ * (hidden), so crawlers see every project.
  */
 export function ProjectCards({
   items,
   current,
   scrollSelf = false,
+  initial,
 }: {
   items: ProjectCard[];
   current?: string;
   scrollSelf?: boolean;
+  initial?: number;
 }) {
   const ref = useRef<HTMLUListElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const shown = expanded || !initial ? items.length : Math.min(initial, items.length);
 
   useEffect(() => {
     const list = ref.current;
@@ -43,7 +52,7 @@ export function ProjectCards({
 
     const layout = () => {
       frame = 0;
-      const cards = [...list.children] as HTMLElement[];
+      const cards = ([...list.children] as HTMLElement[]).filter((c) => !c.hidden);
       const listTop = list.getBoundingClientRect().top;
       const bottom = scrollSelf ? list.getBoundingClientRect().bottom : window.innerHeight;
       const gap = parseFloat(getComputedStyle(list).rowGap) || 0;
@@ -96,31 +105,61 @@ export function ProjectCards({
       window.removeEventListener("resize", schedule);
       ro.disconnect();
     };
-  }, [items.length, scrollSelf]);
+  }, [items.length, scrollSelf, shown]);
+
+  const showMore = () => {
+    const first = shown;
+    setExpanded(true);
+    // Keyboard focus moves to the first new card instead of getting lost
+    // with the pill.
+    requestAnimationFrame(() => {
+      ref.current?.children[first]?.querySelector<HTMLElement>("a")?.focus({ preventScroll: true });
+    });
+  };
 
   return (
-    <ul ref={ref} className="project-cards" data-scroll-self={scrollSelf ? "" : undefined}>
-      {items.map((item, i) => (
-        <li key={item.href} className="project-card-item">
-          <Link
-            href={item.href}
-            className="project-card"
-            aria-current={item.href === current ? "page" : undefined}
-            // From one project to another: replace, so closing still goes
-            // back to where the first one was opened.
-            replace={!!current}
-            onClick={current ? markNextProject : undefined}
-          >
-            <span className="project-card-thumb">
-              <Image src={item.image} alt="" fill sizes="128px" priority={i < 4} className="object-cover" />
-            </span>
-            <span className="project-card-text">
-              <span className="project-card-title">{item.title}</span>
-              <span className="project-card-summary">{item.summary}</span>
-            </span>
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul ref={ref} className="project-cards" data-scroll-self={scrollSelf ? "" : undefined}>
+        {items.map((item, i) => {
+          // Cards the pill brings in rise in one after another.
+          const reveal = expanded && initial && i >= initial ? i - initial : undefined;
+          return (
+            <li
+              key={item.href}
+              className="project-card-item"
+              hidden={i >= shown}
+              data-revealed={reveal !== undefined ? "" : undefined}
+              style={reveal !== undefined ? ({ "--reveal-i": reveal } as React.CSSProperties) : undefined}
+            >
+              <Link
+                href={item.href}
+                className="project-card"
+                aria-current={item.href === current ? "page" : undefined}
+                // From one project to another: replace, so closing still goes
+                // back to where the first one was opened.
+                replace={!!current}
+                onClick={current ? markNextProject : undefined}
+              >
+                <span className="project-card-thumb">
+                  <Image src={item.image} alt="" fill sizes="128px" priority={i < 4} className="object-cover" />
+                </span>
+                <span className="project-card-text">
+                  <span className="project-card-title">{item.title}</span>
+                  <span className="project-card-summary">{item.summary}</span>
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+      {shown < items.length && (
+        <p className="project-cards-more">
+          <button type="button" className="menu-pill" onClick={showMore}>
+            <Icon name="add" className="size-[0.9em] text-[#767676]" />
+            More projects
+          </button>
+        </p>
+      )}
+    </>
   );
 }
