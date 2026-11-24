@@ -256,6 +256,37 @@ a.name-time-name:focus-visible {
   will-change: transform;
 }
 
+/* "+ More projects" under the featured cards on the landing page. */
+.project-cards-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.project-cards-more .menu-pill {
+  gap: 0.4em;
+}
+
+/* Cards the pill brings in rise and fade in, one after another. The
+   animation is on the card, since the list item's transform is the pile's. */
+.project-card-item[data-revealed] .project-card {
+  animation: card-reveal 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--reveal-i, 0) * 60ms);
+}
+
+@keyframes card-reveal {
+  from {
+    opacity: 0;
+    translate: 0 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-card-item[data-revealed] .project-card {
+    animation: none;
+  }
+}
+
 .project-card-item[data-piled] .project-card {
   box-shadow: 0 -1px 0 rgb(0 0 0 / 0.04), 0 -8px 24px rgb(0 0 0 / 0.04);
 }
@@ -1052,6 +1083,12 @@ html:has(.site-menu[open]) {
 .menu-pill:hover,
 .menu-pill:focus-visible {
   background: var(--color-accent);
+}
+
+/* On a project screen's gray panel (the copy-email pill, About's resume
+   pills), a gray pill would vanish, so it turns white there. */
+.project-panel .menu-pill:not(:hover, :focus-visible) {
+  background: #fff;
 }
 
 .menu-body {

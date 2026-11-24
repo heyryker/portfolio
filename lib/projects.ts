@@ -1,4 +1,5 @@
 import { getPosts } from "@/lib/blog";
+import { ABOUT_HEADLINE } from "@/lib/site";
 import { CASE_STUDIES, loadCaseStudy } from "@/lib/work";
 
 /** One card in the project list (components/ProjectCards.tsx). */
@@ -30,3 +31,15 @@ export async function getProjectCards(): Promise<ProjectCard[]> {
   const posts = getPosts().map((p) => ({ href: `/blog/${p.slug}`, image: p.cover, title: p.title, summary: p.summary, tags: p.tags }));
   return [...cases.filter((c): c is ProjectCard => !!c), ...posts];
 }
+
+/**
+ * The About page as a card, for the top of the landing list: the portrait,
+ * with the /about headline as its line, so the two never drift apart.
+ */
+export const ABOUT_CARD: ProjectCard = {
+  href: "/about",
+  image: "/ryker-marble.webp",
+  title: "About me",
+  summary: ABOUT_HEADLINE,
+  tags: [],
+};

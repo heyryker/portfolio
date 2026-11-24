@@ -8,7 +8,10 @@ import { SiteMenu } from "@/components/SiteMenu";
 import { MeepleRelease } from "@/components/MeepleRelease";
 import { SiteFooter } from "@/components/SiteFooter";
 import { LandingMarker } from "@/components/work/LandingMarker";
-import { getProjectCards } from "@/lib/projects";
+import { ABOUT_CARD, getProjectCards } from "@/lib/projects";
+
+/** Project cards shown before "+ More projects", to keep the focus on the main work. */
+const FEATURED = 7;
 
 export const metadata: Metadata = pageMetadata({
   description: SITE_DESCRIPTION,
@@ -79,7 +82,8 @@ export default async function Home() {
           </a>
         </p>
         <section aria-label="Projects" className="landing-cards">
-          <ProjectCards items={cards} />
+          {/* About me on top, then the featured projects; the rest wait behind the pill. */}
+          <ProjectCards items={[ABOUT_CARD, ...cards]} initial={FEATURED + 1} />
         </section>
       </main>
       <LandingMarker />
