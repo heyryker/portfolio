@@ -25,7 +25,19 @@ export function MeepleRelease() {
   const engine = useRef<Release | null>(null);
   const [out, setOut] = useState(false);
 
-  useEffect(() => () => engine.current?.destroy(), []);
+  // Leaving the page puts the meeples away. With cacheComponents, Next keeps
+  // the landing page alive but hidden (React <Activity>) while you're on
+  // another route, so this cleanup runs without unmounting: reset the state
+  // too, or coming back from the village shows the "out" buttons with no
+  // meeples. Also covers the back button restoring the page.
+  useEffect(
+    () => () => {
+      engine.current?.destroy();
+      engine.current = null;
+      setOut(false);
+    },
+    [],
+  );
 
   const onClick = () => {
     if (engine.current) {
